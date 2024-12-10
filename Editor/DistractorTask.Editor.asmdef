@@ -1,0 +1,16 @@
+{
+    "name": "DistractorTask.Editor",
+    "rootNamespace": "DistractorTask",
+    "references": [
+        "GUID:5d8a4b355c8e7f744a53fff51489c352"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

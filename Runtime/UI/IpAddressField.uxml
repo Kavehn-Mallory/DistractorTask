@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/USS/IpAddressSelectorUss.uss?fileID=7433441132597879392&amp;guid=210a58c57303b32419f5e142e99aeeef&amp;type=3#IpAddressSelectorUss" />
+    <ui:VisualElement name="Root" class="unity-base-field unity-base-text-field unity-text-field unity-base-field_inspector-field" style="flex-grow: 0; margin-top: 1px; margin-right: -2px; margin-bottom: 1px; margin-left: 3px; flex-shrink: 0;">
+        <ui:Label tabindex="-1" text="IP-Address" parse-escape-sequences="true" display-tooltip-when-elided="true" class="unity-text-element unity-base-field__label unity-base-text-field__label unity-text-field__label" style="flex-shrink: 0; flex-basis: auto; min-width: 120px; flex-direction: row;" />
+        <ui:VisualElement name="Content" style="flex-grow: 1; flex-direction: row; justify-content: flex-start;">
+            <ui:IntegerField value="255" name="p0" is-delayed="true" binding-path="p0" class="ipAddressField start" style="flex-direction: row; flex-grow: 0; flex-shrink: 0; align-items: stretch; justify-content: flex-start; align-self: auto; margin-left: 0;" />
+            <ui:IntegerField value="255" name="p1" is-delayed="true" binding-path="p1" class="ipAddressField" style="flex-direction: row; flex-grow: 0; flex-shrink: 0;" />
+            <ui:IntegerField value="255" name="p2" is-delayed="true" binding-path="p2" class="ipAddressField" style="flex-direction: row; flex-grow: 0; flex-shrink: 0;" />
+            <ui:IntegerField value="255" name="p3" is-delayed="true" binding-path="p3" class="ipAddressField" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

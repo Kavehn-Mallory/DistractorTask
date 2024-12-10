@@ -1,0 +1,14 @@
+.ipAddressField {
+    margin-right: 4px;
+    margin-left: 4px;
+    min-width: 30px;
+}
+
+.start {
+    margin-left: 0;
+    margin-right: 4px;
+}
+
+.ipAddressField TextElement {
+    -unity-text-align: middle-center;
+}

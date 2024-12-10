@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:Foldout text="Foldout" name="Root">
+        <ui:EnumField label="Endpoint Settings" type="UnityEngine.TextAlignment, UnityEngine.TextRenderingModule" value="Center" />
+        <ui:VisualElement name="ContentArea" style="flex-grow: 1;">
+            <ui:VisualElement name="HiddenContainer" style="flex-grow: 0; flex-shrink: 1; visibility: hidden; width: 0; height: 0; max-height: 0; max-width: 0; min-width: 0; min-height: 0;" />
+        </ui:VisualElement>
+    </ui:Foldout>
+</ui:UXML>
