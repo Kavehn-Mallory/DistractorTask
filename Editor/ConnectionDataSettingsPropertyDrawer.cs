@@ -11,7 +11,7 @@ namespace DistractorTask.Editor
     public class ConnectionDataSettingsPropertyDrawer : PropertyDrawer
     {
 
-        private const string RootElementPath = "Assets/UI/ConnectionDataSettingsPropertyDrawer.uxml";
+        private const string RootElementPath = "Packages/com.janwittke.distractortask/Runtime/UI/ConnectionDataSettingsPropertyDrawer.uxml";
         private VisualTreeAsset _rootAsset;
         private VisualElement _contentContainer;
         private VisualElement[] _contentElements;

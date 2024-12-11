@@ -9,7 +9,7 @@ namespace DistractorTask.Editor
     public class ConnectionPortPropertyDrawer : PropertyDrawer
     {
         
-        private const string RootElementPath = "Assets/UI/PortProperty.uxml";
+        private const string RootElementPath = "Packages/com.janwittke.distractortask/Runtime/UI/PortProperty.uxml";
         private VisualTreeAsset _rootAsset;
         private PropertyField _propertyField;
         private ObjectField _objectField;

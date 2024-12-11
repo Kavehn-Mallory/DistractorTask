@@ -9,7 +9,7 @@ namespace DistractorTask.Editor
     public class IpAddressPropertyDrawer : PropertyDrawer
     {
         
-        private const string RootElementPath = "Assets/UI/IpAddressField.uxml";
+        private const string RootElementPath = "Packages/com.janwittke.distractortask/Runtime/UI/IpAddressField.uxml";
         private VisualTreeAsset _rootAsset;
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
