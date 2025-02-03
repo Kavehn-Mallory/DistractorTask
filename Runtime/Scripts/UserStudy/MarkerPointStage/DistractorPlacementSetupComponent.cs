@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using MixedReality.Toolkit.Input;
@@ -37,11 +38,13 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             
         }
         
-        
+
+
         protected sealed override void OnStudyStageStart(MarkerPointStageEvent studyEvent)
         {
             Manager.RegisterCallback<MarkerCountData>(OnMarkerCountDataReceived);
             Manager.TransmitNetworkMessage(new ConfirmationData());
+            InputHandler.InputHandler.Instance.OnSelectionButtonPressed += AddPlacementPosition;
         }
 
         private void OnMarkerCountDataReceived(MarkerCountData markerCountData)
@@ -69,6 +72,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             Manager.UnregisterCallback<ConfirmationData>(OnConfirmationDataReceived);
             _acceptInput = false;
+            InputHandler.InputHandler.Instance.OnSelectionButtonPressed -= AddPlacementPosition;
         }
         
         [ContextMenu("Add Position")]
@@ -88,20 +92,6 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 confirmationNumber = _currentMarkerPoint
             });
         }
-
-        private void Update()
-        {
-            var clicker = Keyboard.current;
-            if (clicker == null)
-            {
-                return; // No gamepad connected.
-            }
-
-            if (clicker.escapeKey.wasPressedThisFrame)
-            {
-                AddPlacementPosition();
-                
-            }
-        }
+        
     }
 }

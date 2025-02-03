@@ -78,8 +78,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             peripheralDistractor.Component = this;
             _peripheralDistractor = peripheralDistractor.GetComponent<TMP_Text>();
             _peripheralDistractor.gameObject.name = "Peripheral Distractor";
-        
-        
+
+
+            InputHandler.InputHandler.Instance.OnSelectionButtonPressed += OnSelectionConfirmed;
             _mainCamera = Camera.main;
         
             if (!_mainCamera)
@@ -245,20 +246,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             Debug.Log("Correct button pressed");
         }
 
-        private void Update()
-        {
-            var clicker = Keyboard.current;
-            if (clicker == null)
-            {
-                return; // No gamepad connected.
-            }
-
-            if (clicker.escapeKey.wasPressedThisFrame)
-            {
-                // 'Use' code here
-                OnSelectionConfirmed();
-            }
-        }
 
 
         [Serializable]
