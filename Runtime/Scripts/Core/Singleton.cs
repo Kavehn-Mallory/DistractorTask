@@ -2,27 +2,27 @@
 
 namespace DistractorTask.Core {
     public class Singleton<T> : MonoBehaviour where T : Component {
-        protected static T instance;
+        private static T _instance;
 
-        public static bool HasInstance => instance != null;
+        public static bool HasInstance => _instance != null;
 
         public static bool TryGetInstance(out T nullableInstance)
         {
-            nullableInstance = instance;
+            nullableInstance = _instance;
             return nullableInstance != null;
         }
 
         public static T Instance {
             get {
-                if (instance == null) {
-                    instance = FindAnyObjectByType<T>();
-                    if (instance == null) {
+                if (!_instance) {
+                    _instance = FindAnyObjectByType<T>();
+                    if (!_instance) {
                         var go = new GameObject(typeof(T).Name + " Auto-Generated");
-                        instance = go.AddComponent<T>();
+                        _instance = go.AddComponent<T>();
                     }
                 }
 
-                return instance;
+                return _instance;
             }
         }
 
@@ -36,7 +36,7 @@ namespace DistractorTask.Core {
         private void InitializeSingleton() {
             if (!Application.isPlaying) return;
 
-            instance = this as T;
+            _instance = this as T;
         }
     }
 }

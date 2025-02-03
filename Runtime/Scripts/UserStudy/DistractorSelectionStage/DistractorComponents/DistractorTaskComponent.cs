@@ -2,7 +2,6 @@ using System;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using Random = UnityEngine.Random;
 

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using MixedReality.Toolkit.Input;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace DistractorTask.UserStudy.MarkerPointStage
 {

@@ -16,6 +16,7 @@ namespace DistractorTask.Transport
                 case 2: return reader.ReadFixedString128().ToString();
                 case 3: return reader.ReadFixedString512().ToString();
                 case 4: return reader.ReadFixedString4096().ToString();
+                case 5: return reader.ReadFixedString4096() + ReadFixedString(ref reader);
             }
             throw new ArgumentException($"The reader does not contain a fixed string that was sent by {nameof(ConnectionDataWriter.WriteString)}"); 
         }
