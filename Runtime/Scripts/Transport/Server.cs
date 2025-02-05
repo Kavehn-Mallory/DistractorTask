@@ -1,5 +1,6 @@
 ﻿using System;
 using DistractorTask.Core;
+using DistractorTask.Logging;
 using DistractorTask.Transport.DataContainer;
 using Unity.Collections;
 using Unity.Networking.Transport;
@@ -19,10 +20,14 @@ namespace DistractorTask.Transport
             endpointSource = NetworkEndpointSetting.AnyIPv4
         };
         
+        public NetworkEndpoint NetworkEndpoint => settings.NetworkEndpoint;
+        
         private NetworkMessageEventHandler _eventHandler;
         private NetworkPipeline _pipeline;
 
         private NetworkConnectionHandler _ipRequestHandler;
+
+        private LogSystem _logSystem;
 
 
         [FormerlySerializedAs("ipRequestSettings")] [SerializeField]
@@ -36,8 +41,10 @@ namespace DistractorTask.Transport
         protected override void Awake()
         {
             base.Awake();
+            Debug.Log("Init");
             _eventHandler = new NetworkMessageEventHandler();
             _connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
+            
         }
 
         private void Start()
@@ -134,7 +141,7 @@ namespace DistractorTask.Transport
                 if (cmd == NetworkEvent.Type.Connect)
                 {
                     handler.Driver.BeginSend(handler.Pipeline, handler.Connection, out var writer);
-                    ConnectionDataWriter.SendMessage(ref writer, new IpAddressData
+                    writer.SendMessage(new IpAddressData
                     {
                         Endpoint = endpoint
                     });
@@ -160,7 +167,7 @@ namespace DistractorTask.Transport
                     continue;
                 }
                 _driver.BeginSend(_pipeline, connection, out var writer);
-                ConnectionDataWriter.SendMessage(ref writer, data);
+                writer.SendMessage(data);
                 _driver.EndSend(writer);
             }
             return success;

@@ -15,6 +15,11 @@ namespace DistractorTask.UserStudy.Core
         protected override IEnumerator Start()
         {
             Client.Instance.OnAutoConnectionEstablished += OnConnectionEstablished;
+#if UNITY_EDITOR
+            
+#else
+            LogSystem = Logging.LogSystem.InitializeLogSystem(Client.Instance, Client.Instance.NetworkEndpoint);
+#endif
             return base.Start();
         }
 

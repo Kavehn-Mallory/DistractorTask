@@ -15,7 +15,9 @@ namespace DistractorTask.Transport
             endpointSource = NetworkEndpointSetting.LoopbackIPv4,
             port = new ConnectionPortProperty(7777)
         };
-        
+
+        public NetworkEndpoint NetworkEndpoint => settings.NetworkEndpoint;
+
         private NetworkDriver _driver;
         private NetworkConnection _connection;
         private NetworkPipeline _pipeline;
@@ -144,7 +146,7 @@ namespace DistractorTask.Transport
             }
 
             _driver.BeginSend(_pipeline, _connection, out var writer);
-            ConnectionDataWriter.SendMessage(ref writer, data);
+            writer.SendMessage(data);
             _driver.EndSend(writer);
             return true;
         }

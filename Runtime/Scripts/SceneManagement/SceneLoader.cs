@@ -19,12 +19,13 @@ namespace DistractorTask.SceneManagement
         
         async void Start()
         {
+            Server.Instance.RegisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
             await LoadSceneGroup(0);
         }
         
         private void OnEnable()
         {
-            Server.Instance.RegisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
+            //todo fix this
         }
 
         private void OnDisable()

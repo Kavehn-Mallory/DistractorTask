@@ -1,4 +1,5 @@
-﻿using DistractorTask.Transport;
+﻿using System;
+using DistractorTask.Transport;
 
 namespace DistractorTask.UserStudy.Core
 {
@@ -9,6 +10,12 @@ namespace DistractorTask.UserStudy.Core
         private void Awake()
         {
             SecondsToWait = 3f;
+            LogSystem = Logging.LogSystem.InitializeLogSystem(Server.Instance, Server.Instance.NetworkEndpoint).AsReceiver();
+        }
+
+        private void OnDisable()
+        {
+            LogSystem.SaveFiles();
         }
 
         public void EstablishConnection()

@@ -3,9 +3,15 @@ using Unity.Collections;
 
 namespace DistractorTask.Transport
 {
-    public struct ConnectionDataReader
+    public static class ConnectionDataReader
     {
-        public static string ReadFixedString(ref DataStreamReader reader)
+        /// <summary>
+        /// Extension method, allowing reading and writing of arbitrarily long strings
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string ReadString(this ref DataStreamReader reader)
         {
             var fixedStringType = reader.ReadByte();
 
@@ -16,23 +22,10 @@ namespace DistractorTask.Transport
                 case 2: return reader.ReadFixedString128().ToString();
                 case 3: return reader.ReadFixedString512().ToString();
                 case 4: return reader.ReadFixedString4096().ToString();
-                case 5: return reader.ReadFixedString4096() + ReadFixedString(ref reader);
+                case 5: return reader.ReadFixedString4096() + reader.ReadString();
             }
             throw new ArgumentException($"The reader does not contain a fixed string that was sent by {nameof(ConnectionDataWriter.WriteString)}"); 
         }
-
-        public static bool TryReadFixedString(ref DataStreamReader reader, out string data)
-        {
-            try
-            {
-                data = ReadFixedString(ref reader);
-                return true;
-            }
-            catch
-            {
-                data = "";
-                return false;
-            }
-        }
+        
     }
 }

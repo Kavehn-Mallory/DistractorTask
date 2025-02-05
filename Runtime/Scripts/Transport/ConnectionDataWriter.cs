@@ -4,12 +4,12 @@ using Unity.Collections;
 
 namespace DistractorTask.Transport
 {
-    public struct ConnectionDataWriter
+    public static class ConnectionDataWriter
     {
 
         private const int ReservedByteCount = 4;
         
-        public static void SendMessage(ref DataStreamWriter writer, in ISerializer serializableData)
+        public static void SendMessage(this ref DataStreamWriter writer, in ISerializer serializableData)
         {
             var index = GetDataTypeIndex(serializableData.GetType());
             writer.WriteByte(index);
@@ -21,7 +21,7 @@ namespace DistractorTask.Transport
             return DataSerializationIndexer.GetTypeIndex(type);
         }
 
-        public static void WriteString(ref DataStreamWriter writer, string data)
+        public static void WriteString(this ref DataStreamWriter writer, string data)
         {
             while (true)
             {
@@ -62,20 +62,7 @@ namespace DistractorTask.Transport
                 //throw new ArgumentException("string is too long for all types of fixed string.");
             }
         }
-
-
-        public static bool TryWriteString(ref DataStreamWriter writer, string data)
-        {
-            try
-            {
-                WriteString(ref writer, data);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        
         
         
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using UnityEngine;
@@ -16,8 +17,11 @@ namespace DistractorTask.UserStudy.Core
 
         public abstract INetworkManager Manager { get; }
 
+        protected LogSystem LogSystem;
+
         protected virtual IEnumerator Start()
         {
+            
             //yield return new WaitForSeconds(SecondsToWait);
             Manager.RegisterCallback<RequestStudyBeginData>(OnStudyBeginRequest);
             Manager.RegisterCallback<UserStudyBeginData>(OnStudyBegin);
@@ -36,15 +40,7 @@ namespace DistractorTask.UserStudy.Core
             {
                 yield return null;
             }
-
-            //todo remove this and replace with button or something like that 
-#if UNITY_EDITOR
-            /*if (Manager is Client client)
-            {
-                client.Connect();
-            }
-            StartStudy();*/
-#endif
+            
         }
 
         public virtual void OnStudyBeginRequest(RequestStudyBeginData obj)
