@@ -16,9 +16,7 @@ namespace DistractorTask.UserStudy.Core
         protected float SecondsToWait = 5f;
 
         public abstract INetworkManager Manager { get; }
-
-        protected LogSystem LogSystem;
-
+        
         protected virtual IEnumerator Start()
         {
             

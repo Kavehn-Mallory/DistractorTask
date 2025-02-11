@@ -27,9 +27,6 @@ namespace DistractorTask.Transport
 
         private NetworkConnectionHandler _ipRequestHandler;
 
-        private LogSystem _logSystem;
-
-
         [FormerlySerializedAs("ipRequestSettings")] [SerializeField]
         private ConnectionDataSettings ipTransmissionSettings = new()
         {

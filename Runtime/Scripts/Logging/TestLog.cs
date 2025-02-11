@@ -24,7 +24,7 @@ namespace DistractorTask.Logging
             {
                 _lastTimeStamp = Time.time;
                 _counter++;
-                LogSystem.LogKeyframe(LogCategory.Network, $"Test Message {_counter}");
+                //LogSystem.LogKeyframe(LogCategory.Network, $"Test Message {_counter}");
             }
         }
     }

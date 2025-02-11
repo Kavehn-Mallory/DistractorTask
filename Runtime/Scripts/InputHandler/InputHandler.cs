@@ -7,6 +7,9 @@ namespace DistractorTask.InputHandler
     public class InputHandler : Singleton<InputHandler>
     {
         public event Action OnSelectionButtonPressed = delegate { };
+
+        public event Action<string> OnDeviceAdded = delegate { };
+        
         void Update()
         {
             //todo check this and implement it properly: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/HID.html
@@ -23,5 +26,15 @@ namespace DistractorTask.InputHandler
             }
 
         }
+
+        private void Start()
+        {
+            InputSystem.onDeviceChange +=
+                (device, change) =>
+                {
+                    if (change == InputDeviceChange.Added) OnDeviceAdded.Invoke(device.name);
+                };
+        }
+        
     }
 }
