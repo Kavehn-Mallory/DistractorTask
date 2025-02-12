@@ -26,6 +26,8 @@ namespace DistractorTask.Transport
         private NetworkPipeline _pipeline;
 
         private NetworkConnectionHandler _ipRequestHandler;
+        
+        public event Action<bool> OnConnectionEstablished;
 
         [FormerlySerializedAs("ipRequestSettings")] [SerializeField]
         private ConnectionDataSettings ipTransmissionSettings = new()
@@ -181,10 +183,11 @@ namespace DistractorTask.Transport
             }
         }
         
-        public event Action OnAutoConnectionEstablished;
+        
 
         public void TransmitIpAddress(NetworkEndpoint endpoint)
         {
+            Debug.Log($"Transmitting IP-Address to {endpoint}");
             if (_ipRequestHandler is { IsCreated: true })
             {
                 return;
@@ -200,6 +203,12 @@ namespace DistractorTask.Transport
         public void TransmitIpAddress()
         {
             TransmitIpAddress(ipTransmissionSettings.NetworkEndpoint);
+        }
+
+        public void SetIpTransmissionSettings(int p0, int p1, int p2, int p3)
+        {
+            ipTransmissionSettings.endpointSource = NetworkEndpointSetting.Custom;
+            ipTransmissionSettings.ipAddress = new IpAddress(p0, p1, p2, p3);
         }
         
     }

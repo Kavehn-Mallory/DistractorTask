@@ -14,13 +14,17 @@ namespace DistractorTask.UserStudy.Core
 
         protected override IEnumerator Start()
         {
-            Client.Instance.OnAutoConnectionEstablished += OnConnectionEstablished;
+            Client.Instance.OnConnectionEstablished += OnConnectionEstablished;
             return base.Start();
         }
 
-        private void OnConnectionEstablished()
+        private void OnConnectionEstablished(bool connectionSuccessful)
         {
-            _hasConnection = true;
+            _hasConnection = connectionSuccessful;
+            if (!_hasConnection)
+            {
+                return;
+            }
             Debug.Log("Connection established in study manager");
             if (_receivedStudyStartRequest)
             {

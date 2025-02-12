@@ -41,6 +41,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             });
         }
 
+        
 
         private void OnTrialDataReceived(DistractorSelectionTrialData data)
         {
@@ -61,6 +62,18 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             StartTrial(position, _selectionCount, _currentLoadLevel == 1 ? 0 : 1);
         }
 
+
+        public void StartTrialManually()
+        {
+            _placementPositions = distractorPlacement.DistractorPlacementPositions;
+            _currentLoadLevel = 1;
+            _markerOrder = new int[1]{0};
+            _currentMarker = 0;
+            _selectionCount = 100;
+            distractorTaskComponent.EnableCanvas();
+            StartTrialRun();
+        }
+        
         private void StartTrial(Vector3 position, int selectionCount, int distractorGroup)
         {
             distractorTaskComponent.RepositionCanvas(position);

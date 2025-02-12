@@ -32,7 +32,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
             var xStep = Screen.width / markerZones.x;
             var yStep = Screen.height / markerZones.y;
-
+            
             for (int y = 0; y < markerZones.y; y++)
             {
                 for (int x = 0; x < markerZones.x; x++)

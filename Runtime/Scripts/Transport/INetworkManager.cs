@@ -13,7 +13,10 @@ namespace DistractorTask.Transport
 
         public bool TransmitNetworkMessage(ISerializer data);
 
-        public event Action OnAutoConnectionEstablished;
+        /// <summary>
+        /// Called when a connection message is received or the connection times out or fails in other ways 
+        /// </summary>
+        public event Action<bool> OnConnectionEstablished;
         
         public NetworkEndpoint NetworkEndpoint { get; }
     }

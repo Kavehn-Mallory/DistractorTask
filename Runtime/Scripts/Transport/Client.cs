@@ -3,6 +3,7 @@ using DistractorTask.Core;
 using DistractorTask.Transport.DataContainer;
 using Unity.Collections;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Error;
 using UnityEngine;
 
 namespace DistractorTask.Transport
@@ -15,6 +16,10 @@ namespace DistractorTask.Transport
             endpointSource = NetworkEndpointSetting.LoopbackIPv4,
             port = new ConnectionPortProperty(7777)
         };
+
+        public Action OnConnectionRequested = delegate { };
+        public Action OnConnectionDisconnected = delegate { };
+        public event Action<bool> OnConnectionEstablished = delegate { };
 
         public NetworkEndpoint NetworkEndpoint => settings.NetworkEndpoint;
 
@@ -45,7 +50,7 @@ namespace DistractorTask.Transport
             var ip = NetworkConnectionHandler.GetLocalIPAddress();
             var endpoint = NetworkEndpoint.Parse(ip.ToString(), port);
 #if UNITY_EDITOR
-            endpoint = NetworkEndpoint.AnyIpv4.WithPort(port);
+            endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(port);
 #endif
 
             _ipRequestHandler = new NetworkConnectionHandler().AsServer(endpoint);
@@ -74,6 +79,7 @@ namespace DistractorTask.Transport
                         var ipAddressData = new IpAddressData();
                         ipAddressData.Deserialize(ref stream);
                         Debug.Log($"Trying to connect to {ipAddressData.Endpoint.ToString()}");
+                        OnConnectionRequested.Invoke();
 
 #if UNITY_EDITOR
                         Connect(NetworkEndpoint.LoopbackIpv4.WithPort(ipAddressData.Endpoint.Port));
@@ -85,7 +91,7 @@ namespace DistractorTask.Transport
                 }
                 else if (cmd == NetworkEvent.Type.Disconnect)
                 {
-                    Debug.Log("Client disconnected from the server.");
+                    Debug.Log("IP request was ended.");
                     handler.Dispose();
                     break;
                 }
@@ -123,7 +129,7 @@ namespace DistractorTask.Transport
                 if (cmd == NetworkEvent.Type.Connect)
                 {
                     Debug.Log("We are now connected to the server.");
-                    OnAutoConnectionEstablished?.Invoke();
+                    OnConnectionEstablished?.Invoke(true);
                 }
                 else if (cmd == NetworkEvent.Type.Data)
                 {
@@ -131,7 +137,17 @@ namespace DistractorTask.Transport
                 }
                 else if (cmd == NetworkEvent.Type.Disconnect)
                 {
-                    Debug.Log("Client got disconnected from server.");
+                    var reason = (DisconnectReason) stream.ReadByte();
+                    if (reason != DisconnectReason.ClosedByRemote && reason != DisconnectReason.Timeout)
+                    {
+                        //We neither closed the connection manually nor timed out -> error during connection 
+                        OnConnectionEstablished.Invoke(false);
+                    }
+                    else
+                    {
+                        OnConnectionDisconnected.Invoke();
+                    }
+                    Debug.Log($"Client got disconnected from server due to {reason}.");
                     _connection = default;
                 }
             }
@@ -151,7 +167,7 @@ namespace DistractorTask.Transport
             return true;
         }
 
-        public event Action OnAutoConnectionEstablished = delegate { };
+        
 
         private void ProcessData(ref DataStreamReader stream)
         {
@@ -163,13 +179,7 @@ namespace DistractorTask.Transport
                 Debug.LogError($"Type {type} is not handled yet by {nameof(NetworkMessageEventHandler)}. This either means that {type} does not implement {nameof(ISerializer)} or that the type does not have a default constructor");
             }
         }
-
-
-        public void Connect()
-        {
-            Connect(settings.NetworkEndpoint);
-            
-        }
+        
 
         public void Connect(NetworkEndpoint endpoint)
         {

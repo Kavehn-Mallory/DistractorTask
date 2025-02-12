@@ -15,7 +15,18 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         private readonly List<Vector3> _distractorPlacementPositions = new();
         private Transform _mainCameraTransform;
 
-        public List<Vector3> DistractorPlacementPositions => _distractorPlacementPositions;
+        public List<Vector3> DistractorPlacementPositions
+        {
+            get
+            {
+                if(_distractorPlacementPositions.Count > 0)
+                    return _distractorPlacementPositions;
+                return new List<Vector3>
+                {
+                    _mainCameraTransform.position + _mainCameraTransform.forward
+                };
+            }
+        }
 
         private int _currentMarkerPoint;
         private int _markerPointCount;
@@ -33,7 +44,6 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 Debug.LogError($"No main camera found. Please either add one to {nameof(DistractorPlacementSetupComponent)} or tag an active camera with \"MainCamera\"");
                 enabled = false;
             }
-            
         }
         
 
