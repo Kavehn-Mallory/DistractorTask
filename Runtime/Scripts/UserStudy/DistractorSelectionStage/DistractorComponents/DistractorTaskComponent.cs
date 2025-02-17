@@ -211,6 +211,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
     
         public void OnHoverEnter(UIHoverEventArgs args)
         {
+            Debug.Log("On hover enter");
             _selectedDistractor = args.uiObject?.GetComponent<DistractorComponent>();
         }
 

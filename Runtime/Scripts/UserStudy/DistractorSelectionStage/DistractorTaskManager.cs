@@ -115,7 +115,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         }
         
 
-
         private static List<NoiseLevel> GenerateNoiseLevels(NoiseLevel noiseLevel)
         {
             var result = new List<NoiseLevel>();

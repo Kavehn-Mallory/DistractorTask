@@ -1,5 +1,4 @@
-﻿using System;
-using DistractorTask.Transport;
+﻿using DistractorTask.Transport;
 using TMPro;
 using UnityEngine;
 
