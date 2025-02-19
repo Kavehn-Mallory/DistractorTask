@@ -8,6 +8,8 @@ namespace DistractorTask.Transport
 {
     public class NetworkConnectionHandler : IDisposable
     {
+        
+        //todo turn NetworkConnection into list. Needs to change the update method as well
         public NetworkDriver Driver;
         public NetworkPipeline Pipeline;
         public NetworkConnection Connection;
@@ -24,6 +26,7 @@ namespace DistractorTask.Transport
 
         public void UpdateConnectionHandler()
         {
+            //todo go through all the connections and check if they are still viable
             if (IsCreated)
             {
                 Driver.ScheduleUpdate().Complete();

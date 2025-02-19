@@ -182,10 +182,9 @@ namespace DistractorTask.Transport
                 Debug.LogError($"Type {type} is not handled yet by {nameof(NetworkMessageEventHandler)}. This either means that {type} does not implement {nameof(ISerializer)} or that the type does not have a default constructor");
             }
         }
-        
-        
 
-        public void TransmitIpAddress(NetworkEndpoint endpoint)
+
+        private void TransmitIpAddress(NetworkEndpoint endpoint)
         {
             Debug.Log($"Transmitting IP-Address to {endpoint}");
             if (_ipRequestHandler is { IsCreated: true })

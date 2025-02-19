@@ -45,7 +45,7 @@ namespace DistractorTask.Transport
 
         }
 
-        public void ListenForIpRequest(ushort port)
+        private void ListenForIpRequest(ushort port)
         {
             var ip = NetworkConnectionHandler.GetLocalIPAddress();
             var endpoint = NetworkEndpoint.Parse(ip.ToString(), port);
@@ -179,9 +179,9 @@ namespace DistractorTask.Transport
                 Debug.LogError($"Type {type} is not handled yet by {nameof(NetworkMessageEventHandler)}. This either means that {type} does not implement {nameof(ISerializer)} or that the type does not have a default constructor");
             }
         }
-        
 
-        public void Connect(NetworkEndpoint endpoint)
+
+        private void Connect(NetworkEndpoint endpoint)
         {
             if (_connection.IsCreated)
             {
