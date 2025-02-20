@@ -1,7 +1,7 @@
 ﻿using System;
 using DistractorTask.Core;
-using DistractorTask.Logging;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Error;
 
 namespace DistractorTask.Transport
 {
@@ -14,10 +14,18 @@ namespace DistractorTask.Transport
         public bool TransmitNetworkMessage(ISerializer data);
 
         /// <summary>
-        /// Called when a connection message is received or the connection times out or fails in other ways 
+        /// Called when a connection message is received
         /// </summary>
         public event Action<bool> OnConnectionEstablished;
         
+
+        /// <summary>
+        /// Called when a connection is terminated 
+        /// </summary>
+        public event Action<NetworkEndpoint, DisconnectReason> OnConnectionDisconnected;
+        
         public NetworkEndpoint NetworkEndpoint { get; }
+
+        
     }
 }

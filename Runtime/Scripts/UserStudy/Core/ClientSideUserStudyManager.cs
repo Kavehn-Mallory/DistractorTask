@@ -7,14 +7,14 @@ namespace DistractorTask.UserStudy.Core
 {
     public class ClientSideUserStudyManager : UserStudyManager
     {
-        public override INetworkManager Manager => Client.Instance;
+        public override INetworkManager Manager => NetworkConnectionManager.Instance;
 
         private bool _hasConnection;
         private bool _receivedStudyStartRequest;
 
         protected override IEnumerator Start()
         {
-            Client.Instance.OnConnectionEstablished += OnConnectionEstablished;
+            NetworkConnectionManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
             return base.Start();
         }
 

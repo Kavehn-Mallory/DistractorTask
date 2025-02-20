@@ -2,6 +2,8 @@
 using DistractorTask.Transport;
 using MixedReality.Toolkit.UX;
 using TMPro;
+using Unity.Networking.Transport;
+using Unity.Networking.Transport.Error;
 using UnityEngine;
 
 namespace DistractorTask.UI
@@ -26,13 +28,18 @@ namespace DistractorTask.UI
         {
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
-            Client.Instance.OnConnectionRequested += OnConnectionRequested;
-            Client.Instance.OnConnectionEstablished += OnConnectionEstablished;
-            Client.Instance.OnConnectionDisconnected += OnConnectionDisconnected;
+            NetworkConnectionManager.Instance.OnConnectionRequested += OnConnectionRequested;
+            NetworkConnectionManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
+            NetworkConnectionManager.Instance.OnConnectionDisconnected += OnConnectionDisconnected;
         }
 
-        private void OnConnectionDisconnected()
+        private void OnConnectionDisconnected(NetworkEndpoint networkEndpoint, DisconnectReason disconnectReason)
         {
+            if (NetworkConnectionManager.DidConnectionThrowError(disconnectReason))
+            {
+                OnConnectionFailed();
+                return;
+            }
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
         }

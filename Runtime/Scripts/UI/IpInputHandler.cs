@@ -1,4 +1,5 @@
-﻿using DistractorTask.Transport;
+﻿using System;
+using DistractorTask.Transport;
 using TMPro;
 using UnityEngine;
 
@@ -33,7 +34,8 @@ namespace DistractorTask.UI
             if (int.TryParse(inputFieldP0.text, out var p0) && int.TryParse(inputFieldP1.text, out var p1) &&
                 int.TryParse(inputFieldP2.text, out var p2) && int.TryParse(inputFieldP3.text, out var p3))
             {
-                Server.Instance.SetIpTransmissionSettings(p0, p1, p2, p3);
+                throw new NotImplementedException();
+                //NetworkConnectionManager.Instance.SetIpTransmissionSettings(p0, p1, p2, p3);
             }
             
         }

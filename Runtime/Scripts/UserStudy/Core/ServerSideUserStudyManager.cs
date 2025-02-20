@@ -1,10 +1,11 @@
-﻿using DistractorTask.Transport;
+﻿using System;
+using DistractorTask.Transport;
 
 namespace DistractorTask.UserStudy.Core
 {
     public class ServerSideUserStudyManager : UserStudyManager
     {
-        public override INetworkManager Manager => Server.Instance;
+        public override INetworkManager Manager => NetworkConnectionManager.Instance;
 
         private void Awake()
         {
@@ -13,7 +14,8 @@ namespace DistractorTask.UserStudy.Core
         
         public void EstablishConnection()
         {
-            Server.Instance.TransmitIpAddress();
+            throw new NotImplementedException();
+            //Server.Instance.TransmitIpAddress();
         }
     }
 }
