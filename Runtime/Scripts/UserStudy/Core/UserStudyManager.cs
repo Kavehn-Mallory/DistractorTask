@@ -43,6 +43,7 @@ namespace DistractorTask.UserStudy.Core
 
         public virtual void OnStudyBeginRequest(RequestStudyBeginData obj)
         {
+            Debug.Log("Received on Study Begin Data", this);
             Manager.UnregisterCallback<RequestStudyBeginData>(OnStudyBeginRequest);
             StartStudy();
         }
@@ -54,6 +55,7 @@ namespace DistractorTask.UserStudy.Core
             if (studyStages[0] is ReceivingStudyStageComponent)
             {
                 _studyIndex++;
+                Debug.Log("Transmitting UserStudyBeginData for first study stage",this);
                 Manager.TransmitNetworkMessage(new UserStudyBeginData
                 {
                     studyIndex = _studyIndex
@@ -61,7 +63,7 @@ namespace DistractorTask.UserStudy.Core
             }
             else
             {
-                Debug.Log("Sending study start request");
+                Debug.Log("Sending study start request", this);
                 Manager.TransmitNetworkMessage(new RequestStudyBeginData());
             }
         }
@@ -79,7 +81,7 @@ namespace DistractorTask.UserStudy.Core
             {
                 throw new Exception("The selected study is a receiver not a sender, something went wrong");
             }
-            Debug.Log($"Starting next sending study {_studyIndex}");
+            Debug.Log($"Starting next sending study {_studyIndex}", this);
             sender.StartStudy(Manager);
         }
         
@@ -95,7 +97,7 @@ namespace DistractorTask.UserStudy.Core
             if (_studyIndex + 1 < studyStages.Length && studyStages[_studyIndex + 1] is ReceivingStudyStageComponent)
             {
                 _studyIndex++;
-                Debug.Log($"Starting next receiver study {_studyIndex}");
+                Debug.Log($"Starting next receiver study {_studyIndex}", this);
                 Manager.TransmitNetworkMessage(new UserStudyBeginData
                 {
                     studyIndex = _studyIndex

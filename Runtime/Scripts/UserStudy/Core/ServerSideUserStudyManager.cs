@@ -12,10 +12,5 @@ namespace DistractorTask.UserStudy.Core
             SecondsToWait = 3f;
         }
         
-        public void EstablishConnection()
-        {
-            throw new NotImplementedException();
-            //Server.Instance.TransmitIpAddress();
-        }
     }
 }

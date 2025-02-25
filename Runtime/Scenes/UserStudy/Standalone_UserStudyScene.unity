@@ -436,93 +436,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: fed3cdb7f7c1776428c9c69988151f88, type: 3}
   m_PrefabInstance: {fileID: 1490467469}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &565485503
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 565485506}
-  - component: {fileID: 565485505}
-  - component: {fileID: 565485504}
-  m_Layer: 0
-  m_Name: ClientServer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &565485504
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565485503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bc0a0a310764d3e84f7245bdde4e72a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  settings:
-    endpointSource: 0
-    ipAddress:
-      p0: 0
-      p1: 0
-      p2: 0
-      p3: 0
-    port:
-      port: 7777
-      useReference: 0
-  ipTransmissionSettings:
-    endpointSource: 2
-    ipAddress:
-      p0: 0
-      p1: 0
-      p2: 0
-      p3: 0
-    port:
-      port: 7500
-      useReference: 0
---- !u!114 &565485505
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565485503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1b970d04c824da28caba27a979e0fce, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  settings:
-    endpointSource: 2
-    ipAddress:
-      p0: 0
-      p1: 0
-      p2: 0
-      p3: 0
-    port:
-      port: 7777
-      useReference: 0
---- !u!4 &565485506
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 565485503}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.14890563, y: -0.12629415, z: 0.668545}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &655534470
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2450,7 +2363,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   distractorPlacement: {fileID: 1740053206}
   distractorTaskComponent: {fileID: 1740053205}
-  optionalManager: {fileID: 0}
 --- !u!1 &1900109441
 GameObject:
   m_ObjectHideFlags: 0
@@ -2642,5 +2554,4 @@ SceneRoots:
   - {fileID: 1468180560}
   - {fileID: 1112505925}
   - {fileID: 655534470}
-  - {fileID: 565485506}
   - {fileID: 437366447}

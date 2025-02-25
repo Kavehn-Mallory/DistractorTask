@@ -46,16 +46,27 @@ namespace DistractorTask.Transport
 
         public void ListenForRequest(NetworkEndpoint endpoint, NetworkConnectionHandler.ActionRef<DataStreamReader> onDataReceived = null)
         {
-            ListenForRequestInternal(endpoint, onDataReceived);
+
+            NetworkConnectionHandler.ActionRef<DataStreamReader> combinedDataReceivedEvent = OnDataReceived;
+            if (onDataReceived != null)
+            {
+                combinedDataReceivedEvent += onDataReceived;
+            }
+            
+            var handler = ListenForRequestInternal(_handlers, endpoint, combinedDataReceivedEvent, OnConnectionEstablished, OnDisconnect);
+            if (handler != null)
+            {
+                _handlers.Add(handler);
+            }
         }
         
-        private void ListenForRequestInternal(NetworkEndpoint endpoint, NetworkConnectionHandler.ActionRef<DataStreamReader> onDataReceived = null, bool addBaseDataReceivedCallback = true)
+        private static NetworkConnectionHandler ListenForRequestInternal(List<NetworkConnectionHandler> handlers, NetworkEndpoint endpoint, NetworkConnectionHandler.ActionRef<DataStreamReader> onDataReceived, Action<bool> onConnectionEstablished, NetworkConnectionHandler.ActionRef<DataStreamReader, NetworkConnectionHandler> onDisconnect)
         {
 
-            for (int i = 0; i < _handlers.Count; i++)
+            for (int i = 0; i < handlers.Count; i++)
             {
-                var handler = _handlers[i];
-                if (handler.IsLocal)
+                var handler = handlers[i];
+                if (handler.Internal)
                 {
                     //we can skip local instances. They represent clients only and cannot be used as servers 
                     continue;
@@ -77,30 +88,19 @@ namespace DistractorTask.Transport
                     {
                         handler.OnDataReceived += onDataReceived;
                     }
-                    return;
+                    return null;
                 }
             }
 
             var server = new NetworkConnectionHandler().AsServer(endpoint);
 
-            NetworkConnectionHandler.ActionRef<DataStreamReader> combinedAction = OnDataReceived;
-            
-            if (onDataReceived != null)
-            {
-                combinedAction += onDataReceived;
-            }
 
-            if (!addBaseDataReceivedCallback)
-            {
-                combinedAction = onDataReceived;
-            }
-            
-            
-            Debug.Log($"Opened channel: {endpoint.ToString()}");
-            server.OnDisconnect += OnDisconnect;
-            server.OnConnectionAccepted += OnConnectionEstablished;
-            server.OnDataReceived += combinedAction;
-            _handlers.Add(server);
+            Debug.Log($"Creating new handler for connection {endpoint.ToString()}");
+            server.OnDisconnect += onDisconnect;
+            server.OnConnectionAccepted += onConnectionEstablished;
+            server.OnDataReceived += onDataReceived;
+            //handlers.Add(server);
+            return server;
         }
 
         
@@ -120,9 +120,14 @@ namespace DistractorTask.Transport
                 combinedAction += onIpDataReceived;
             }
 
-            ListenForRequestInternal(endpoint, combinedAction, false);
+            var handler = ListenForRequestInternal(_handlers, endpoint, combinedAction, null, null);
+            if (handler != null)
+            {
+                _handlers.Add(handler);
+            }
         }
         
+
 
         private void OnDisconnect(ref DataStreamReader stream, NetworkConnectionHandler handler)
         {
@@ -139,16 +144,23 @@ namespace DistractorTask.Transport
         public void Connect(NetworkEndpoint endpoint, NetworkConnectionHandler.ActionRef<DataStreamReader> onDataReceived = null)
         {
             var localConnection = endpoint.IsLoopback;
+            Debug.Log(_handlers.Count);
             var localServer = false;
             
             for (int i = 0; i < _handlers.Count; i++)
             {
                 var handler = _handlers[i];
 
+                if (handler.Driver.GetLocalEndpoint().Port != endpoint.Port)
+                {
+                    continue;
+                }
                 if (localConnection)
                 {
-                    if (handler.IsLocal)
+                    Debug.Log("Local connection");
+                    if (handler.Internal)
                     {
+                        Debug.Log("Local connection already established");
                         //we already have a connection 
                         return;
                     }
@@ -157,9 +169,12 @@ namespace DistractorTask.Transport
                     {
                         continue;
                     }
+
+                    
                     if (handler.Driver.GetLocalEndpoint().IsLoopback || handler.Driver.GetLocalEndpoint() ==
                         NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port))
                     {
+                        Debug.Log("Local server already exists");
                         //We already have a server, but need to check if we have a connection
                         localServer = true;
                     }
@@ -171,6 +186,7 @@ namespace DistractorTask.Transport
                     if (handler.Driver.GetRemoteEndpoint(handler.Connections[connectionIndex]).Equals(endpoint))
                     {
                         //we are already connected 
+                        Debug.Log("Already connected");
                         if (onDataReceived != null && !handler.OnDataReceived.GetInvocationList().Contains(onDataReceived))
                         {
                             handler.OnDataReceived += onDataReceived;
@@ -181,6 +197,7 @@ namespace DistractorTask.Transport
                 }
             }
             
+            Debug.Log($"Creating client for connection as local? {localServer}");
             _handlers.Add(CreateClient(endpoint, onDataReceived, localServer));
 
 
@@ -216,6 +233,7 @@ namespace DistractorTask.Transport
 
         public bool TransmitNetworkMessage(ISerializer data)
         {
+            Debug.Log($"Connection count: {_handlers.Count}");
             var successful = false;
             foreach (var handler in _handlers)
             {
@@ -226,7 +244,7 @@ namespace DistractorTask.Transport
                         continue;
                     }
 
-                    Debug.Log("Sending message");
+                    Debug.Log($"Sending message to {handler.Driver.GetRemoteEndpoint(connection)}");
                     successful = true;
                     handler.Driver.BeginSend(handler.Pipeline, connection, out var writer);
                     writer.SendMessage(data);
@@ -280,6 +298,7 @@ namespace DistractorTask.Transport
             var typeIndex = stream.ReadByte();
             var type = DataSerializationIndexer.GetTypeForTypeIndex(typeIndex);
 
+            Debug.Log($"Message of type {type} received");
             if (!_eventHandler.TriggerCallback(type, ref stream))
             {
                 Debug.LogError($"Type {type} is not handled yet by {nameof(NetworkMessageEventHandler)}. This either means that {type} does not implement {nameof(ISerializer)} or that the type does not have a default constructor");
@@ -295,7 +314,7 @@ namespace DistractorTask.Transport
             {
                 var ipAddressData = new IpAddressData();
                 ipAddressData.Deserialize(ref stream);
-                Debug.Log($"Trying to connect to {ipAddressData.Endpoint.ToString()}");
+                Debug.Log($"Trying to connect to {ipAddressData.Endpoint.ToString()}", this);
                 OnConnectionRequested.Invoke();
 
 #if UNITY_EDITOR

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using DistractorTask.Transport.DataContainer;
+using Unity.Networking.Transport;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -23,6 +24,11 @@ namespace DistractorTask.Transport
         
         private IEnumerator Start()
         {
+            var anyIp = NetworkEndpoint.AnyIpv4.WithPort(serverSettings.port.Port);
+            var loopback = NetworkEndpoint.LoopbackIpv4.WithPort(serverSettings.port.Port);
+            Debug.Log(
+                $"Are equal?: {AreEqual(anyIp, loopback)}, {AreEqual(anyIp, serverSettings.NetworkEndpoint)}, {AreEqual(loopback, serverSettings.NetworkEndpoint)}");
+            
             NetworkConnectionManager.Instance.ListenForRequest(serverSettings.NetworkEndpoint);
             NetworkConnectionManager.Instance.RegisterCallback<LogfileData>(OnLogFileDataReceived);
             yield return new WaitForSeconds(5f);
@@ -46,6 +52,27 @@ namespace DistractorTask.Transport
         private void OnLogFileDataReceived(LogfileData obj)
         {
             Debug.Log(obj.Message);
+        }
+        
+        private static bool AreEqual(NetworkEndpoint endpoint, NetworkEndpoint endpoint2)
+        {
+
+            if (endpoint2.Equals(endpoint))
+            {
+                return true;
+            }
+            //if(handler.Driver.)
+            if (endpoint2.Port != endpoint.Port)
+            {
+                return false;
+            }
+
+            if ((endpoint2.IsLoopback || endpoint2 == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port)))
+            {
+                return true;
+            }
+            
+            return false;
         }
     }
 }

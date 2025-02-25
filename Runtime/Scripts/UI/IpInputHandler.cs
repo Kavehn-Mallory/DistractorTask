@@ -1,6 +1,8 @@
 ﻿using System;
 using DistractorTask.Transport;
 using TMPro;
+using Unity.Collections;
+using Unity.Networking.Transport;
 using UnityEngine;
 
 namespace DistractorTask.UI
@@ -11,6 +13,7 @@ namespace DistractorTask.UI
         public TMP_InputField inputFieldP1;
         public TMP_InputField inputFieldP2;
         public TMP_InputField inputFieldP3;
+        public TMP_InputField inputFieldPort;
 
 
         private void Awake()
@@ -26,18 +29,23 @@ namespace DistractorTask.UI
             
             inputFieldP3.contentType = TMP_InputField.ContentType.IntegerNumber;
             inputFieldP3.characterLimit = 3;
+            
+            inputFieldPort.contentType = TMP_InputField.ContentType.IntegerNumber;
+            inputFieldPort.characterLimit = 5;
         }
 
 
-        public void InputIpAddress()
+        public void EstablishConnection()
         {
             if (int.TryParse(inputFieldP0.text, out var p0) && int.TryParse(inputFieldP1.text, out var p1) &&
-                int.TryParse(inputFieldP2.text, out var p2) && int.TryParse(inputFieldP3.text, out var p3))
+                int.TryParse(inputFieldP2.text, out var p2) && int.TryParse(inputFieldP3.text, out var p3) && ushort.TryParse(inputFieldPort.text, out var port))
             {
-                throw new NotImplementedException();
-                //NetworkConnectionManager.Instance.SetIpTransmissionSettings(p0, p1, p2, p3);
+                var endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", port);
+                NetworkConnectionManager.Instance.Connect(endpoint);
             }
             
         }
+        
+        
     }
 }

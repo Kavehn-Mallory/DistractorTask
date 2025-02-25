@@ -21,7 +21,10 @@ namespace DistractorTask.Transport
         public event Action<bool> OnConnectionAccepted = delegate { };
         public ActionRef<DataStreamReader> OnDataReceived = delegate { };
         public ActionRef<DataStreamReader, NetworkConnectionHandler> OnDisconnect = delegate { };
-        public bool IsLocal;
+        public bool Internal;
+        public NetworkEndpoint Endpoint => Driver.GetLocalEndpoint();
+        public ConnectionType ConnectionType;
+        public ConnectionState ConnectionState;
 
         public void Dispose()
         {
@@ -30,7 +33,7 @@ namespace DistractorTask.Transport
             if (Connections.IsCreated)
                 Connections.Dispose();
 
-            IsLocal = false;
+            Internal = false;
         }
 
         public bool IsCreated => Driver.IsCreated || Connections.IsCreated;
@@ -58,6 +61,7 @@ namespace DistractorTask.Transport
                     while ((c = Driver.Accept()) != default)
                     {
                         Connections.Add(c);
+                        Debug.Log($"Accepted connection for {Driver.GetLocalEndpoint()}");
                         OnConnectionAccepted.Invoke(true);
                     }
                 }
@@ -78,6 +82,7 @@ namespace DistractorTask.Transport
                         }
                         if (cmd == NetworkEvent.Type.Data)
                         {
+                            Debug.Log("Data received");
                             OnDataReceived.Invoke(ref stream);
                         }
                         else if (cmd == NetworkEvent.Type.Disconnect)
@@ -91,6 +96,8 @@ namespace DistractorTask.Transport
             }
         }
         
+        
+        //todo remove this and replace it with proper constructors 
 
         public NetworkConnectionHandler AsServer(NetworkEndpoint endpoint)
         {
@@ -111,6 +118,21 @@ namespace DistractorTask.Transport
             return this;
         }
 
+        public bool StartListening(NetworkEndpoint endpoint)
+        {
+            if (Driver.Listening)
+            {
+                return true;
+            }
+            if (Driver.Bind(endpoint) != 0)
+            {
+                return false;
+            }
+
+            Driver.Listen();
+            return true;
+        }
+
         public NetworkConnectionHandler AsClient(NetworkEndpoint endpoint)
         {
             return AsClient(endpoint, false);
@@ -126,7 +148,7 @@ namespace DistractorTask.Transport
             Pipeline = PipelineCreation.CreatePipeline(ref Driver);
             Connections = new NativeList<NetworkConnection>(1, Allocator.Persistent);
             Connections.Add(Driver.Connect(endpoint));
-            IsLocal = local;
+            Internal = local;
             return this;
         }
 
@@ -147,6 +169,12 @@ namespace DistractorTask.Transport
             }
             return null;
         }
+    }
+
+    public enum ConnectionType
+    {
+        Broadcast,
+        Unicast
     }
 }
 

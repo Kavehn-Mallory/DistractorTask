@@ -23,10 +23,6 @@ namespace DistractorTask.SceneManagement
             await LoadSceneGroup(0);
         }
         
-        private void OnEnable()
-        {
-            //todo fix this
-        }
 
         private void OnDisable()
         {

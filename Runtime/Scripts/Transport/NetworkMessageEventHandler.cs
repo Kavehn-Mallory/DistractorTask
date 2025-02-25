@@ -50,9 +50,24 @@ namespace DistractorTask.Transport
 #endif
             
         }
-        
 
 
+
+
+        public bool TriggerCallback<T>(T data) where T : ISerializer, new()
+        {
+            foreach (var invoker in _invocationHelper)
+            {
+                if (invoker is InvocationHelper<T> invocationHelper)
+                {
+                    Debug.Log("Found a local invoker");
+                    invocationHelper.Invoke(data);
+                    return true;
+                }
+            }
+
+            return false;
+        }
         
         
 

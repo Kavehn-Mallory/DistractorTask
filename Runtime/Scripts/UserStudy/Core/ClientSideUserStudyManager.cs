@@ -15,6 +15,7 @@ namespace DistractorTask.UserStudy.Core
         protected override IEnumerator Start()
         {
             NetworkConnectionManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
+            NetworkConnectionManager.Instance.ListenForIpRequest(7500);
             return base.Start();
         }
 
@@ -25,7 +26,7 @@ namespace DistractorTask.UserStudy.Core
             {
                 return;
             }
-            Debug.Log("Connection established in study manager");
+            Debug.Log("Connection established in study manager", this);
             if (_receivedStudyStartRequest)
             {
                 OnStudyBeginRequest(new RequestStudyBeginData());
