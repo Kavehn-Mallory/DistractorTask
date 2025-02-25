@@ -20,7 +20,7 @@ namespace DistractorTask.UserStudy.Core
         protected override IEnumerator Start()
         {
             NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived);
-            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalIpListeningEndpoint(), null);
+            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalIpListeningEndpoint(), null, ConnectionType.Multicast);
             
             NetworkManager.Instance.DebugAction += OnDebugActionOfNetworkManager;
             

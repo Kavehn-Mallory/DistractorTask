@@ -1133,11 +1133,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0c0772373ec4ca98cf255fc7d6e1977, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rayInteractor: {fileID: 750094220}
-  distanceFromCamera: 0.1
-  headGazeVisualizer: {fileID: 563887858}
-  start: {fileID: 1215662621}
-  end: {fileID: 548983668}
 --- !u!114 &750094220 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4102833070697430761, guid: 4d7e2f87fefe0ba468719b15288b46e7, type: 3}
@@ -2362,6 +2357,14 @@ PrefabInstance:
       propertyPath: m_UIHoverEntered.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
+    - target: {fileID: 5302893730759227071, guid: 4d7e2f87fefe0ba468719b15288b46e7, type: 3}
+      propertyPath: m_PositionAction.m_Reference
+      value: 
+      objectReference: {fileID: 6617357981711541546, guid: 18c412191cdc9274897f101c7fd5316f, type: 3}
+    - target: {fileID: 5302893730759227071, guid: 4d7e2f87fefe0ba468719b15288b46e7, type: 3}
+      propertyPath: m_RotationAction.m_Reference
+      value: 
+      objectReference: {fileID: 1272146141651074281, guid: 18c412191cdc9274897f101c7fd5316f, type: 3}
     - target: {fileID: 5727148871348114051, guid: 4d7e2f87fefe0ba468719b15288b46e7, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -2912,6 +2915,7 @@ MonoBehaviour:
   proximityLight: {fileID: 1250144308}
   headGazeVisualizer: {fileID: 1372900159}
   distanceFromCamera: 0.5
+  targetCanvas: {fileID: 1429226293}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

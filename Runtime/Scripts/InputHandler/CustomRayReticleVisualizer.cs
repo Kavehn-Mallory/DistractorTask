@@ -1,6 +1,4 @@
-﻿using System;
-using MixedReality.Toolkit;
-using MixedReality.Toolkit.Input;
+﻿using MixedReality.Toolkit.Input;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.UI;
@@ -27,10 +25,26 @@ namespace DistractorTask.InputHandler
         [SerializeField]
         private float distanceFromCamera = 0.1f;
 
+        [SerializeField]
+        private Canvas targetCanvas;
+
+        private Transform _mainCameraTransform;
+
+        private float DistanceFromCamera()
+        {
+            if (targetCanvas && _mainCameraTransform)
+            {
+                return Vector3.Distance(targetCanvas.transform.position, _mainCameraTransform.transform.position);
+            }
+
+            return distanceFromCamera;
+        }
+
         private bool _onUIObject;
 
         private void Start()
         {
+            _mainCameraTransform = Camera.main?.transform;
             rayInteractor.uiHoverEntered.AddListener(OnHoverEnter);
             rayInteractor.uiHoverExited.AddListener(OnHoverExit);
         }
@@ -66,7 +80,7 @@ namespace DistractorTask.InputHandler
             if (!_onUIObject)
             {
                 headGazeVisualizer.position = rayInteractor.rayOriginTransform.position +
-                                              rayInteractor.rayOriginTransform.forward * distanceFromCamera;
+                                              rayInteractor.rayOriginTransform.forward * DistanceFromCamera();
             }
             
         }
