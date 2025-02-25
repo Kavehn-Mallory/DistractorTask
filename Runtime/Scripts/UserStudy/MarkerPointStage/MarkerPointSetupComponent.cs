@@ -58,7 +58,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             Manager.RegisterCallback<ConfirmationData>(OnPointSelectionConfirmed);
             _markerPoints[0].enabled = true;
             markerPointCanvas.gameObject.SetActive(true);
-            Manager.TransmitNetworkMessage(new MarkerCountData
+            Manager.BroadcastMessage(new MarkerCountData
             {
                 markerCount = MarkerPointCount
             });
@@ -84,7 +84,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 return;
             }
             ActivateMarker();
-            Manager.TransmitNetworkMessage(new ConfirmationData
+            Manager.BroadcastMessage(new ConfirmationData
             {
                 confirmationNumber = _currentMarker
             });

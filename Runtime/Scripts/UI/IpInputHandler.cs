@@ -1,7 +1,6 @@
-﻿using System;
-using DistractorTask.Transport;
+﻿using DistractorTask.Transport;
+using DistractorTask.Transport.DataContainer;
 using TMPro;
-using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
 
@@ -15,6 +14,8 @@ namespace DistractorTask.UI
         public TMP_InputField inputFieldP3;
         public TMP_InputField inputFieldPort;
 
+
+        private NetworkEndpoint _endpoint;
 
         private void Awake()
         {
@@ -40,12 +41,31 @@ namespace DistractorTask.UI
             if (int.TryParse(inputFieldP0.text, out var p0) && int.TryParse(inputFieldP1.text, out var p1) &&
                 int.TryParse(inputFieldP2.text, out var p2) && int.TryParse(inputFieldP3.text, out var p3) && ushort.TryParse(inputFieldPort.text, out var port))
             {
-                var endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", port);
-                NetworkConnectionManager.Instance.Connect(endpoint);
+                NetworkManager.Instance.StartListening(NetworkHelper.GetLocalEndpointWithDefaultPort(),
+                    OnConnectionEstablished);
+                _endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", port);
+                NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived, ConnectionType.Multicast);
             }
             
         }
-        
-        
+
+        private void OnConnectionEstablished(ConnectionState obj)
+        {
+            if (obj == ConnectionState.Connected)
+            {
+                Debug.Log("Connection established!");
+                return;
+            }
+            Debug.Log("Something went wrong");
+        }
+
+        private void OnConnectionStateReceived(ConnectionState obj)
+        {
+            Debug.Log("Sending Ip-Address");
+            NetworkManager.Instance.Multicast(new IpAddressData
+            {
+                Endpoint = NetworkHelper.GetLocalEndpointWithDefaultPort(),
+            }, _endpoint);
+        }
     }
 }

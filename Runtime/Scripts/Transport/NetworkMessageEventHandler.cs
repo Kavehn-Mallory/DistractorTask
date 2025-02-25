@@ -60,7 +60,6 @@ namespace DistractorTask.Transport
             {
                 if (invoker is InvocationHelper<T> invocationHelper)
                 {
-                    Debug.Log("Found a local invoker");
                     invocationHelper.Invoke(data);
                     return true;
                 }

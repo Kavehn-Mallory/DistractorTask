@@ -5,7 +5,7 @@ namespace DistractorTask.UserStudy.Core
 {
     public class ServerSideUserStudyManager : UserStudyManager
     {
-        public override INetworkManager Manager => NetworkConnectionManager.Instance;
+        public override INetworkManager Manager => NetworkManager.Instance;
 
         private void Awake()
         {

@@ -10,7 +10,7 @@ namespace DistractorTask.Transport
         
         private void Start()
         {
-            var ip = NetworkConnectionHandler.GetLocalIPAddress();
+            var ip = NetworkHelper.GetLocalIPAddress();
             ipAddressField.text = ip.ToString();
         }
     }

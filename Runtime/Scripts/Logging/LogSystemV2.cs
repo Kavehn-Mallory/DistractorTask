@@ -113,8 +113,9 @@ namespace DistractorTask.Logging
 
         private static void SendKeyframe(LogfileData logfileData, INetworkManager sender)
         {
-            logfileData.NetworkEndpoint = sender.NetworkEndpoint;
-            sender.TransmitNetworkMessage(logfileData);
+            //todo add this back in 
+            //logfileData.NetworkEndpoint = sender.NetworkEndpoint;
+            sender.BroadcastMessage(logfileData);
         }
 
         public static void LogKeyframe(LogCategory category, string message, INetworkManager sender)

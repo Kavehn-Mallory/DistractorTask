@@ -24,29 +24,34 @@ namespace DistractorTask.Transport
         
         private IEnumerator Start()
         {
-            var anyIp = NetworkEndpoint.AnyIpv4.WithPort(serverSettings.port.Port);
-            var loopback = NetworkEndpoint.LoopbackIpv4.WithPort(serverSettings.port.Port);
-            Debug.Log(
-                $"Are equal?: {AreEqual(anyIp, loopback)}, {AreEqual(anyIp, serverSettings.NetworkEndpoint)}, {AreEqual(loopback, serverSettings.NetworkEndpoint)}");
-            
-            NetworkConnectionManager.Instance.ListenForRequest(serverSettings.NetworkEndpoint);
-            NetworkConnectionManager.Instance.RegisterCallback<LogfileData>(OnLogFileDataReceived);
+            NetworkManager.Instance.StartListening(serverSettings.NetworkEndpoint, OnConnectionEstablished, ConnectionType.Multicast);
+            NetworkManager.Instance.RegisterCallback<LogfileData>(OnLogFileDataReceived);
             yield return new WaitForSeconds(5f);
             
 
-            NetworkConnectionManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
-            NetworkConnectionManager.Instance.Connect(clientToConnectToAddress.NetworkEndpoint);
+            //NetworkManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
+            //we dont want to subscribe twice 
+            Debug.Log("Trying to connect", this);
+            NetworkManager.Instance.Connect(clientToConnectToAddress.NetworkEndpoint, null, ConnectionType.Multicast);
         }
-
-        private void OnConnectionEstablished(bool success)
+        
+        private void OnConnectionEstablished(ConnectionState state)
         {
-            NetworkConnectionManager.Instance.TransmitNetworkMessage(new LogfileData
+            
+            if (state == ConnectionState.Connected)
             {
-                Message = "Hello",
-                NetworkEndpoint = clientToConnectToAddress.NetworkEndpoint,
-                Time = new TimeSpan(10, 1, 1, 1),
-                LogCategory = LogCategory.Network
-            });
+                NetworkManager.Instance.Multicast(new LogfileData
+                {
+                    Message = "Hello",
+                    NetworkEndpoint = clientToConnectToAddress.NetworkEndpoint,
+                    Time = new TimeSpan(10, 1, 1, 1),
+                    LogCategory = LogCategory.Network
+                }, serverSettings.NetworkEndpoint);
+                NetworkManager.Instance.UnregisterToConnectionStateChange(serverSettings.NetworkEndpoint, OnConnectionEstablished);
+                return;
+            }
+            Debug.Log("Connection is invalid");
+            
         }
 
         private void OnLogFileDataReceived(LogfileData obj)
@@ -54,25 +59,5 @@ namespace DistractorTask.Transport
             Debug.Log(obj.Message);
         }
         
-        private static bool AreEqual(NetworkEndpoint endpoint, NetworkEndpoint endpoint2)
-        {
-
-            if (endpoint2.Equals(endpoint))
-            {
-                return true;
-            }
-            //if(handler.Driver.)
-            if (endpoint2.Port != endpoint.Port)
-            {
-                return false;
-            }
-
-            if ((endpoint2.IsLoopback || endpoint2 == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port)))
-            {
-                return true;
-            }
-            
-            return false;
-        }
     }
 }

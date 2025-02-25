@@ -7,21 +7,29 @@ namespace DistractorTask.UserStudy.Core
 {
     public class ClientSideUserStudyManager : UserStudyManager
     {
-        public override INetworkManager Manager => NetworkConnectionManager.Instance;
+        public override INetworkManager Manager => NetworkManager.Instance;
 
         private bool _hasConnection;
         private bool _receivedStudyStartRequest;
 
         protected override IEnumerator Start()
         {
-            NetworkConnectionManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
-            NetworkConnectionManager.Instance.ListenForIpRequest(7500);
+            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived);
+            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalIpListeningEndpoint(), null);
             return base.Start();
         }
 
-        private void OnConnectionEstablished(bool connectionSuccessful)
+        private void OnIpAddressDataReceived(IpAddressData obj)
         {
-            _hasConnection = connectionSuccessful;
+            Debug.Log($"Trying to connect to {obj.Endpoint}");
+            NetworkManager.Instance.Connect(obj.Endpoint, OnConnectionEstablished);
+        }
+        
+
+
+        private void OnConnectionEstablished(ConnectionState connectionState)
+        {
+            _hasConnection = connectionState == ConnectionState.Connected;
             if (!_hasConnection)
             {
                 return;
@@ -40,6 +48,7 @@ namespace DistractorTask.UserStudy.Core
             if (_hasConnection)
             {
                 Debug.Log("Study request accepted");
+                Manager.UnregisterToConnectionStateChange(NetworkHelper.GetLocalEndpointWithDefaultPort(), OnConnectionEstablished);
                 base.OnStudyBeginRequest(obj);
             }
             

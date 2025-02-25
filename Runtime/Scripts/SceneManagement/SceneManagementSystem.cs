@@ -11,12 +11,12 @@ namespace DistractorTask.SceneManagement
         private void OnEnable()
         {
             sceneLoader = FindObjectOfType<SceneLoader>();
-            NetworkConnectionManager.Instance.RegisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
+            NetworkManager.Instance.RegisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
         }
 
         private void OnDisable()
         {
-            NetworkConnectionManager.Instance.UnregisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
+            NetworkManager.Instance.UnregisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
         }
 
         private void OnSceneGroupChangeRequest(SceneGroupChangeData data)

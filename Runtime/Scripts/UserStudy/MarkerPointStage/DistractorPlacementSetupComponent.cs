@@ -51,7 +51,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         protected sealed override void OnStudyStageStart(MarkerPointStageEvent studyEvent)
         {
             Manager.RegisterCallback<MarkerCountData>(OnMarkerCountDataReceived);
-            Manager.TransmitNetworkMessage(new ConfirmationData());
+            Manager.BroadcastMessage(new ConfirmationData());
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += AddPlacementPosition;
         }
 
@@ -95,7 +95,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             var position = _mainCameraTransform.position + _mainCameraTransform.forward;
         
             _distractorPlacementPositions.Add(position);
-            Manager.TransmitNetworkMessage(new ConfirmationData
+            Manager.BroadcastMessage(new ConfirmationData
             {
                 confirmationNumber = _currentMarkerPoint
             });

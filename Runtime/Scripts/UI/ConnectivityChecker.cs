@@ -28,31 +28,37 @@ namespace DistractorTask.UI
         {
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
-            NetworkConnectionManager.Instance.OnConnectionRequested += OnConnectionRequested;
-            NetworkConnectionManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
-            NetworkConnectionManager.Instance.OnConnectionDisconnected += OnConnectionDisconnected;
+            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkHelper.GetLocalEndpointWithDefaultPort(), OnConnectionStateChanged);
         }
 
-        private void OnConnectionDisconnected(NetworkEndpoint networkEndpoint, DisconnectReason disconnectReason)
+        private void OnConnectionStateChanged(ConnectionState obj)
         {
-            if (NetworkConnectionManager.DidConnectionThrowError(disconnectReason))
+            if (obj == ConnectionState.Connected)
+            {
+                OnConnectionEstablished();
+            }
+            else if (obj == ConnectionState.ConnectionRequested)
+            {
+                OnConnectionRequested();
+            }
+            else if (NetworkHelper.DidConnectionThrowError(obj))
             {
                 OnConnectionFailed();
-                return;
             }
+            else
+            {
+                OnConnectionDisconnected();
+            }
+        }
+
+        private void OnConnectionDisconnected()
+        {
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
         }
+        
 
-        private void OnConnectionEstablished(bool connectionSuccessful)
-        {
-            if (connectionSuccessful)
-            {
-                OnConnectionEstablished();
-                return;
-            }
-            OnConnectionFailed();
-        }
+        
 
         private void OnConnectionEstablished()
         {

@@ -81,7 +81,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             {
                 0, 1, 2, 3, 4, 5
             };
-            Manager.TransmitNetworkMessage(new DistractorSelectionTrialData
+            Manager.BroadcastMessage(new DistractorSelectionTrialData
             {
                 loadLevel = (byte)trial.conditionList[_currentConditionIndex].Item1,
                 selectionCount = trial.selectionsPerTrial,

@@ -55,16 +55,16 @@ namespace DistractorTask.UserStudy.Core
             if (studyStages[0] is ReceivingStudyStageComponent)
             {
                 _studyIndex++;
-                Debug.Log("Transmitting UserStudyBeginData for first study stage",this);
-                Manager.TransmitNetworkMessage(new UserStudyBeginData
+                Debug.Log($"{this.GetType()} is transmitting UserStudyBeginData for first study stage",this);
+                Manager.BroadcastMessage(new UserStudyBeginData
                 {
                     studyIndex = _studyIndex
                 });
             }
             else
             {
-                Debug.Log("Sending study start request", this);
-                Manager.TransmitNetworkMessage(new RequestStudyBeginData());
+                Debug.Log($"{this.GetType()} is sending study start request", this);
+                Manager.BroadcastMessage(new RequestStudyBeginData());
             }
         }
 
@@ -73,6 +73,7 @@ namespace DistractorTask.UserStudy.Core
         {
             if (obj.studyIndex <= _studyIndex)
             {
+                Debug.Log($"Index: {obj.studyIndex} vs {_studyIndex}", this);
                 throw new ArgumentException($"The given study index {obj.studyIndex} is smaller or equal to the current index {_studyIndex}. This study was started already");
             }
 
@@ -98,7 +99,7 @@ namespace DistractorTask.UserStudy.Core
             {
                 _studyIndex++;
                 Debug.Log($"Starting next receiver study {_studyIndex}", this);
-                Manager.TransmitNetworkMessage(new UserStudyBeginData
+                Manager.BroadcastMessage(new UserStudyBeginData
                 {
                     studyIndex = _studyIndex
                 });

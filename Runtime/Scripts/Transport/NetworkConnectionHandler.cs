@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using Unity.Collections;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Error;
 using UnityEngine;
 
 namespace DistractorTask.Transport
@@ -18,9 +19,8 @@ namespace DistractorTask.Transport
         public NetworkPipeline Pipeline;
         public NativeList<NetworkConnection> Connections;
         
-        public event Action<bool> OnConnectionAccepted = delegate { };
-        public ActionRef<DataStreamReader> OnDataReceived = delegate { };
-        public ActionRef<DataStreamReader, NetworkConnectionHandler> OnDisconnect = delegate { };
+        private event Action<NetworkEndpoint, ConnectionState> OnConnectionStateChanged;
+        private readonly ActionRef<DataStreamReader> _onDataReceived;
         public bool Internal;
         public NetworkEndpoint Endpoint => Driver.GetLocalEndpoint();
         public ConnectionType ConnectionType;
@@ -37,6 +37,25 @@ namespace DistractorTask.Transport
         }
 
         public bool IsCreated => Driver.IsCreated || Connections.IsCreated;
+        
+
+        
+        public NetworkConnectionHandler(ActionRef<DataStreamReader> onDataReceived, Action<NetworkEndpoint, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
+        {
+            if (IsCreated)
+            {
+                Dispose();
+            }
+            Driver = NetworkDriver.Create();
+            Pipeline = PipelineCreation.CreatePipeline(ref Driver);
+            Connections = new NativeList<NetworkConnection>(numberOfConnections, Allocator.Persistent);
+            OnConnectionStateChanged = onConnectionStateChanged;
+            this._onDataReceived = onDataReceived;
+
+        }
+
+
+
 
         public void UpdateConnectionHandler()
         {
@@ -62,7 +81,7 @@ namespace DistractorTask.Transport
                     {
                         Connections.Add(c);
                         Debug.Log($"Accepted connection for {Driver.GetLocalEndpoint()}");
-                        OnConnectionAccepted.Invoke(true);
+                        ChangeConnectionState(ConnectionState.Connected);
                     }
                 }
                 
@@ -78,48 +97,47 @@ namespace DistractorTask.Transport
                         if (cmd == NetworkEvent.Type.Connect)
                         {
                             Debug.Log("We are now connected to the server.");
-                            OnConnectionAccepted?.Invoke(true);
+                            ChangeConnectionState(ConnectionState.Connected);
                         }
                         if (cmd == NetworkEvent.Type.Data)
                         {
                             Debug.Log("Data received");
-                            OnDataReceived.Invoke(ref stream);
+                            _onDataReceived.Invoke(ref stream);
                         }
                         else if (cmd == NetworkEvent.Type.Disconnect)
                         {
                             Connections[i] = default;
-                            OnDisconnect.Invoke(ref stream, this);
+                            var reason = (DisconnectReason) stream.ReadByte();
+                            ChangeConnectionState(NetworkHelper.CastDisconnectReasonToConnectionState(reason));
+                            Debug.Log($"We got disconnected from server due to {reason}.");
                             break;
                         }
                     }
                 }
             }
         }
-        
-        
-        //todo remove this and replace it with proper constructors 
 
-        public NetworkConnectionHandler AsServer(NetworkEndpoint endpoint)
+        private void ChangeConnectionState(ConnectionState state)
         {
-            if (IsCreated)
+            if (state == ConnectionState)
             {
-                Dispose();
+                return;
             }
-            Driver = NetworkDriver.Create();
-            Pipeline = PipelineCreation.CreatePipeline(ref Driver);
-            Connections = new NativeList<NetworkConnection>(1, Allocator.Persistent);
-            
-            if (Driver.Bind(endpoint) != 0)
-            {
-                Debug.LogError($"Failed to bind to port {endpoint.Port}.");
-                return this;
-            }
-            Driver.Listen();
-            return this;
+            ConnectionState = state;
+            OnConnectionStateChanged?.Invoke(Endpoint, state);
+        }
+        
+        
+        public void Connect(NetworkEndpoint endpoint, ConnectionType connectionType)
+        {
+            ConnectionType = connectionType;
+            ChangeConnectionState(ConnectionState.ConnectionRequested);
+            Connections.Add(Driver.Connect(endpoint));
         }
 
-        public bool StartListening(NetworkEndpoint endpoint)
+        public bool StartListening(NetworkEndpoint endpoint, ConnectionType connectionType)
         {
+            ConnectionType = connectionType;
             if (Driver.Listening)
             {
                 return true;
@@ -133,48 +151,21 @@ namespace DistractorTask.Transport
             return true;
         }
 
-        public NetworkConnectionHandler AsClient(NetworkEndpoint endpoint)
-        {
-            return AsClient(endpoint, false);
-        }
 
-        private NetworkConnectionHandler AsClient(NetworkEndpoint endpoint, bool local)
+        public void EstablishInternalConnection()
         {
-            if (IsCreated)
+            Internal = true;
+            if (ConnectionState != ConnectionState.Connected)
             {
-                Dispose();
+                ChangeConnectionState(ConnectionState.Connected);
             }
-            Driver = NetworkDriver.Create();
-            Pipeline = PipelineCreation.CreatePipeline(ref Driver);
-            Connections = new NativeList<NetworkConnection>(1, Allocator.Persistent);
-            Connections.Add(Driver.Connect(endpoint));
-            Internal = local;
-            return this;
-        }
-
-        public NetworkConnectionHandler AsLocalClient(NetworkEndpoint endpoint)
-        {
-            return AsClient(endpoint, true);
-        }
-        
-        public static IPAddress GetLocalIPAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip;
-                }
-            }
-            return null;
         }
     }
 
     public enum ConnectionType
     {
         Broadcast,
-        Unicast
+        Multicast
     }
 }
 

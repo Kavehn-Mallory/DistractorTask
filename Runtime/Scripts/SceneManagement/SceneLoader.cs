@@ -19,14 +19,14 @@ namespace DistractorTask.SceneManagement
         
         async void Start()
         {
-            NetworkConnectionManager.Instance.RegisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
+            NetworkManager.Instance.RegisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
             await LoadSceneGroup(0);
         }
         
 
         private void OnDisable()
         {
-            if (NetworkConnectionManager.TryGetInstance(out var instance))
+            if (NetworkManager.TryGetInstance(out var instance))
             {
                 instance.UnregisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
             }

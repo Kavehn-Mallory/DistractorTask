@@ -9,7 +9,7 @@ namespace DistractorTask.UserStudy.Core
 
         public override void StartStudy(INetworkManager manager)
         {
-            manager.TransmitNetworkMessage(new TStudyEvent
+            manager.BroadcastMessage(new TStudyEvent
             {
                 IsStartEvent = true
             });
@@ -18,7 +18,7 @@ namespace DistractorTask.UserStudy.Core
 
         public override void EndStudy(INetworkManager manager)
         {
-            manager.TransmitNetworkMessage(new TStudyEvent
+            manager.BroadcastMessage(new TStudyEvent
             {
                 IsStartEvent = false
             });

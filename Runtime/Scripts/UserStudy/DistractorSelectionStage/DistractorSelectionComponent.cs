@@ -25,7 +25,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             _placementPositions = distractorPlacement.DistractorPlacementPositions;
             Manager.RegisterCallback<DistractorSelectionTrialData>(OnTrialDataReceived);
             distractorTaskComponent.OnTaskCompleted += OnTrialCompleted;
-            Manager.TransmitNetworkMessage(new ConfirmationData());
+            Manager.BroadcastMessage(new ConfirmationData());
         }
         
         private void OnTrialCompleted()
@@ -35,7 +35,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 StartTrialRun();
                 return;
             }
-            Manager.TransmitNetworkMessage(new TrialCompletedData
+            Manager.BroadcastMessage(new TrialCompletedData
             {
                 LoadLevel = _currentLoadLevel
             });
