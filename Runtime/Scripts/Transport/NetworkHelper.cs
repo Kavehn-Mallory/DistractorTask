@@ -47,24 +47,33 @@ namespace DistractorTask.Transport
 
         public static NetworkEndpoint GetLocalIpListeningEndpoint()
         {
-            return GetLocalEndpoint(IpListeningPort);
+            return GetLocalEndpoint(IpListeningPort, true);
         }
         
-        public static NetworkEndpoint GetLocalEndpointWithDefaultPort()
+        public static NetworkEndpoint GetLocalEndpointWithDefaultPort(bool binding)
         {
-            return GetLocalEndpoint(DefaultPort);
+            return GetLocalEndpoint(DefaultPort, binding);
         }
         
-        public static NetworkEndpoint GetLocalEndpoint(ushort port)
+        
+        public static NetworkEndpoint GetLocalEndpoint(ushort port, bool binding)
         {
             var ip = NetworkHelper.GetLocalIPAddress();
             var endpoint = NetworkEndpoint.Parse(ip.ToString(), port);
             //if we are listening for ip in the editor we are doing it just locally?
 #if UNITY_EDITOR
-            endpoint = NetworkEndpoint.LoopbackIpv4.WithPort(port);
+            if(binding)
+                endpoint = NetworkEndpoint.AnyIpv4.WithPort(port);
 #endif
 
             return endpoint;
+        }
+
+        public static bool IsLocalAddress(NetworkEndpoint endpoint)
+        {
+            return GetLocalEndpoint(endpoint.Port, true) == endpoint ||
+                   GetLocalEndpoint(endpoint.Port, false) == endpoint || 
+                   endpoint.IsLoopback || endpoint == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port);
         }
     }
 }

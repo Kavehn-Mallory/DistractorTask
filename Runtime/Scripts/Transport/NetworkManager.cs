@@ -11,6 +11,9 @@ namespace DistractorTask.Transport
     public class NetworkManager : Singleton<NetworkManager>, INetworkManager
     {
 
+
+        public Action<string> DebugAction = delegate { };
+        
         private readonly List<NetworkConnectionHandler> _handlers = new();
         private readonly NetworkMessageEventHandler _eventHandler = new();
 
@@ -40,12 +43,12 @@ namespace DistractorTask.Transport
                     handler.ConnectionType = connectionType;
                 }
                 onConnectionStateChanged?.Invoke(handler.ConnectionState);
-                RegisterToConnectionStateChange(endpoint, onConnectionStateChanged);
+                RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
                 return handler.StartListening(endpoint, connectionType);
             }
 
             handler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged);
-            RegisterToConnectionStateChange(endpoint, onConnectionStateChanged);
+            RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
             handler.StartListening(endpoint, connectionType);
             
             _handlers.Add(handler);
@@ -57,12 +60,7 @@ namespace DistractorTask.Transport
             var typeIndex = stream.ReadByte();
             var type = DataSerializationIndexer.GetTypeForTypeIndex(typeIndex);
             
-            if (type == typeof(UserStudyBeginData))
-            {
-                Debug.Log("Sending message");
-            }
-
-            Debug.Log($"Message of type {type} received");
+            DebugAction.Invoke($"Received {type}");
             if (!_eventHandler.TriggerCallback(type, ref stream))
             {
                 Debug.LogError($"Type {type} is not handled yet by {nameof(NetworkMessageEventHandler)}. This either means that {type} does not implement {nameof(ISerializer)} or that the type does not have a default constructor");
@@ -80,14 +78,27 @@ namespace DistractorTask.Transport
                 {
                     handler.ConnectionType = connectionType;
                 }
-
-                handler.EstablishInternalConnection();
+                
+                DebugAction.Invoke("Local");
+                
+                if (NetworkHelper.IsLocalAddress(endpoint))
+                {
+                    handler.EstablishInternalConnection();
+                }
+                else if(!handler.ContainsEndpoint(endpoint.Port))
+                {
+                    handler.Connect(endpoint, handler.ConnectionType);
+                }
+                    
                 onConnectionStateChanged?.Invoke(handler.ConnectionState);
-                RegisterToConnectionStateChange(endpoint, onConnectionStateChanged);
+                RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
+                
+                
                 return;
             }
+            DebugAction.Invoke("Global");
             Debug.Log("No handler exists yet");
-            RegisterToConnectionStateChange(endpoint, onConnectionStateChanged);
+            RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
             handler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged, 1);
             handler.Connect(endpoint, connectionType);
             
@@ -95,24 +106,20 @@ namespace DistractorTask.Transport
             _handlers.Add(handler);
         }
 
-        private void OnConnectionStateChanged(NetworkEndpoint endpoint, ConnectionState connectionState)
+        private void OnConnectionStateChanged(ushort endpoint, ConnectionState connectionState)
         {
-            if (!endpoint.IsValid)
-            {
-                return;
-            }
             Debug.Log("Looking for state-change-object", this);
             for (var i = 0; i < _onConnectionStateChange.Count; i++)
             {
                 var changedData = _onConnectionStateChange[i];
-                if (OnConnectionChangedData.AreEqual(changedData.Endpoint, endpoint))
+                if (changedData.EndpointPort == endpoint)
                 {
                     Debug.Log("Found a connection state object");
                     changedData.OnStateChange.Invoke(connectionState);
                     continue;
                 }
 
-                Debug.Log($"Thats not it: {changedData.Endpoint} vs {endpoint}");
+                Debug.Log($"Thats not it: {changedData.EndpointPort} vs {endpoint}");
             }
         }
 
@@ -129,13 +136,8 @@ namespace DistractorTask.Transport
         public bool BroadcastMessage<T>(T data, int callerId) where T : ISerializer, new()
         {
             var success = false;
-            NetworkConnectionHandler localHandler = null;
             foreach (var handler in _handlers)
             {
-                if (handler.Internal)
-                {
-                    localHandler = handler;
-                }
                 if (handler.ConnectionType == ConnectionType.Multicast)
                 {
                     continue;
@@ -143,9 +145,9 @@ namespace DistractorTask.Transport
                 success |= SendMessage(handler, data);
             }
 
-            if (localHandler != null)
+            if (callerId != 0)
             {
-                SendMessageLocally(localHandler, data, callerId);
+                SendMessageLocally(data, callerId);
             }
             
             return success;
@@ -171,7 +173,7 @@ namespace DistractorTask.Transport
 
         }
 
-        private void SendMessageLocally<T>(NetworkConnectionHandler handler, T data, int callerId)
+        private void SendMessageLocally<T>(T data, int callerId)
             where T : ISerializer, new()
         {
             _eventHandler.TriggerCallback(data, callerId);
@@ -183,9 +185,10 @@ namespace DistractorTask.Transport
             {
                 var result = SendMessage(handler, data);
 
-                if (handler.Internal)
+                if (callerId != 0)
                 {
-                    SendMessageLocally(handler, data, callerId);
+                    Debug.Log($"Local send: {typeof(T)}");
+                    SendMessageLocally(data, callerId);
                 }
                 return result;
             }
@@ -193,7 +196,7 @@ namespace DistractorTask.Transport
             return false;
         }
 
-        public void RegisterToConnectionStateChange(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged)
+        public void RegisterToConnectionStateChange(ushort endpointPort, Action<ConnectionState> onConnectionStateChanged)
         {
             if (onConnectionStateChanged == null)
             {
@@ -202,7 +205,7 @@ namespace DistractorTask.Transport
             for (var i = 0; i < _onConnectionStateChange.Count; i++)
             {
                 var connectionChangedData = _onConnectionStateChange[i];
-                if (OnConnectionChangedData.AreEqual(connectionChangedData.Endpoint, endpoint))
+                if (connectionChangedData.EndpointPort == endpointPort)
                 {
                     connectionChangedData.OnStateChange += onConnectionStateChanged;
                     _onConnectionStateChange[i] = connectionChangedData;
@@ -210,11 +213,11 @@ namespace DistractorTask.Transport
                 }
             }
             
-            _onConnectionStateChange.Add(new OnConnectionChangedData(endpoint, onConnectionStateChanged));
+            _onConnectionStateChange.Add(new OnConnectionChangedData(endpointPort, onConnectionStateChanged));
 
         }
 
-        public void UnregisterToConnectionStateChange(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged)
+        public void UnregisterToConnectionStateChange(ushort endpointPort, Action<ConnectionState> onConnectionStateChanged)
         {
             if (onConnectionStateChanged == null)
             {
@@ -223,7 +226,7 @@ namespace DistractorTask.Transport
             for (var i = 0; i < _onConnectionStateChange.Count; i++)
             {
                 var connectionChangedData = _onConnectionStateChange[i];
-                if (OnConnectionChangedData.AreEqual(connectionChangedData.Endpoint, endpoint))
+                if (connectionChangedData.EndpointPort == endpointPort)
                 {
                     connectionChangedData.OnStateChange -= onConnectionStateChanged;
                     _onConnectionStateChange[i] = connectionChangedData;
@@ -249,81 +252,34 @@ namespace DistractorTask.Transport
             }
             
         }
-
-        private bool TryGetHandlerInternal(NetworkEndpoint endpoint, out NetworkConnectionHandler existingHandler)
-        {
-            existingHandler = default;
-            foreach (var handler in _handlers)
-            {
-                if (handler.Endpoint.Equals(endpoint))
-                {
-                    existingHandler = handler;
-                    return true;
-                }
-            }
-
-            return false;
-        }
+        
         
         private bool TryGetHandler(NetworkEndpoint endpoint, out NetworkConnectionHandler existingHandler, bool loopbackCheck)
         {
-            var isLocalAddress = endpoint.IsLoopback;
-            if (!loopbackCheck || !isLocalAddress)
-            {
-                return TryGetHandlerInternal(endpoint, out existingHandler);
-            }
-            
-            
+            existingHandler = default;
             foreach (var handler in _handlers)
             {
-                if (handler.Endpoint.Equals(endpoint))
-                {
-                    existingHandler = handler;
-                    return true;
-                }
-                //if(handler.Driver.)
-                var localEndpoint = handler.Driver.GetLocalEndpoint();
-                if (localEndpoint.Port != endpoint.Port)
-                {
-                    continue;
-                }
-
-                if ((localEndpoint.IsLoopback || localEndpoint == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port)))
+                if (handler.ContainsEndpoint(endpoint.Port))
                 {
                     existingHandler = handler;
                     return true;
                 }
             }
 
-            existingHandler = default;
             return false;
         }
     }
 
     public struct OnConnectionChangedData
     {
-        public NetworkEndpoint Endpoint;
+        public readonly ushort EndpointPort;
         public Action<ConnectionState> OnStateChange;
 
-        public OnConnectionChangedData(NetworkEndpoint endpoint, Action<ConnectionState> onStateChange)
+        public OnConnectionChangedData(ushort endpointPort, Action<ConnectionState> onStateChange)
         {
-            Endpoint = endpoint;
+            EndpointPort = endpointPort;
             OnStateChange = onStateChange;
         }
-
-        public static bool AreEqual(NetworkEndpoint endpoint, NetworkEndpoint otherEndpoint)
-        {
-            if (endpoint.Equals(otherEndpoint))
-            {
-                return true;
-            }
-            Debug.Log($"{endpoint} vs {otherEndpoint}");
-            if (otherEndpoint.Port != endpoint.Port)
-            {
-                return false;
-            }
-            
-            return (otherEndpoint.IsLoopback || otherEndpoint == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port)) && (endpoint.IsLoopback || endpoint == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port));
-        }
+        
     }
 }

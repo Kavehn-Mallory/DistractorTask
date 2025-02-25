@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Unity.Collections;
@@ -19,10 +20,10 @@ namespace DistractorTask.Transport
         public NetworkPipeline Pipeline;
         public NativeList<NetworkConnection> Connections;
         
-        private event Action<NetworkEndpoint, ConnectionState> OnConnectionStateChanged;
+        private event Action<ushort, ConnectionState> OnConnectionStateChanged;
         private readonly ActionRef<DataStreamReader> _onDataReceived;
         public bool Internal;
-        public NetworkEndpoint Endpoint => Driver.GetLocalEndpoint();
+        private NativeList<ushort> _endpointPorts;
         public ConnectionType ConnectionType;
         public ConnectionState ConnectionState;
 
@@ -32,6 +33,10 @@ namespace DistractorTask.Transport
                 Driver.Dispose();
             if (Connections.IsCreated)
                 Connections.Dispose();
+            if (_endpointPorts.IsCreated)
+            {
+                _endpointPorts.Dispose();
+            }
 
             Internal = false;
         }
@@ -40,7 +45,7 @@ namespace DistractorTask.Transport
         
 
         
-        public NetworkConnectionHandler(ActionRef<DataStreamReader> onDataReceived, Action<NetworkEndpoint, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
+        public NetworkConnectionHandler(ActionRef<DataStreamReader> onDataReceived, Action<ushort, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
         {
             if (IsCreated)
             {
@@ -51,6 +56,7 @@ namespace DistractorTask.Transport
             Connections = new NativeList<NetworkConnection>(numberOfConnections, Allocator.Persistent);
             OnConnectionStateChanged = onConnectionStateChanged;
             this._onDataReceived = onDataReceived;
+            _endpointPorts = new NativeList<ushort>(numberOfConnections, Allocator.Persistent);
 
         }
 
@@ -101,7 +107,7 @@ namespace DistractorTask.Transport
                         }
                         if (cmd == NetworkEvent.Type.Data)
                         {
-                            Debug.Log("Data received");
+                            Debug.Log($"Data received {Driver.GetLocalEndpoint()}");
                             _onDataReceived.Invoke(ref stream);
                         }
                         else if (cmd == NetworkEvent.Type.Disconnect)
@@ -124,7 +130,13 @@ namespace DistractorTask.Transport
                 return;
             }
             ConnectionState = state;
-            OnConnectionStateChanged?.Invoke(Endpoint, state);
+            foreach (var endpoint in _endpointPorts)
+            {
+                OnConnectionStateChanged?.Invoke(endpoint, state);
+            }
+            
+            
+            
         }
         
         
@@ -132,6 +144,7 @@ namespace DistractorTask.Transport
         {
             ConnectionType = connectionType;
             ChangeConnectionState(ConnectionState.ConnectionRequested);
+            _endpointPorts.Add(endpoint.Port);
             Connections.Add(Driver.Connect(endpoint));
         }
 
@@ -147,6 +160,7 @@ namespace DistractorTask.Transport
                 return false;
             }
 
+            _endpointPorts.Add(endpoint.Port);
             Driver.Listen();
             return true;
         }
@@ -159,6 +173,32 @@ namespace DistractorTask.Transport
             {
                 ChangeConnectionState(ConnectionState.Connected);
             }
+        }
+
+        public bool ContainsEndpoint(ushort endpointPort)
+        {
+            foreach (var networkEndpoint in _endpointPorts)
+            {
+                if (networkEndpoint.Equals(endpointPort))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool ContainsEndpointWithLoopbackCheck(ushort endpoint)
+        {
+            foreach (var networkEndpoint in _endpointPorts)
+            {
+                if (networkEndpoint.Equals(endpoint))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 

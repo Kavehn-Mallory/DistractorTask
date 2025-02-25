@@ -74,7 +74,6 @@ namespace DistractorTask.Transport
         {
             foreach (var invoker in _invocationHelper)
             {
-               
                 if (type == invoker.InvocationType)
                 {
                     invoker.Invoke(ref stream);

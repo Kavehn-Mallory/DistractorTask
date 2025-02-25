@@ -1,22 +1,39 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
+using TMPro;
 using UnityEngine;
 
 namespace DistractorTask.UserStudy.Core
 {
+    [Serializable]
     public class ClientSideUserStudyManager : UserStudyManager
     {
         public override INetworkManager Manager => NetworkManager.Instance;
 
         private bool _hasConnection;
         private bool _receivedStudyStartRequest;
+        
+        public TextMeshProUGUI debugText; 
 
         protected override IEnumerator Start()
         {
             NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived);
             NetworkManager.Instance.StartListening(NetworkHelper.GetLocalIpListeningEndpoint(), null);
+            
+            NetworkManager.Instance.DebugAction += OnDebugActionOfNetworkManager;
+            
             return base.Start();
+        }
+
+        private void OnDebugActionOfNetworkManager(string obj)
+        {
+            if (debugText)
+            {
+                debugText.text = obj;
+            }
+            
         }
 
         private void OnIpAddressDataReceived(IpAddressData obj, int callerId)
@@ -25,7 +42,7 @@ namespace DistractorTask.UserStudy.Core
             {
                 return;
             }
-            Debug.Log($"Trying to connect to {obj.Endpoint}");
+            OnDebugActionOfNetworkManager($"Trying to connect to {obj.Endpoint}");
             NetworkManager.Instance.Connect(obj.Endpoint, OnConnectionEstablished);
         }
         
@@ -56,7 +73,7 @@ namespace DistractorTask.UserStudy.Core
             if (_hasConnection)
             {
                 Debug.Log("Study request accepted");
-                Manager.UnregisterToConnectionStateChange(NetworkHelper.GetLocalEndpointWithDefaultPort(), OnConnectionEstablished);
+                Manager.UnregisterToConnectionStateChange(NetworkHelper.DefaultPort, OnConnectionEstablished);
                 base.OnStudyBeginRequest(obj, callerId);
             }
             

@@ -47,7 +47,7 @@ namespace DistractorTask.Transport
                     Time = new TimeSpan(10, 1, 1, 1),
                     LogCategory = LogCategory.Network
                 }, serverSettings.NetworkEndpoint, this.GetInstanceID());
-                NetworkManager.Instance.UnregisterToConnectionStateChange(serverSettings.NetworkEndpoint, OnConnectionEstablished);
+                NetworkManager.Instance.UnregisterToConnectionStateChange(serverSettings.NetworkEndpoint.Port, OnConnectionEstablished);
                 return;
             }
             Debug.Log("Connection is invalid");

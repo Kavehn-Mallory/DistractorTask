@@ -20,10 +20,10 @@ namespace DistractorTask.Transport
 
         public bool MulticastMessage<T>(T data, NetworkEndpoint endpoint, int callerId) where T : ISerializer, new();
 
-        public void RegisterToConnectionStateChange(NetworkEndpoint endpoint,
+        public void RegisterToConnectionStateChange(ushort endpointPort,
             Action<ConnectionState> onConnectionStateChanged);
         
-        public void UnregisterToConnectionStateChange(NetworkEndpoint endpoint,
+        public void UnregisterToConnectionStateChange(ushort endpointPort,
             Action<ConnectionState> onConnectionStateChanged);
     }
 

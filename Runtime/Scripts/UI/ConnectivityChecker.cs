@@ -1,9 +1,6 @@
-﻿using System;
-using DistractorTask.Transport;
+﻿using DistractorTask.Transport;
 using MixedReality.Toolkit.UX;
 using TMPro;
-using Unity.Networking.Transport;
-using Unity.Networking.Transport.Error;
 using UnityEngine;
 
 namespace DistractorTask.UI
@@ -28,7 +25,7 @@ namespace DistractorTask.UI
         {
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
-            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkHelper.GetLocalEndpointWithDefaultPort(), OnConnectionStateChanged);
+            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkHelper.DefaultPort, OnConnectionStateChanged);
         }
 
         private void OnConnectionStateChanged(ConnectionState obj)
