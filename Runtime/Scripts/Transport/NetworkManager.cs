@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DistractorTask.Core;
+using DistractorTask.Transport.DataContainer;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
@@ -15,12 +16,16 @@ namespace DistractorTask.Transport
 
         private readonly List<OnConnectionChangedData> _onConnectionStateChange = new();
         
-        public void RegisterCallback<T>(Action<T> callback) where T : ISerializer, new()
+        public void RegisterCallback<T>(Action<T, int> callback) where T : ISerializer, new()
         {
+            if (typeof(T) == typeof(UserStudyBeginData))
+            {
+                Debug.Log("Registered");
+            }
             _eventHandler.RegisterCallback(callback);
         }
 
-        public void UnregisterCallback<T>(Action<T> callback) where T : ISerializer, new()
+        public void UnregisterCallback<T>(Action<T, int> callback) where T : ISerializer, new()
         {
             _eventHandler.UnregisterCallback(callback);
         }
@@ -51,6 +56,11 @@ namespace DistractorTask.Transport
         {
             var typeIndex = stream.ReadByte();
             var type = DataSerializationIndexer.GetTypeForTypeIndex(typeIndex);
+            
+            if (type == typeof(UserStudyBeginData))
+            {
+                Debug.Log("Sending message");
+            }
 
             Debug.Log($"Message of type {type} received");
             if (!_eventHandler.TriggerCallback(type, ref stream))
@@ -116,19 +126,28 @@ namespace DistractorTask.Transport
             return ConnectionState.Default;
         }
 
-        public bool BroadcastMessage<T>(T data) where T : ISerializer, new()
+        public bool BroadcastMessage<T>(T data, int callerId) where T : ISerializer, new()
         {
             var success = false;
+            NetworkConnectionHandler localHandler = null;
             foreach (var handler in _handlers)
             {
+                if (handler.Internal)
+                {
+                    localHandler = handler;
+                }
                 if (handler.ConnectionType == ConnectionType.Multicast)
                 {
                     continue;
                 }
-
                 success |= SendMessage(handler, data);
             }
 
+            if (localHandler != null)
+            {
+                SendMessageLocally(localHandler, data, callerId);
+            }
+            
             return success;
 
         }
@@ -147,20 +166,28 @@ namespace DistractorTask.Transport
                     success = true;
                 }
             }
-            if (handler.Internal)
-            {
-                _eventHandler.TriggerCallback(data);
-            }
 
             return success;
 
         }
 
-        public bool Multicast<T>(T data, NetworkEndpoint endpoint) where T : ISerializer, new()
+        private void SendMessageLocally<T>(NetworkConnectionHandler handler, T data, int callerId)
+            where T : ISerializer, new()
+        {
+            _eventHandler.TriggerCallback(data, callerId);
+        }
+
+        public bool MulticastMessage<T>(T data, NetworkEndpoint endpoint, int callerId) where T : ISerializer, new()
         {
             if (TryGetHandler(endpoint, out var handler, true))
             {
-                return SendMessage(handler, data);
+                var result = SendMessage(handler, data);
+
+                if (handler.Internal)
+                {
+                    SendMessageLocally(handler, data, callerId);
+                }
+                return result;
             }
 
             return false;

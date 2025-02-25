@@ -19,8 +19,12 @@ namespace DistractorTask.UserStudy.Core
             return base.Start();
         }
 
-        private void OnIpAddressDataReceived(IpAddressData obj)
+        private void OnIpAddressDataReceived(IpAddressData obj, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             Debug.Log($"Trying to connect to {obj.Endpoint}");
             NetworkManager.Instance.Connect(obj.Endpoint, OnConnectionEstablished);
         }
@@ -37,19 +41,23 @@ namespace DistractorTask.UserStudy.Core
             Debug.Log("Connection established in study manager", this);
             if (_receivedStudyStartRequest)
             {
-                OnStudyBeginRequest(new RequestStudyBeginData());
+                OnStudyBeginRequest(new RequestStudyBeginData(), GetInstanceID());
             }
         }
 
-        public override void OnStudyBeginRequest(RequestStudyBeginData obj)
+        public override void OnStudyBeginRequest(RequestStudyBeginData obj, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             Debug.Log("Study request received");
             _receivedStudyStartRequest = true;
             if (_hasConnection)
             {
                 Debug.Log("Study request accepted");
                 Manager.UnregisterToConnectionStateChange(NetworkHelper.GetLocalEndpointWithDefaultPort(), OnConnectionEstablished);
-                base.OnStudyBeginRequest(obj);
+                base.OnStudyBeginRequest(obj, callerId);
             }
             
         }

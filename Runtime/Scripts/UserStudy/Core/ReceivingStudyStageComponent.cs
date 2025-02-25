@@ -16,8 +16,12 @@ namespace DistractorTask.UserStudy.Core
             manager.UnregisterCallback<TStudyEvent>(OnStudyStageEventReceived);
         }
         
-        private void OnStudyStageEventReceived(TStudyEvent studyEvent)
+        private void OnStudyStageEventReceived(TStudyEvent studyEvent, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             if (studyEvent.IsStartEvent)
             {
                 OnStudyStageStart(studyEvent);

@@ -33,8 +33,12 @@ namespace DistractorTask.SceneManagement
             
         }
 
-        private async void OnSceneGroupChangeRequest(SceneGroupChangeData data)
+        private async void OnSceneGroupChangeRequest(SceneGroupChangeData data, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             await LoadSceneGroup(data.index);
         }
         

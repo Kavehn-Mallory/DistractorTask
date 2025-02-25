@@ -6,9 +6,9 @@ namespace DistractorTask.Transport
 {
     public interface INetworkManager
     {
-        public void RegisterCallback<T>(Action<T> callback) where T : ISerializer, new();
+        public void RegisterCallback<T>(Action<T, int> callback) where T : ISerializer, new();
         
-        public void UnregisterCallback<T>(Action<T> callback) where T : ISerializer, new();
+        public void UnregisterCallback<T>(Action<T, int> callback) where T : ISerializer, new();
         
         public bool StartListening(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType);
 
@@ -16,9 +16,9 @@ namespace DistractorTask.Transport
 
         public ConnectionState CheckConnectionStatus(NetworkEndpoint endpoint);
 
-        public bool BroadcastMessage<T>(T data) where T : ISerializer, new();
+        public bool BroadcastMessage<T>(T data, int callerId) where T : ISerializer, new();
 
-        public bool Multicast<T>(T data, NetworkEndpoint endpoint) where T : ISerializer, new();
+        public bool MulticastMessage<T>(T data, NetworkEndpoint endpoint, int callerId) where T : ISerializer, new();
 
         public void RegisterToConnectionStateChange(NetworkEndpoint endpoint,
             Action<ConnectionState> onConnectionStateChanged);

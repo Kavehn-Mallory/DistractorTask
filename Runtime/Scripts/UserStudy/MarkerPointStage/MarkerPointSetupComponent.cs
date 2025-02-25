@@ -52,8 +52,12 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             base.StartStudy(manager);
         }
 
-        private void OnStartConfirmed(ConfirmationData obj)
+        private void OnStartConfirmed(ConfirmationData obj, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             Manager.UnregisterCallback<ConfirmationData>(OnStartConfirmed);
             Manager.RegisterCallback<ConfirmationData>(OnPointSelectionConfirmed);
             _markerPoints[0].enabled = true;
@@ -61,7 +65,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             Manager.BroadcastMessage(new MarkerCountData
             {
                 markerCount = MarkerPointCount
-            });
+            }, GetInstanceID());
         }
         
         private void ActivateMarker()
@@ -71,8 +75,12 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             _markerPoints[_currentMarker].enabled = true;
         }
         
-        private void OnPointSelectionConfirmed(ConfirmationData data)
+        private void OnPointSelectionConfirmed(ConfirmationData data, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             if (data.confirmationNumber != _currentMarker)
             {
                 //todo throw error
@@ -87,7 +95,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             Manager.BroadcastMessage(new ConfirmationData
             {
                 confirmationNumber = _currentMarker
-            });
+            }, GetInstanceID());
         }
         
         public void EndMarkerPointSetup()

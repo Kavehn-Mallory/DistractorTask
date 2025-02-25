@@ -62,10 +62,10 @@ namespace DistractorTask.UI
         private void OnConnectionStateReceived(ConnectionState obj)
         {
             Debug.Log("Sending Ip-Address");
-            NetworkManager.Instance.Multicast(new IpAddressData
+            NetworkManager.Instance.MulticastMessage(new IpAddressData
             {
                 Endpoint = NetworkHelper.GetLocalEndpointWithDefaultPort(),
-            }, _endpoint);
+            }, _endpoint, this.GetInstanceID());
         }
     }
 }

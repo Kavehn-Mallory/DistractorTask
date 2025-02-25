@@ -25,7 +25,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             _placementPositions = distractorPlacement.DistractorPlacementPositions;
             Manager.RegisterCallback<DistractorSelectionTrialData>(OnTrialDataReceived);
             distractorTaskComponent.OnTaskCompleted += OnTrialCompleted;
-            Manager.BroadcastMessage(new ConfirmationData());
+            Manager.BroadcastMessage(new ConfirmationData(), GetInstanceID());
         }
         
         private void OnTrialCompleted()
@@ -38,14 +38,19 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             Manager.BroadcastMessage(new TrialCompletedData
             {
                 LoadLevel = _currentLoadLevel
-            });
+            }, GetInstanceID());
         }
 
         
 
-        private void OnTrialDataReceived(DistractorSelectionTrialData data)
+        private void OnTrialDataReceived(DistractorSelectionTrialData data, int callerId)
         {
             //todo place distractor at the correct location
+            
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             
             _currentLoadLevel = data.loadLevel;
             _markerOrder = data.markers;

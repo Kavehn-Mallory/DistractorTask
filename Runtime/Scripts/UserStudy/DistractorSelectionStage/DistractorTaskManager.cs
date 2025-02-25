@@ -65,8 +65,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             base.StartStudy(manager);
         }
 
-        private void OnStudyBegin(ConfirmationData data)
+        private void OnStudyBegin(ConfirmationData data, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             Manager.UnregisterCallback<ConfirmationData>(OnStudyBegin);
             Manager.RegisterCallback<TrialCompletedData>(OnTrialCompleted);
             _currentTrialIndex = 0;
@@ -86,12 +90,16 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 loadLevel = (byte)trial.conditionList[_currentConditionIndex].Item1,
                 selectionCount = trial.selectionsPerTrial,
                 markers = positions
-            });
+            }, GetInstanceID());
             _currentConditionIndex++;
         }
 
-        private void OnTrialCompleted(TrialCompletedData obj)
+        private void OnTrialCompleted(TrialCompletedData obj, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             if (_currentConditionIndex >= trials[_currentTrialIndex].conditionList.Count)
             {
                 _currentTrialIndex++;

@@ -169,7 +169,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
                 OnTaskCompleted.Invoke();
                 return;
             }
-            Debug.Log("Starting next trial");
+            Debug.Log($"Starting next trial {_currentTrial + 1} / {_trialCount}");
             var length = _distractorShapes[_currentGroup].Length;
             foreach (var distractor in _distractors)
             {

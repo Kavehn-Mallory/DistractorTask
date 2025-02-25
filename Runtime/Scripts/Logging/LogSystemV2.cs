@@ -6,6 +6,7 @@ using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using Unity.Networking.Transport;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace DistractorTask.Logging
 {
@@ -22,6 +23,8 @@ namespace DistractorTask.Logging
         private readonly string _startTime;
 
         private static LogSystemV2 _instance;
+
+
         
         private static LogSystemV2 LogSystem {
             get
@@ -87,7 +90,7 @@ namespace DistractorTask.Logging
             receiver.UnregisterCallback<LogfileData>(OnLogDataReceived);
         }
 
-        private static void OnLogDataReceived(LogfileData logfileData)
+        private static void OnLogDataReceived(LogfileData logfileData, int callerId)
         {
             LogSystem._streamWriter.WriteLine($"{logfileData.Time:c},{logfileData.LogCategory.ToString()},{logfileData.NetworkEndpoint.ToString()},{logfileData.Message}");
         }
@@ -115,7 +118,7 @@ namespace DistractorTask.Logging
         {
             //todo add this back in 
             //logfileData.NetworkEndpoint = sender.NetworkEndpoint;
-            sender.BroadcastMessage(logfileData);
+            sender.BroadcastMessage(logfileData, 0);
         }
 
         public static void LogKeyframe(LogCategory category, string message, INetworkManager sender)

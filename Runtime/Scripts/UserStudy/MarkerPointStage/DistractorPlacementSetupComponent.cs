@@ -51,12 +51,16 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         protected sealed override void OnStudyStageStart(MarkerPointStageEvent studyEvent)
         {
             Manager.RegisterCallback<MarkerCountData>(OnMarkerCountDataReceived);
-            Manager.BroadcastMessage(new ConfirmationData());
+            Manager.BroadcastMessage(new ConfirmationData(), GetInstanceID());
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += AddPlacementPosition;
         }
 
-        private void OnMarkerCountDataReceived(MarkerCountData markerCountData)
+        private void OnMarkerCountDataReceived(MarkerCountData markerCountData, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             _markerPointCount = markerCountData.markerCount;
             Manager.UnregisterCallback<MarkerCountData>(OnMarkerCountDataReceived);
             Manager.RegisterCallback<ConfirmationData>(OnConfirmationDataReceived);
@@ -70,8 +74,12 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             //todo display counter and tell the user what to do 
         }
         
-        private void OnConfirmationDataReceived(ConfirmationData confirmationData)
+        private void OnConfirmationDataReceived(ConfirmationData confirmationData, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             _currentMarkerPoint = confirmationData.confirmationNumber;
             _acceptInput = true;
         }
@@ -98,7 +106,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             Manager.BroadcastMessage(new ConfirmationData
             {
                 confirmationNumber = _currentMarkerPoint
-            });
+            }, GetInstanceID());
         }
         
     }

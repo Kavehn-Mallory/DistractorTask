@@ -40,13 +40,13 @@ namespace DistractorTask.Transport
             
             if (state == ConnectionState.Connected)
             {
-                NetworkManager.Instance.Multicast(new LogfileData
+                NetworkManager.Instance.MulticastMessage(new LogfileData
                 {
                     Message = "Hello",
                     NetworkEndpoint = clientToConnectToAddress.NetworkEndpoint,
                     Time = new TimeSpan(10, 1, 1, 1),
                     LogCategory = LogCategory.Network
-                }, serverSettings.NetworkEndpoint);
+                }, serverSettings.NetworkEndpoint, this.GetInstanceID());
                 NetworkManager.Instance.UnregisterToConnectionStateChange(serverSettings.NetworkEndpoint, OnConnectionEstablished);
                 return;
             }
@@ -54,7 +54,7 @@ namespace DistractorTask.Transport
             
         }
 
-        private void OnLogFileDataReceived(LogfileData obj)
+        private void OnLogFileDataReceived(LogfileData obj, int callerId)
         {
             Debug.Log(obj.Message);
         }

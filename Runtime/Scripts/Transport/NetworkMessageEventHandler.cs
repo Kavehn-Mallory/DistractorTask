@@ -54,13 +54,13 @@ namespace DistractorTask.Transport
 
 
 
-        public bool TriggerCallback<T>(T data) where T : ISerializer, new()
+        public bool TriggerCallback<T>(T data, int callerId) where T : ISerializer, new()
         {
             foreach (var invoker in _invocationHelper)
             {
                 if (invoker is InvocationHelper<T> invocationHelper)
                 {
-                    invocationHelper.Invoke(data);
+                    invocationHelper.Invoke(data, callerId);
                     return true;
                 }
             }
@@ -85,7 +85,7 @@ namespace DistractorTask.Transport
             return false;
         }
 
-        public void RegisterCallback<T>(Action<T> test) where T : ISerializer, new()
+        public void RegisterCallback<T>(Action<T, int> test) where T : ISerializer, new()
         {
             foreach (var invoker in _invocationHelper)
             {
@@ -97,7 +97,7 @@ namespace DistractorTask.Transport
             }
         }
         
-        public void UnregisterCallback<T>(Action<T> test) where T : ISerializer, new()
+        public void UnregisterCallback<T>(Action<T, int> test) where T : ISerializer, new()
         {
             foreach (var invoker in _invocationHelper)
             {
@@ -120,9 +120,9 @@ namespace DistractorTask.Transport
         public interface IInvoker<T> : IInvoker where T : ISerializer
         {
 
-            public void RegisterCallback(Action<T> callback);
+            public void RegisterCallback(Action<T, int> callback);
 
-            public void UnregisterCallback(Action<T> callback);
+            public void UnregisterCallback(Action<T, int> callback);
         }
         
         public class InvocationHelper<T> : IInvoker<T> where T : ISerializer, new()
@@ -130,26 +130,26 @@ namespace DistractorTask.Transport
 
             public Type InvocationType => typeof(T);
             
-            private Action<T> _actionToInvoke = delegate {};
+            private Action<T, int> _actionToInvoke = delegate {};
 
             public void Invoke(ref DataStreamReader stream)
             {
                 var data = new T();
                 data.Deserialize(ref stream);
-                _actionToInvoke.Invoke(data);
+                _actionToInvoke.Invoke(data, 0);
             }
 
-            public void Invoke(T data)
+            public void Invoke(T data, int callerId)
             {
-                _actionToInvoke.Invoke(data);
+                _actionToInvoke.Invoke(data, callerId);
             }
 
-            public void RegisterCallback(Action<T> callback)
+            public void RegisterCallback(Action<T, int> callback)
             {
                 _actionToInvoke += callback;
             }
 
-            public void UnregisterCallback(Action<T> callback)
+            public void UnregisterCallback(Action<T, int> callback)
             {
                 _actionToInvoke -= callback;
             }

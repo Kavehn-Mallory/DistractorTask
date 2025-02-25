@@ -19,8 +19,12 @@ namespace DistractorTask.SceneManagement
             NetworkManager.Instance.UnregisterCallback<SceneGroupChangeData>(OnSceneGroupChangeRequest);
         }
 
-        private void OnSceneGroupChangeRequest(SceneGroupChangeData data)
+        private void OnSceneGroupChangeRequest(SceneGroupChangeData data, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             sceneLoader?.LoadSceneGroup(data.index);
         }
         

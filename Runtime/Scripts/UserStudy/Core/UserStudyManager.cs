@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using UnityEngine;
@@ -39,10 +38,16 @@ namespace DistractorTask.UserStudy.Core
                 yield return null;
             }
             
+            Debug.Log($"{this.name} has a study index of {_studyIndex}");
+            
         }
 
-        public virtual void OnStudyBeginRequest(RequestStudyBeginData obj)
+        public virtual void OnStudyBeginRequest(RequestStudyBeginData obj, int callerId)
         {
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
             Debug.Log("Received on Study Begin Data", this);
             Manager.UnregisterCallback<RequestStudyBeginData>(OnStudyBeginRequest);
             StartStudy();
@@ -59,22 +64,33 @@ namespace DistractorTask.UserStudy.Core
                 Manager.BroadcastMessage(new UserStudyBeginData
                 {
                     studyIndex = _studyIndex
-                });
+                }, GetInstanceID());
             }
             else
             {
-                Debug.Log($"{this.GetType()} is sending study start request", this);
-                Manager.BroadcastMessage(new RequestStudyBeginData());
+                Debug.Log($"{this.name} is sending study start request with index {_studyIndex}", this);
+                Manager.BroadcastMessage(new RequestStudyBeginData(), GetInstanceID());
             }
         }
 
 
-        private void OnStudyBegin(UserStudyBeginData obj)
+        private void OnStudyBegin(UserStudyBeginData obj, int callerId)
         {
+            
+            if (callerId == GetInstanceID())
+            {
+                return;
+            }
+
+            if (this is ServerSideUserStudyManager)
+            {
+                Debug.Log($"How often do we get called? {callerId}", this);
+            }
+            
             if (obj.studyIndex <= _studyIndex)
             {
                 Debug.Log($"Index: {obj.studyIndex} vs {_studyIndex}", this);
-                throw new ArgumentException($"The given study index {obj.studyIndex} is smaller or equal to the current index {_studyIndex}. This study was started already");
+                throw new ArgumentException($"The given study index {obj.studyIndex} is smaller or equal to the current index {_studyIndex} of {name}. This study was started already");
             }
 
             _studyIndex = obj.studyIndex;
@@ -102,7 +118,7 @@ namespace DistractorTask.UserStudy.Core
                 Manager.BroadcastMessage(new UserStudyBeginData
                 {
                     studyIndex = _studyIndex
-                });
+                }, GetInstanceID());
             }
         }
 

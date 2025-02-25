@@ -12,7 +12,7 @@ namespace DistractorTask.UserStudy.Core
             manager.BroadcastMessage(new TStudyEvent
             {
                 IsStartEvent = true
-            });
+            }, GetInstanceID());
             TriggerStudyStartEvent();
         }
 
@@ -21,7 +21,7 @@ namespace DistractorTask.UserStudy.Core
             manager.BroadcastMessage(new TStudyEvent
             {
                 IsStartEvent = false
-            });
+            }, GetInstanceID());
             TriggerStudyEndEvent();
         }
     }
