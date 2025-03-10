@@ -12,6 +12,7 @@ namespace DistractorTask.Transport
     {
 
 
+        //Todo we need to set this up in a slightly different way 
         public Action<string> DebugAction = delegate { };
         
         private readonly List<NetworkConnectionHandler> _handlers = new();
@@ -33,6 +34,7 @@ namespace DistractorTask.Transport
             _eventHandler.UnregisterCallback(callback);
         }
 
+        //todo change this to use the port as a lookup for listening but the ip for connections?
         public bool StartListening(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
         {
             //for our server it is fine to have two distinct listeners, I assume
@@ -80,7 +82,8 @@ namespace DistractorTask.Transport
                 }
                 
                 DebugAction.Invoke("Local");
-                
+                //todo I do not think that it is possible for the second statement to be true. TryGetHandler already checks for the port. Instead we should check if there is already a connection to that Ip-Address 
+                //todo potentially we should have listeners and connections separated from each other 
                 if (NetworkHelper.IsLocalAddress(endpoint))
                 {
                     handler.EstablishInternalConnection();

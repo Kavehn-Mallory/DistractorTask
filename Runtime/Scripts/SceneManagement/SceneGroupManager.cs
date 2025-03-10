@@ -19,7 +19,7 @@ namespace DistractorTask.SceneManagement
         {
             _activeSceneGroup = group;
             var loadedScenes = new List<string>();
-            await UnloadScenes();
+            //await UnloadScenes();
 
             int sceneCount = SceneManager.sceneCount;
 

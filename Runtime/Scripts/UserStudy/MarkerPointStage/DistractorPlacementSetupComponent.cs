@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
+using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using MixedReality.Toolkit.Input;
 using UnityEngine;
 
@@ -11,9 +12,11 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         
         [SerializeField] private Camera mainCamera;
         [SerializeField] private FuzzyGazeInteractor gazeInteractor;
+        [SerializeField] private DistractorTaskComponent distractorTaskComponent;
     
         private readonly List<Vector3> _distractorPlacementPositions = new();
         private Transform _mainCameraTransform;
+        
 
         public List<Vector3> DistractorPlacementPositions
         {
@@ -43,6 +46,11 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 Debug.LogError($"No main camera found. Please either add one to {nameof(DistractorPlacementSetupComponent)} or tag an active camera with \"MainCamera\"");
                 enabled = false;
+            }
+
+            if (!distractorTaskComponent)
+            {
+                distractorTaskComponent = GetComponent<DistractorTaskComponent>();
             }
         }
         
@@ -100,7 +108,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             }
 
             _acceptInput = false;
-            var position = _mainCameraTransform.position + _mainCameraTransform.forward;
+            var position = _mainCameraTransform.position + _mainCameraTransform.forward * 2f;
         
             _distractorPlacementPositions.Add(position);
             Manager.BroadcastMessage(new ConfirmationData
