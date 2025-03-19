@@ -4,15 +4,19 @@ using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using MixedReality.Toolkit.Input;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 
 namespace DistractorTask.UserStudy.MarkerPointStage
 {
     public class DistractorPlacementSetupComponent : ReceivingStudyStageComponent<MarkerPointStageEvent>
     {
-        
+
+        [SerializeField] private ARRaycastManager raycastManager;
         [SerializeField] private Camera mainCamera;
         [SerializeField] private FuzzyGazeInteractor gazeInteractor;
         [SerializeField] private DistractorTaskComponent distractorTaskComponent;
+        [SerializeField] private RoomRaycaster raycastTarget;
+        [SerializeField] private float distanceFromWall = 0.1f;
     
         private readonly List<Vector3> _distractorPlacementPositions = new();
         private Transform _mainCameraTransform;
@@ -107,14 +111,32 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 return;
             }
 
+            
+            //raycastTarget.StopTracking();
             _acceptInput = false;
-            var position = _mainCameraTransform.position + _mainCameraTransform.forward * 2f;
+            var targetPosition = raycastTarget.transform.position;
+            var position = targetPosition +
+                           (mainCamera.transform.position - targetPosition).normalized * distanceFromWall;
+            
+            
+            var ray = new Ray(mainCamera.transform.position, mainCamera.transform.forward);
+            var results = new List<ARRaycastHit>();
+            if (raycastManager.Raycast(ray, results))
+            {
+                position = ray.GetPoint((results[0].distance - distanceFromWall));
+            }
+            else
+            {
+                position = new Vector3();
+            }
+            
         
             _distractorPlacementPositions.Add(position);
             Manager.BroadcastMessage(new ConfirmationData
             {
                 confirmationNumber = _currentMarkerPoint
             }, GetInstanceID());
+            //raycastTarget.StartTracking();
         }
         
     }

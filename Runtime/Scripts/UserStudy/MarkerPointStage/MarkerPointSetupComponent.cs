@@ -10,21 +10,12 @@ namespace DistractorTask.UserStudy.MarkerPointStage
     public class MarkerPointSetupComponent : SendingStudyStageComponent<MarkerPointStageEvent>
     {
         
-        [SerializeField] private Canvas markerPointCanvas;
-        [SerializeField] private Vector2Int zones;
-        [SerializeField] private Image marker;
-
-        private Image[] _markerPoints = Array.Empty<Image>();
+        
         private int _currentMarker;
-        
-        public int MarkerPointCount => _markerPoints.Length;
-        
-        private void Awake()
-        {
-            markerPointCanvas.gameObject.SetActive(false);
-            _markerPoints = CreateMarkerPoints(marker, markerPointCanvas, zones);
 
-        }
+        public int MarkerPointCount = 6;
+        
+
         
         private static Image[] CreateMarkerPoints(Image image, Canvas markerPointCanvas, Vector2Int markerZones)
         {
@@ -49,7 +40,6 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         public override void StartStudy(INetworkManager manager)
         {
             manager.RegisterCallback<ConfirmationData>(OnStartConfirmed);
-            base.StartStudy(manager);
         }
 
         private void OnStartConfirmed(ConfirmationData obj, int callerId)
@@ -60,8 +50,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             }
             Manager.UnregisterCallback<ConfirmationData>(OnStartConfirmed);
             Manager.RegisterCallback<ConfirmationData>(OnPointSelectionConfirmed);
-            _markerPoints[0].enabled = true;
-            markerPointCanvas.gameObject.SetActive(true);
+
             Manager.BroadcastMessage(new MarkerCountData
             {
                 markerCount = MarkerPointCount
@@ -70,9 +59,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         
         private void ActivateMarker()
         {
-            _markerPoints[_currentMarker].enabled = false;
             _currentMarker++;
-            _markerPoints[_currentMarker].enabled = true;
         }
         
         private void OnPointSelectionConfirmed(ConfirmationData data, int callerId)
@@ -86,11 +73,16 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 //todo throw error
             }
 
-            if (_currentMarker >= _markerPoints.Length - 1)
+            if (_currentMarker >= MarkerPointCount - 1)
             {
                 EndMarkerPointSetup();
                 return;
             }
+
+            Manager.BroadcastMessage(new ActivateMarkerPoint
+            {
+                currentMarkerIndex = _currentMarker
+            }, GetInstanceID());
             ActivateMarker();
             Manager.BroadcastMessage(new ConfirmationData
             {
@@ -100,8 +92,6 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         
         public void EndMarkerPointSetup()
         {
-            _markerPoints[^1].enabled = false;
-            markerPointCanvas.gameObject.SetActive(false);
             Manager.UnregisterCallback<ConfirmationData>(OnPointSelectionConfirmed); 
             EndStudy(Manager);
         }

@@ -13,6 +13,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         private int _currentTrialIndex;
 
         private int _currentConditionIndex;
+        private int _tempVideoClipData = 0;
 
         private void Awake()
         {
@@ -85,6 +86,11 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             {
                 0, 1, 2, 3, 4, 5
             };
+            Manager.BroadcastMessage(new VideoClipChangeData
+            {
+                videoClipIndex = _tempVideoClipData
+            }, GetInstanceID());
+            _tempVideoClipData = (_tempVideoClipData + 1) % 2;
             Manager.BroadcastMessage(new DistractorSelectionTrialData
             {
                 loadLevel = (byte)trial.conditionList[_currentConditionIndex].Item1,
