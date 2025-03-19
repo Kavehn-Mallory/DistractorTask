@@ -10,6 +10,7 @@ namespace DistractorTask.Transport
 
         public const ushort IpListeningPort = 7500;
         public const ushort DefaultPort = 7777;
+        public const ushort DisplayWallControlPort = 7600;
         
         public static IPAddress GetLocalIPAddress()
         {
@@ -23,7 +24,6 @@ namespace DistractorTask.Transport
             }
             return null;
         }
-        
         
         public static bool DidConnectionThrowError(ConnectionState reason)
         {
@@ -53,6 +53,12 @@ namespace DistractorTask.Transport
         public static NetworkEndpoint GetLocalEndpointWithDefaultPort(bool binding)
         {
             return GetLocalEndpoint(DefaultPort, binding);
+        }
+
+        //Todo fix this so that there are two different functions for display and listening
+        public static NetworkEndpoint GetBindableEndpoint(ushort port)
+        {
+            return NetworkEndpoint.AnyIpv4.WithPort(port);
         }
         
         

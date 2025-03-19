@@ -10,9 +10,8 @@ namespace DistractorTask.Transport
 {
     public class NetworkManager : Singleton<NetworkManager>, INetworkManager
     {
-
-
-        //Todo we need to set this up in a slightly different way 
+        
+        //Todo we need to set this up in a slightly different way I think 
         public Action<string> DebugAction = delegate { };
         
         private readonly List<NetworkConnectionHandler> _handlers = new();
@@ -33,6 +32,7 @@ namespace DistractorTask.Transport
         {
             _eventHandler.UnregisterCallback(callback);
         }
+        
 
         //todo change this to use the port as a lookup for listening but the ip for connections?
         public bool StartListening(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
