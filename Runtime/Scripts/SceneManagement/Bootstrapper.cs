@@ -1,6 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using DistractorTask.Core;
+using DistractorTask.Settings;
 using UnityEditor;
+using UnityEditor.Build.Content;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
@@ -10,33 +14,22 @@ namespace DistractorTask.SceneManagement
 {
     public class Bootstrapper : PersistentSingleton<Bootstrapper>
     {
-        private static bool _loadBootstrapper;
-
-#if UNITY_EDITOR
-        [MenuItem("Tools/Toggle Bootstrapper", true)]
-        private static bool SetToggleState()
-        {
-            Menu.SetChecked("Tools/Toggle Bootstrapper", _loadBootstrapper);
-            return true;
-        }
-
-        [MenuItem("Tools/Toggle Bootstrapper")]
-        public static void ToggleBootstrapper()
-        {
-            _loadBootstrapper = !_loadBootstrapper;
-        }
-#endif    
+        private const string ScenePath = "Packages/com.janwittke.distractortask/Runtime/Scenes/Bootstrapper/Editor_Bootstrapper.unity";
+        
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        static async void Init()
+        private static async void Init()
         {
             AsyncOperation bootstrapperLoadOperation = null;
             Debug.Log("Bootstrapper...");
 
 #if UNITY_EDITOR
+            var test = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
             //do nothing and just use the default scene?
-            if (_loadBootstrapper)
+            if (DistractorTaskUserSettings.instance.UseBootstrapper && test != null)
             {
-                bootstrapperLoadOperation = SceneManager.LoadSceneAsync("Editor_Bootstrapper", LoadSceneMode.Single);
+                Debug.Log("Enabling scene");
+                AddOrEnableScene(test);
+                bootstrapperLoadOperation = SceneManager.LoadSceneAsync(test.name, LoadSceneMode.Single);
             }
 #elif UNITY_ANDROID
 //todo put custom scene for VR/AR
@@ -65,5 +58,34 @@ namespace DistractorTask.SceneManagement
                 await Task.Delay(100);
             }
         }
+
+#if UNITY_EDITOR
+
+        private static void AddOrEnableScene(SceneAsset sceneAsset)
+        {
+            var scenes = EditorBuildSettings.scenes;
+
+            var path = AssetDatabase.GetAssetOrScenePath(sceneAsset);
+            
+            for (var index = 0; index < scenes.Length; index++)
+            {
+                var scene = scenes[index];
+                if (scene.path.Equals(path))
+                {
+                    scenes[index].enabled = true;
+                    EditorBuildSettings.scenes = scenes;
+                    return;
+                }
+                
+            }
+            
+            var sceneList = scenes.ToList();
+            sceneList.Add(new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = sceneList.ToArray();
+        }
+#endif
+        
+        
     }
+    
 }
