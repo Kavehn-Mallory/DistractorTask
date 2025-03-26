@@ -1,10 +1,11 @@
 ﻿#if UNITY_EDITOR
+using DistractorTask.Core;
 using UnityEditor;
 using UnityEngine;
 
 namespace DistractorTask.Settings
 {
-    [FilePath("UserSettings/Packages/com.janwittke.distractortask/DistractorTaskSettings.asset", FilePathAttribute.Location.ProjectFolder)]
+    [FilePath(Constants.UserSettingsPath, FilePathAttribute.Location.ProjectFolder)]
     public class DistractorTaskUserSettings : BaseSettings<DistractorTaskUserSettings>
     {
         [SerializeField]
@@ -19,6 +20,8 @@ namespace DistractorTask.Settings
                 Save();
             }
         }
+        
+
     }
 }
 #endif

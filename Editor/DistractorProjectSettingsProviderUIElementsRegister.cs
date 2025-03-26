@@ -46,10 +46,10 @@ namespace DistractorTask.Editor
                     properties.AddToClassList("property-list");
                     rootElement.Add(properties);
 
-                    properties.Add(new PropertyField(settings.FindProperty("defaultPort")));
-                    properties.Add(new PropertyField(settings.FindProperty("ipListeningPort")));
-                    properties.Add(new PropertyField(settings.FindProperty("loggingPort")));
-                    properties.Add(new PropertyField(settings.FindProperty("videoPlayerPort")));
+                    properties.Add(new PropertyField(settings.FindProperty("settings.defaultPort")));
+                    properties.Add(new PropertyField(settings.FindProperty("settings.ipListeningPort")));
+                    properties.Add(new PropertyField(settings.FindProperty("settings.loggingPort")));
+                    properties.Add(new PropertyField(settings.FindProperty("settings.videoPlayerPort")));
 
                     rootElement.Bind(settings);
                 },

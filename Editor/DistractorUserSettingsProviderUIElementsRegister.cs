@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DistractorTask.Core;
 using DistractorTask.Settings;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -8,19 +9,15 @@ namespace DistractorTask.Editor
 {
     public static class DistractorUserSettingsProviderUIElementsRegister
     {
-
-
-        private const string StyleSheetPath = "Packages/com.janwittke.distractortask/Editor/settings_ui.uss";
         
-        
-        [MenuItem("Tools/Toggle Bootstrapper", true)]
+        [MenuItem("Tools/" + Constants.MenuPrefixBase + "/Toggle Bootstrapper", true)]
         private static bool SetToggleState()
         {
-            Menu.SetChecked("Tools/Toggle Bootstrapper", DistractorTaskUserSettings.instance.UseBootstrapper);
+            Menu.SetChecked("Tools/" + Constants.MenuPrefixBase + "/Toggle Bootstrapper", DistractorTaskUserSettings.instance.UseBootstrapper);
             return true;
         }
 
-        [MenuItem("Tools/Toggle Bootstrapper")]
+        [MenuItem("Tools/" + Constants.MenuPrefixBase + "/Toggle Bootstrapper")]
         public static void ToggleBootstrapper()
         {
             DistractorTaskUserSettings.instance.UseBootstrapper = !DistractorTaskUserSettings.instance.UseBootstrapper;
@@ -42,7 +39,7 @@ namespace DistractorTask.Editor
 
                     // rootElement is a VisualElement. If you add any children to it, the OnGUI function
                     // isn't called because the SettingsProvider uses the UIElements drawing framework.
-                    var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(StyleSheetPath);
+                    var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(Constants.StyleSheetPath);
                     rootElement.styleSheets.Add(styleSheet);
                     var title = new Label()
                     {
