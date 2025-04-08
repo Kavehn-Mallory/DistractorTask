@@ -19,22 +19,14 @@ namespace DistractorTask.UserStudy.Core
 
         protected override IEnumerator Start()
         {
-            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived);
-            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalIpListeningEndpoint(), null, ConnectionType.Multicast);
+            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived, NetworkExtensions.IpListeningPort);
+            NetworkManager.Instance.StartListening(NetworkExtensions.IpListeningPort, null, ConnectionType.Multicast);
             
-            NetworkManager.Instance.DebugAction += OnDebugActionOfNetworkManager;
             
             return base.Start();
         }
 
-        private void OnDebugActionOfNetworkManager(string obj)
-        {
-            if (debugText)
-            {
-                debugText.text = obj;
-            }
-            
-        }
+
 
         private void OnIpAddressDataReceived(IpAddressData obj, int callerId)
         {
@@ -42,7 +34,6 @@ namespace DistractorTask.UserStudy.Core
             {
                 return;
             }
-            OnDebugActionOfNetworkManager($"Trying to connect to {obj.Endpoint}");
             NetworkManager.Instance.Connect(obj.Endpoint, OnConnectionEstablished);
         }
         
@@ -73,7 +64,7 @@ namespace DistractorTask.UserStudy.Core
             if (_hasConnection)
             {
                 Debug.Log("Study request accepted");
-                Manager.UnregisterToConnectionStateChange(NetworkHelper.DefaultPort, OnConnectionEstablished);
+                Manager.UnregisterToConnectionStateChange(NetworkExtensions.DefaultPort, OnConnectionEstablished);
                 base.OnStudyBeginRequest(obj, callerId);
             }
             

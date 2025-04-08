@@ -82,12 +82,12 @@ namespace DistractorTask.Logging
 
         public static void RegisterReceiver(INetworkManager receiver)
         {
-            receiver.RegisterCallback<LogfileData>(OnLogDataReceived);
+            receiver.RegisterCallback<LogfileData>(OnLogDataReceived, NetworkExtensions.DefaultPort);
         }
         
         public static void UnregisterReceiver(INetworkManager receiver)
         {
-            receiver.UnregisterCallback<LogfileData>(OnLogDataReceived);
+            receiver.UnregisterCallback<LogfileData>(OnLogDataReceived, NetworkExtensions.DefaultPort);
         }
 
         private static void OnLogDataReceived(LogfileData logfileData, int callerId)

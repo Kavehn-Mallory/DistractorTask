@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
@@ -62,7 +63,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         protected sealed override void OnStudyStageStart(MarkerPointStageEvent studyEvent)
         {
-            Manager.RegisterCallback<MarkerCountData>(OnMarkerCountDataReceived);
+            Manager.RegisterCallback<MarkerCountData>(OnMarkerCountDataReceived, NetworkExtensions.DefaultPort);
             Manager.BroadcastMessage(new ConfirmationData(), GetInstanceID());
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += AddPlacementPosition;
         }
@@ -74,8 +75,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 return;
             }
             _markerPointCount = markerCountData.markerCount;
-            Manager.UnregisterCallback<MarkerCountData>(OnMarkerCountDataReceived);
-            Manager.RegisterCallback<ConfirmationData>(OnConfirmationDataReceived);
+            Manager.UnregisterCallback<MarkerCountData>(OnMarkerCountDataReceived, NetworkExtensions.DefaultPort);
+            Manager.RegisterCallback<ConfirmationData>(OnConfirmationDataReceived, NetworkExtensions.DefaultPort);
             StartMarkerPlacement();
         }
         
@@ -98,7 +99,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         protected sealed override void OnStudyStageEnd(MarkerPointStageEvent studyEvent)
         {
-            Manager.UnregisterCallback<ConfirmationData>(OnConfirmationDataReceived);
+            Manager.UnregisterCallback<ConfirmationData>(OnConfirmationDataReceived, NetworkExtensions.DefaultPort);
             _acceptInput = false;
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed -= AddPlacementPosition;
         }

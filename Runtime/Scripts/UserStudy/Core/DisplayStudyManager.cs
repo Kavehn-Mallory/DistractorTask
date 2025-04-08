@@ -13,8 +13,8 @@ namespace DistractorTask.UserStudy.Core
         
         private void Start()
         {
-            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived);
-            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalEndpoint(NetworkHelper.DisplayWallControlPort, true), null, ConnectionType.Multicast);
+            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived, NetworkExtensions.DisplayWallControlPort);
+            NetworkManager.Instance.StartListening(NetworkExtensions.DisplayWallControlPort, null, ConnectionType.Multicast);
         }
 
         private void OnIpAddressDataReceived(IpAddressData ipAddressData, int callerId)

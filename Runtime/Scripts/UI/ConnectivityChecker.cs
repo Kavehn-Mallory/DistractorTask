@@ -25,7 +25,7 @@ namespace DistractorTask.UI
         {
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
-            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkHelper.DefaultPort, OnConnectionStateChanged);
+            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DefaultPort, OnConnectionStateChanged);
         }
 
         private void OnConnectionStateChanged(ConnectionState obj)
@@ -38,7 +38,7 @@ namespace DistractorTask.UI
             {
                 OnConnectionRequested();
             }
-            else if (NetworkHelper.DidConnectionThrowError(obj))
+            else if (NetworkExtensions.DidConnectionThrowError(obj))
             {
                 OnConnectionFailed();
             }

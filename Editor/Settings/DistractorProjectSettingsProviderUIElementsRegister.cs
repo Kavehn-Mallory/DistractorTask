@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace DistractorTask.Editor
+namespace DistractorTask.Editor.Settings
 {
     public static class DistractorProjectSettingsProviderUIElementsRegister
     {

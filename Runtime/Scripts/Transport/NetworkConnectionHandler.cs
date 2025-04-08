@@ -16,14 +16,16 @@ namespace DistractorTask.Transport
         //have list with listeners?
         public delegate void ActionRef<T>(ref T item);
         public delegate void ActionRef<T, TS>(ref T item, TS item2);
+        
         public NetworkDriver Driver;
         public NetworkPipeline Pipeline;
         public NativeList<NetworkConnection> Connections;
         
         private event Action<ushort, ConnectionState> OnConnectionStateChanged;
-        private readonly ActionRef<DataStreamReader> _onDataReceived;
+        private readonly ActionRef<DataStreamReader, ushort> _onDataReceived;
         public bool Internal;
         private NativeList<ushort> _endpointPorts;
+        [Obsolete]
         public ConnectionType ConnectionType;
         public ConnectionState ConnectionState;
 
@@ -45,7 +47,7 @@ namespace DistractorTask.Transport
         
 
         
-        public NetworkConnectionHandler(ActionRef<DataStreamReader> onDataReceived, Action<ushort, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
+        public NetworkConnectionHandler(ActionRef<DataStreamReader, ushort> onDataReceived, Action<ushort, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
         {
             if (IsCreated)
             {
@@ -108,13 +110,13 @@ namespace DistractorTask.Transport
                         if (cmd == NetworkEvent.Type.Data)
                         {
                             Debug.Log($"Data received {Driver.GetLocalEndpoint()}");
-                            _onDataReceived.Invoke(ref stream);
+                            _onDataReceived.Invoke(ref stream, Driver.GetLocalEndpoint().Port);
                         }
                         else if (cmd == NetworkEvent.Type.Disconnect)
                         {
                             Connections[i] = default;
                             var reason = (DisconnectReason) stream.ReadByte();
-                            ChangeConnectionState(NetworkHelper.CastDisconnectReasonToConnectionState(reason));
+                            ChangeConnectionState(NetworkExtensions.CastDisconnectReasonToConnectionState(reason));
                             Debug.Log($"We got disconnected from server due to {reason}.");
                             break;
                         }
@@ -144,7 +146,10 @@ namespace DistractorTask.Transport
         {
             ConnectionType = connectionType;
             ChangeConnectionState(ConnectionState.ConnectionRequested);
-            _endpointPorts.Add(endpoint.Port);
+            if (!_endpointPorts.Contains(endpoint.Port))
+            {
+                _endpointPorts.Add(endpoint.Port);
+            }
             Connections.Add(Driver.Connect(endpoint));
         }
 
@@ -160,7 +165,11 @@ namespace DistractorTask.Transport
                 return false;
             }
 
-            _endpointPorts.Add(endpoint.Port);
+            if (!_endpointPorts.Contains(endpoint.Port))
+            {
+                _endpointPorts.Add(endpoint.Port);
+            }
+            
             Driver.Listen();
             return true;
         }
@@ -188,11 +197,11 @@ namespace DistractorTask.Transport
             return false;
         }
 
-        public bool ContainsEndpointWithLoopbackCheck(ushort endpoint)
+        public bool IsConnectedTo(NetworkEndpoint endpoint)
         {
-            foreach (var networkEndpoint in _endpointPorts)
+            foreach (var connection in Connections)
             {
-                if (networkEndpoint.Equals(endpoint))
+                if (Driver.GetRemoteEndpoint(connection).Equals(endpoint))
                 {
                     return true;
                 }

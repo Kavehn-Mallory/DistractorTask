@@ -22,7 +22,7 @@ namespace DistractorTask.VideoPlayer
         void Start()
         {
             Assert.IsNotNull(videoPlayer, "The video player was not set.");
-            NetworkManager.Instance.RegisterCallback<VideoClipChangeData>(SwitchVideoClip);
+            NetworkManager.Instance.RegisterCallback<VideoClipChangeData>(SwitchVideoClip, NetworkExtensions.DefaultPort);
         }
 
         private void SwitchVideoClip(VideoClipChangeData changeData, int instanceId)

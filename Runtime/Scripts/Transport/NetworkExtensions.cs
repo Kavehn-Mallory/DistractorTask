@@ -5,7 +5,7 @@ using Unity.Networking.Transport.Error;
 
 namespace DistractorTask.Transport
 {
-    public static class NetworkHelper
+    public static class NetworkExtensions
     {
 
         public const ushort IpListeningPort = 7500;
@@ -64,18 +64,16 @@ namespace DistractorTask.Transport
         
         public static NetworkEndpoint GetLocalEndpoint(ushort port, bool binding)
         {
-            var ip = NetworkHelper.GetLocalIPAddress();
+            var ip = NetworkExtensions.GetLocalIPAddress();
             var endpoint = NetworkEndpoint.Parse(ip.ToString(), port);
-            //if we are listening for ip in the editor we are doing it just locally?
-#if UNITY_EDITOR
+            //if its used for binding we just return the default port
             if(binding)
                 endpoint = NetworkEndpoint.AnyIpv4.WithPort(port);
-#endif
 
             return endpoint;
         }
 
-        public static bool IsLocalAddress(NetworkEndpoint endpoint)
+        public static bool IsLocalAddress(this NetworkEndpoint endpoint)
         {
             return GetLocalEndpoint(endpoint.Port, true) == endpoint ||
                    GetLocalEndpoint(endpoint.Port, false) == endpoint || 

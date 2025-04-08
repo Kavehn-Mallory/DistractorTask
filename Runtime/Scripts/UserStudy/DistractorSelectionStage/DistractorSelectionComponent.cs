@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
@@ -23,7 +24,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         protected override void OnStudyStageStart(DistractorSelectionStageEvent studyEvent)
         {
             _placementPositions = distractorPlacement.DistractorPlacementPositions;
-            Manager.RegisterCallback<DistractorSelectionTrialData>(OnTrialDataReceived);
+            Manager.RegisterCallback<DistractorSelectionTrialData>(OnTrialDataReceived, NetworkExtensions.DefaultPort);
             distractorTaskComponent.OnTaskCompleted += OnTrialCompleted;
             Manager.BroadcastMessage(new ConfirmationData(), GetInstanceID());
         }
@@ -89,7 +90,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
 
         protected override void OnStudyStageEnd(DistractorSelectionStageEvent studyEvent)
         {
-            Manager.UnregisterCallback<DistractorSelectionTrialData>(OnTrialDataReceived);
+            Manager.UnregisterCallback<DistractorSelectionTrialData>(OnTrialDataReceived, NetworkExtensions.DefaultPort);
             distractorTaskComponent.DisableCanvas();
             Debug.Log("All trials completed");
         }

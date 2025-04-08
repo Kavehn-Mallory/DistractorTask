@@ -3,7 +3,7 @@ using DistractorTask.Settings;
 using UnityEditor;
 using UnityEngine;
 
-namespace DistractorTask.Editor
+namespace DistractorTask.Editor.Settings
 {
     
     [FilePath(Constants.ProjectSettingsPath, FilePathAttribute.Location.ProjectFolder)]

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using DistractorTask.Core;
-using DistractorTask.Transport.DataContainer;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
@@ -10,160 +9,227 @@ namespace DistractorTask.Transport
 {
     public class NetworkManager : Singleton<NetworkManager>, INetworkManager
     {
-        
-        //Todo we need to set this up in a slightly different way I think 
-        public Action<string> DebugAction = delegate { };
-        
-        private readonly List<NetworkConnectionHandler> _handlers = new();
-        private readonly NetworkMessageEventHandler _eventHandler = new();
 
-        private readonly List<OnConnectionChangedData> _onConnectionStateChange = new();
+        private NetworkMessageEventHandler _globalHandler = new();
+        private Dictionary<ushort, ConnectionObject> _activeConnections = new();
         
-        public void RegisterCallback<T>(Action<T, int> callback) where T : ISerializer, new()
+        public void RegisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new()
         {
-            if (typeof(T) == typeof(UserStudyBeginData))
+            if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
-                Debug.Log("Registered");
+                return;
             }
-            _eventHandler.RegisterCallback(callback);
+            connectionObject.EventHandler.RegisterCallback(callback);
         }
 
-        public void UnregisterCallback<T>(Action<T, int> callback) where T : ISerializer, new()
+        public void RegisterCallbackAllPorts<T>(Action<T, int> callback) where T : ISerializer, new()
         {
-            _eventHandler.UnregisterCallback(callback);
+            _globalHandler.RegisterCallback(callback);
+        }
+
+        public void UnregisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new()
+        {
+            if (!_activeConnections.TryGetValue(port, out var connectionObject))
+            {
+                return;
+            }
+            connectionObject.EventHandler.UnregisterCallback(callback);
         }
         
-
-        //todo change this to use the port as a lookup for listening but the ip for connections?
-        public bool StartListening(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
+        public void UnregisterCallbackAllPorts<T>(Action<T, int> callback) where T : ISerializer, new()
         {
-            //for our server it is fine to have two distinct listeners, I assume
-            if (TryGetHandler(endpoint, out var handler,false))
+            _globalHandler.UnregisterCallback(callback);
+        }
+
+        public bool StartListening(ushort port, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
+        {
+            if (_activeConnections.TryGetValue(port, out var connectionObject))
             {
-                if (handler.ConnectionType == ConnectionType.Multicast)
-                {
-                    handler.ConnectionType = connectionType;
-                }
-                onConnectionStateChanged?.Invoke(handler.ConnectionState);
-                RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
-                return handler.StartListening(endpoint, connectionType);
+                //todo update connection type?
+                onConnectionStateChanged?.Invoke(connectionObject.ConnectionHandler.ConnectionState);
+                RegisterToConnectionStateChange(port, onConnectionStateChanged);
+                var endpoint = NetworkExtensions.GetLocalEndpoint(port, true);
+                return connectionObject.ConnectionHandler.StartListening(endpoint, connectionType);
             }
 
-            handler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged);
-            RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
-            handler.StartListening(endpoint, connectionType);
+            connectionObject = new ConnectionObject
+            {
+                ConnectionType = connectionType,
+                ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
+                EventHandler = new NetworkMessageEventHandler(),
+                HasLocalConnection = false,
+                OnConnectionStateChange = _ => {}
+            };
+            _activeConnections.Add(port, connectionObject);
+            RegisterToConnectionStateChange(port, onConnectionStateChanged);
             
-            _handlers.Add(handler);
-            return handler.Driver.Listening;
+            //todo do we have the connection type twice?
+            
+            return connectionObject.ConnectionHandler.StartListening(NetworkExtensions.GetLocalEndpoint(port, true),
+                connectionType);
         }
 
-        private void OnDataReceived(ref DataStreamReader stream)
+        private void OnConnectionStateChanged(ushort port, ConnectionState connectionState)
+        {
+            if (_activeConnections.TryGetValue(port, out var connectionObject))
+            {
+                connectionObject.OnConnectionStateChange?.Invoke(connectionState);
+            }
+        }
+
+        private void OnDataReceived(ref DataStreamReader stream, ushort port)
         {
             var typeIndex = stream.ReadByte();
             var type = DataSerializationIndexer.GetTypeForTypeIndex(typeIndex);
             
-            DebugAction.Invoke($"Received {type}");
-            if (!_eventHandler.TriggerCallback(type, ref stream))
+            if (!_globalHandler.TriggerCallback(type, ref stream, out var data))
             {
                 Debug.LogError($"Type {type} is not handled yet by {nameof(NetworkMessageEventHandler)}. This either means that {type} does not implement {nameof(ISerializer)} or that the type does not have a default constructor");
+                return;
+            }
+
+            if (_activeConnections.TryGetValue(port, out var connectionObject))
+            {
+                connectionObject.EventHandler.TriggerCallback(type, data, 0);
             }
         }
 
         public void Connect(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
         {
-            if (TryGetHandler(endpoint, out var handler,true))
+            var isLocal = endpoint.IsLocalAddress();
+
+            if (_activeConnections.TryGetValue(endpoint.Port, out var connectionObject))
             {
-                Debug.Log("Found a handler");
-                //we already have a handler as a server
                 
-                if (handler.ConnectionType == ConnectionType.Multicast)
+                //todo update connection type if necessary 
+                if (isLocal)
                 {
-                    handler.ConnectionType = connectionType;
+                    Debug.Log("We are already listening and this is a local thing");
+                    connectionObject.HasLocalConnection = true;
+                    RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
+                    connectionObject.OnConnectionStateChange.Invoke(ConnectionState.Connected);
+                    return;
+                }
+
+                if (connectionObject.IsConnectedTo(endpoint))
+                {
+                    RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
+                    onConnectionStateChanged?.Invoke(ConnectionState.Connected);
+                    return;
                 }
                 
-                DebugAction.Invoke("Local");
-                //todo I do not think that it is possible for the second statement to be true. TryGetHandler already checks for the port. Instead we should check if there is already a connection to that Ip-Address 
-                //todo potentially we should have listeners and connections separated from each other 
-                if (NetworkHelper.IsLocalAddress(endpoint))
-                {
-                    handler.EstablishInternalConnection();
-                }
-                else if(!handler.ContainsEndpoint(endpoint.Port))
-                {
-                    handler.Connect(endpoint, handler.ConnectionType);
-                }
-                    
-                onConnectionStateChanged?.Invoke(handler.ConnectionState);
-                RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
-                
-                
+                connectionObject.ConnectionHandler.Connect(endpoint, connectionType);
                 return;
             }
-            DebugAction.Invoke("Global");
-            Debug.Log("No handler exists yet");
-            RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
-            handler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged, 1);
-            handler.Connect(endpoint, connectionType);
-            
-            
-            _handlers.Add(handler);
-        }
 
-        private void OnConnectionStateChanged(ushort endpoint, ConnectionState connectionState)
-        {
-            Debug.Log("Looking for state-change-object", this);
-            for (var i = 0; i < _onConnectionStateChange.Count; i++)
+            connectionObject = new ConnectionObject()
             {
-                var changedData = _onConnectionStateChange[i];
-                if (changedData.EndpointPort == endpoint)
-                {
-                    Debug.Log("Found a connection state object");
-                    changedData.OnStateChange.Invoke(connectionState);
-                    continue;
-                }
+                ConnectionType = connectionType,
+                ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
+                EventHandler = new NetworkMessageEventHandler(),
+                HasLocalConnection = isLocal,
+                OnConnectionStateChange = _ => {}
+            };
+            _activeConnections.Add(endpoint.Port, connectionObject);
+            RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
 
-                Debug.Log($"Thats not it: {changedData.EndpointPort} vs {endpoint}");
+            if (!isLocal)
+            {
+                connectionObject.ConnectionHandler.Connect(endpoint, connectionType);
             }
+
         }
 
         public ConnectionState CheckConnectionStatus(NetworkEndpoint endpoint)
         {
-            if (TryGetHandler(endpoint, out var handler, true))
-            {
-                return handler.ConnectionState;
-            }
-
-            return ConnectionState.Default;
+            throw new NotImplementedException();
         }
 
-        public bool BroadcastMessage<T>(T data, int callerId) where T : ISerializer, new()
+        public bool BroadcastMessage<T>(T data, int callerId, bool suppressInternalGlobalCall = false) where T : ISerializer, new()
         {
-            var success = false;
-            foreach (var handler in _handlers)
+            bool local = false;
+            bool success = false;
+            foreach (var activeConnectionObject in _activeConnections.Values)
             {
-                if (handler.ConnectionType == ConnectionType.Multicast)
+                if (activeConnectionObject.HasLocalConnection)
                 {
-                    continue;
+                    activeConnectionObject.EventHandler.TriggerCallback(data, callerId);
+                    local = true;
                 }
-                success |= SendMessage(handler, data);
+
+                success |= SendMessage(activeConnectionObject.ConnectionHandler, data);
             }
 
-            if (callerId != 0)
+            if (local && !suppressInternalGlobalCall)
             {
-                SendMessageLocally(data, callerId);
+                _globalHandler.TriggerCallback(data, callerId);
             }
-            
+
             return success;
-
         }
+        
 
+
+        public bool MulticastMessage<T>(T data, ushort port, int callerId) where T : ISerializer, new()
+        {
+            if(_activeConnections.TryGetValue(port, out var activeConnectionObject))
+            {
+                if (activeConnectionObject.HasLocalConnection)
+                {
+                    activeConnectionObject.EventHandler.TriggerCallback(data, callerId);
+                    _globalHandler.TriggerCallback(data, callerId);
+                }
+
+                return SendMessage(activeConnectionObject.ConnectionHandler, data);
+            }
+
+            return false;
+        }
+        
+        public bool UnicastMessage<T>(T data, NetworkEndpoint endpoint, int callerId) where T : ISerializer, new()
+        {
+            if(_activeConnections.TryGetValue(endpoint.Port, out var activeConnectionObject))
+            {
+                if (activeConnectionObject.HasLocalConnection)
+                {
+                    activeConnectionObject.EventHandler.TriggerCallback(data, callerId);
+                    _globalHandler.TriggerCallback(data, callerId);
+                }
+
+                return SendMessage(activeConnectionObject.ConnectionHandler, data, endpoint);
+            }
+
+            return false;
+        }
+        
         private bool SendMessage<T>(NetworkConnectionHandler handler, T data) where T : ISerializer, new()
         {
             var success = false;
             foreach (var connection in handler.Connections)
             {
                 var beginSend = handler.Driver.BeginSend(handler.Pipeline, connection, out var writer) == 0;
-                Debug.Log(beginSend);
+                writer.SendMessage(data);
+                var endSend = handler.Driver.EndSend(writer) >= 0;
+                if (beginSend && endSend)
+                {
+                    success = true;
+                }
+            }
+
+            return success;
+
+        }
+        
+        private bool SendMessage<T>(NetworkConnectionHandler handler, T data, NetworkEndpoint targetEndpoint) where T : ISerializer, new()
+        {
+            var success = false;
+            foreach (var connection in handler.Connections)
+            {
+                if (handler.Driver.GetRemoteEndpoint(connection) != targetEndpoint)
+                {
+                    continue;
+                }
+                var beginSend = handler.Driver.BeginSend(handler.Pipeline, connection, out var writer) == 0;
                 writer.SendMessage(data);
                 var endSend = handler.Driver.EndSend(writer) >= 0;
                 if (beginSend && endSend)
@@ -176,48 +242,16 @@ namespace DistractorTask.Transport
 
         }
 
-        private void SendMessageLocally<T>(T data, int callerId)
-            where T : ISerializer, new()
-        {
-            _eventHandler.TriggerCallback(data, callerId);
-        }
-
-        public bool MulticastMessage<T>(T data, NetworkEndpoint endpoint, int callerId) where T : ISerializer, new()
-        {
-            if (TryGetHandler(endpoint, out var handler, true))
-            {
-                var result = SendMessage(handler, data);
-
-                if (callerId != 0)
-                {
-                    Debug.Log($"Local send: {typeof(T)}");
-                    SendMessageLocally(data, callerId);
-                }
-                return result;
-            }
-
-            return false;
-        }
-
         public void RegisterToConnectionStateChange(ushort endpointPort, Action<ConnectionState> onConnectionStateChanged)
         {
             if (onConnectionStateChanged == null)
             {
                 return;
             }
-            for (var i = 0; i < _onConnectionStateChange.Count; i++)
+            if (_activeConnections.TryGetValue(endpointPort, out var connectionObject))
             {
-                var connectionChangedData = _onConnectionStateChange[i];
-                if (connectionChangedData.EndpointPort == endpointPort)
-                {
-                    connectionChangedData.OnStateChange += onConnectionStateChanged;
-                    _onConnectionStateChange[i] = connectionChangedData;
-                    return;
-                }
+                connectionObject.OnConnectionStateChange += onConnectionStateChanged;
             }
-            
-            _onConnectionStateChange.Add(new OnConnectionChangedData(endpointPort, onConnectionStateChanged));
-
         }
 
         public void UnregisterToConnectionStateChange(ushort endpointPort, Action<ConnectionState> onConnectionStateChanged)
@@ -226,63 +260,24 @@ namespace DistractorTask.Transport
             {
                 return;
             }
-            for (var i = 0; i < _onConnectionStateChange.Count; i++)
+            if (_activeConnections.TryGetValue(endpointPort, out var connectionObject))
             {
-                var connectionChangedData = _onConnectionStateChange[i];
-                if (connectionChangedData.EndpointPort == endpointPort)
-                {
-                    connectionChangedData.OnStateChange -= onConnectionStateChanged;
-                    _onConnectionStateChange[i] = connectionChangedData;
-                    return;
-                }
+                connectionObject.OnConnectionStateChange -= onConnectionStateChanged;
             }
-        }
-        
-        private void Update()
-        {
-            for (var index = _handlers.Count - 1; index >= 0; index--)
-            {
-                var handler = _handlers[index];
-                handler.UpdateConnectionHandler();
-            }
-        }
-
-        private void OnDestroy()
-        {
-            foreach (var handler in _handlers)
-            {
-                handler.Dispose();
-            }
-            
-        }
-        
-        
-        private bool TryGetHandler(NetworkEndpoint endpoint, out NetworkConnectionHandler existingHandler, bool loopbackCheck)
-        {
-            existingHandler = default;
-            foreach (var handler in _handlers)
-            {
-                if (handler.ContainsEndpoint(endpoint.Port))
-                {
-                    existingHandler = handler;
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 
-    public struct OnConnectionChangedData
+    internal class ConnectionObject
     {
-        public readonly ushort EndpointPort;
-        public Action<ConnectionState> OnStateChange;
+        public bool HasLocalConnection;
+        public ConnectionType ConnectionType;
+        public NetworkConnectionHandler ConnectionHandler;
+        public NetworkMessageEventHandler EventHandler;
+        public Action<ConnectionState> OnConnectionStateChange;
 
-        public OnConnectionChangedData(ushort endpointPort, Action<ConnectionState> onStateChange)
+        public bool IsConnectedTo(NetworkEndpoint endpoint)
         {
-            EndpointPort = endpointPort;
-            OnStateChange = onStateChange;
+            return ConnectionHandler.IsConnectedTo(endpoint);
         }
-        
     }
 }

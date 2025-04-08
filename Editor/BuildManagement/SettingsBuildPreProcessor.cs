@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using DistractorTask.Core;
+using DistractorTask.Editor.Settings;
 using DistractorTask.Settings;
 using UnityEditor;
 using UnityEditor.Build;

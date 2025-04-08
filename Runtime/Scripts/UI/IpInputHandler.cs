@@ -41,9 +41,9 @@ namespace DistractorTask.UI
             if (int.TryParse(inputFieldP0.text, out var p0) && int.TryParse(inputFieldP1.text, out var p1) &&
                 int.TryParse(inputFieldP2.text, out var p2) && int.TryParse(inputFieldP3.text, out var p3) && ushort.TryParse(inputFieldPort.text, out var port))
             {
-                Debug.Log($"Starting to listen on {NetworkHelper.GetLocalEndpointWithDefaultPort(true)}");
-                NetworkManager.Instance.StartListening(NetworkHelper.GetLocalEndpointWithDefaultPort(true),
-                    OnConnectionEstablished);
+                Debug.Log($"Starting to listen on {NetworkExtensions.GetLocalEndpointWithDefaultPort(true)}");
+                NetworkManager.Instance.StartListening(NetworkExtensions.DefaultPort,
+                    OnConnectionEstablished, ConnectionType.Broadcast);
                 _endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", port);
                 NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived, ConnectionType.Multicast);
             }
@@ -65,8 +65,8 @@ namespace DistractorTask.UI
             Debug.Log("Sending Ip-Address");
             Debug.Log(NetworkManager.Instance.MulticastMessage(new IpAddressData
             {
-                Endpoint = NetworkHelper.GetLocalEndpointWithDefaultPort(false),
-            }, _endpoint, this.GetInstanceID()));
+                Endpoint = NetworkExtensions.GetLocalEndpointWithDefaultPort(false),
+            }, _endpoint.Port, this.GetInstanceID()));
         }
     }
 }

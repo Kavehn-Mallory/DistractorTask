@@ -1,9 +1,10 @@
 ﻿#if UNITY_EDITOR
 using DistractorTask.Core;
+using DistractorTask.Settings;
 using UnityEditor;
 using UnityEngine;
 
-namespace DistractorTask.Settings
+namespace DistractorTask.Editor.Settings
 {
     [FilePath(Constants.UserSettingsPath, FilePathAttribute.Location.ProjectFolder)]
     public class DistractorTaskUserSettings : BaseSettings<DistractorTaskUserSettings>

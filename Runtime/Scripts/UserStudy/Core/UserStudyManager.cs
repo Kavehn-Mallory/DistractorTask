@@ -13,6 +13,7 @@ namespace DistractorTask.UserStudy.Core
         private int _studyIndex = -1;
 
         protected float SecondsToWait = 5f;
+        
 
         public abstract INetworkManager Manager { get; }
         
@@ -20,8 +21,8 @@ namespace DistractorTask.UserStudy.Core
         {
             
             //yield return new WaitForSeconds(SecondsToWait);
-            Manager.RegisterCallback<RequestStudyBeginData>(OnStudyBeginRequest);
-            Manager.RegisterCallback<UserStudyBeginData>(OnStudyBegin);
+            Manager.RegisterCallback<RequestStudyBeginData>(OnStudyBeginRequest, NetworkExtensions.DefaultPort);
+            Manager.RegisterCallback<UserStudyBeginData>(OnStudyBegin, NetworkExtensions.DefaultPort);
             foreach (var studyStage in studyStages)
             {
                 studyStage.Manager = Manager;
@@ -49,7 +50,7 @@ namespace DistractorTask.UserStudy.Core
                 return;
             }
             Debug.Log("Received on Study Begin Data", this);
-            Manager.UnregisterCallback<RequestStudyBeginData>(OnStudyBeginRequest);
+            Manager.UnregisterCallback<RequestStudyBeginData>(OnStudyBeginRequest, NetworkExtensions.DefaultPort);
             StartStudy();
         }
 

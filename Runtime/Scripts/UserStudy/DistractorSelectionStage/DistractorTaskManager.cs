@@ -62,7 +62,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
 
         public override void StartStudy(INetworkManager manager)
         {
-            Manager.RegisterCallback<ConfirmationData>(OnStudyBegin);
+            Manager.RegisterCallback<ConfirmationData>(OnStudyBegin, NetworkExtensions.DefaultPort);
             base.StartStudy(manager);
         }
 
@@ -72,8 +72,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             {
                 return;
             }
-            Manager.UnregisterCallback<ConfirmationData>(OnStudyBegin);
-            Manager.RegisterCallback<TrialCompletedData>(OnTrialCompleted);
+            Manager.UnregisterCallback<ConfirmationData>(OnStudyBegin, NetworkExtensions.DefaultPort);
+            Manager.RegisterCallback<TrialCompletedData>(OnTrialCompleted, NetworkExtensions.DefaultPort);
             _currentTrialIndex = 0;
             _currentConditionIndex = 0;
             StartTrial();
@@ -124,7 +124,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         
         public override void EndStudy(INetworkManager manager)
         {
-            Manager.UnregisterCallback<TrialCompletedData>(OnTrialCompleted);
+            Manager.UnregisterCallback<TrialCompletedData>(OnTrialCompleted, NetworkExtensions.DefaultPort);
             base.EndStudy(manager);
         }
         

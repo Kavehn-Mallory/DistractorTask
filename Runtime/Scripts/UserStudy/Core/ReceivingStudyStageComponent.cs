@@ -8,12 +8,12 @@ namespace DistractorTask.UserStudy.Core
         
         public override void RegisterStudyComponent(INetworkManager manager)
         {
-            manager.RegisterCallback<TStudyEvent>(OnStudyStageEventReceived);
+            manager.RegisterCallback<TStudyEvent>(OnStudyStageEventReceived, DefaultPort);
         }
 
         public override void UnregisterStudyComponent(INetworkManager manager)
         {
-            manager.UnregisterCallback<TStudyEvent>(OnStudyStageEventReceived);
+            manager.UnregisterCallback<TStudyEvent>(OnStudyStageEventReceived, DefaultPort);
         }
         
         private void OnStudyStageEventReceived(TStudyEvent studyEvent, int callerId)

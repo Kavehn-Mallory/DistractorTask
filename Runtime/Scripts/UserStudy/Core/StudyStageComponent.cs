@@ -7,6 +7,8 @@ namespace DistractorTask.UserStudy.Core
     public abstract class StudyStageComponent : MonoBehaviour
     {
 
+        public ushort DefaultPort = NetworkExtensions.DefaultPort;
+        
         public INetworkManager Manager;
         public event Action OnStudyStart = delegate { };
 

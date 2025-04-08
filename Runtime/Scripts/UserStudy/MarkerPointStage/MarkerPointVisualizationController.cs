@@ -77,9 +77,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 Source = returnValue
             };
-            NetworkManager.Instance.RegisterCallback<T>(testStruct.Callback);
-            NetworkManager.Instance.MulticastMessage(data, NetworkEndpoint.AnyIpv4.WithPort(targetPort),
-                GetInstanceID());
+            NetworkManager.Instance.RegisterCallback<T>(testStruct.Callback, NetworkExtensions.DefaultPort);
+            NetworkManager.Instance.MulticastMessage(data, targetPort, GetInstanceID());
             
             return testStruct.Source;
         }
@@ -90,7 +89,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
             public void Callback(T data, int id)
             {
-                NetworkManager.Instance.UnregisterCallback<T>(Callback);
+                NetworkManager.Instance.UnregisterCallback<T>(Callback, NetworkExtensions.DefaultPort);
                 Source.SetResult(data);
             }
         }

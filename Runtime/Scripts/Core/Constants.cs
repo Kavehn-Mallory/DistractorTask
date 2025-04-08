@@ -19,6 +19,8 @@
         public const string RuntimeSettingsFileName = "RuntimeUserSettings.asset";
 
         public const string RuntimeSettingsFullPath = RuntimeSettingsPath + "/" + RuntimeSettingsFileName;
+        
+        public const string EditorBootstrapperScenePath = "Packages/" + PackageNameReverseDomain + "/Runtime/Scenes/Bootstrapper/Editor_Bootstrapper.unity";
 
     }
 }

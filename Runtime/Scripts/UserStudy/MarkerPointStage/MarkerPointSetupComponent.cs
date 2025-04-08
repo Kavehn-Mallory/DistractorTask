@@ -39,7 +39,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         public override void StartStudy(INetworkManager manager)
         {
-            manager.RegisterCallback<ConfirmationData>(OnStartConfirmed);
+            manager.RegisterCallback<ConfirmationData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
         }
 
         private void OnStartConfirmed(ConfirmationData obj, int callerId)
@@ -48,8 +48,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 return;
             }
-            Manager.UnregisterCallback<ConfirmationData>(OnStartConfirmed);
-            Manager.RegisterCallback<ConfirmationData>(OnPointSelectionConfirmed);
+            Manager.UnregisterCallback<ConfirmationData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
+            Manager.RegisterCallback<ConfirmationData>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort);
 
             Manager.BroadcastMessage(new MarkerCountData
             {
@@ -92,7 +92,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         
         public void EndMarkerPointSetup()
         {
-            Manager.UnregisterCallback<ConfirmationData>(OnPointSelectionConfirmed); 
+            Manager.UnregisterCallback<ConfirmationData>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort); 
             EndStudy(Manager);
         }
     }

@@ -16,8 +16,8 @@ namespace DistractorTask.Transport
         
         private void Start()
         {
-            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived);
-            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalEndpoint(port, true), null, ConnectionType.Multicast);
+            NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived, port);
+            NetworkManager.Instance.StartListening(port, null, ConnectionType.Multicast);
         }
 
         private void OnIpAddressDataReceived(IpAddressData ipAddressData, int callerId)
@@ -26,7 +26,7 @@ namespace DistractorTask.Transport
             {
                 return;
             }
-            NetworkManager.Instance.Connect(ipAddressData.Endpoint, OnConnectionEstablished);
+            NetworkManager.Instance.Connect(ipAddressData.Endpoint, OnConnectionEstablished, ConnectionType.Broadcast);
         }
 
         private void OnConnectionEstablished(ConnectionState connectionState)

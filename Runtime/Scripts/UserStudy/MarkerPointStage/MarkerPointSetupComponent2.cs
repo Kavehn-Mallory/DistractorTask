@@ -28,7 +28,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             markerPointCanvas.gameObject.SetActive(false);
             _markerPoints = CreateMarkerPoints(marker, markerPointCanvas, zones);
-            Manager.RegisterCallback<MarkerCountData>(OnStartConfirmed);
+            Manager.RegisterCallback<MarkerCountData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
 
         }
         
@@ -59,8 +59,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 return;
             }
-            Manager.UnregisterCallback<MarkerCountData>(OnStartConfirmed);
-            Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed);
+            Manager.UnregisterCallback<MarkerCountData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
+            Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort);
             _markerPoints[0].enabled = true;
             markerPointCanvas.gameObject.SetActive(true);
         }
@@ -100,7 +100,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             _markerPoints[^1].enabled = false;
             markerPointCanvas.gameObject.SetActive(false);
-            Manager.UnregisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed); 
+            Manager.UnregisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort); 
         }
     }
 

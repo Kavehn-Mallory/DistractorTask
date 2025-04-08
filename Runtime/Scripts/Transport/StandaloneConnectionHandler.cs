@@ -12,9 +12,9 @@ namespace DistractorTask.Transport
         
         public IEnumerator Start()
         {
-            NetworkManager.Instance.StartListening(NetworkHelper.GetLocalEndpointWithDefaultPort(true),
-                OnConnectionEstablished);
-            _endpoint = NetworkEndpoint.AnyIpv4.WithPort(NetworkHelper.IpListeningPort);
+            NetworkManager.Instance.StartListening(NetworkExtensions.DefaultPort,
+                OnConnectionEstablished, ConnectionType.Broadcast);
+            _endpoint = NetworkEndpoint.AnyIpv4.WithPort(NetworkExtensions.IpListeningPort);
             yield return new WaitForSeconds(2f);
             NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived, ConnectionType.Multicast);
         }
@@ -22,8 +22,8 @@ namespace DistractorTask.Transport
         private void OnConnectionStateReceived(ConnectionState obj) =>
             NetworkManager.Instance.MulticastMessage(new IpAddressData
             {
-                Endpoint = NetworkHelper.GetLocalEndpointWithDefaultPort(false),
-            }, _endpoint, this.GetInstanceID());
+                Endpoint = NetworkExtensions.GetLocalEndpointWithDefaultPort(false),
+            }, _endpoint.Port, this.GetInstanceID());
         
         
         private void OnConnectionEstablished(ConnectionState obj)

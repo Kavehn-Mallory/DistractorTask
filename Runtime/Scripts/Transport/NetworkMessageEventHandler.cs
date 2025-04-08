@@ -52,6 +52,20 @@ namespace DistractorTask.Transport
         }
 
 
+        
+        public bool TriggerCallback(Type type, ISerializer data, int callerId)
+        {
+            foreach (var invoker in _invocationHelper)
+            {
+                if (type == invoker.InvocationType)
+                {
+                    invoker.Invoke(data, callerId);
+                    return true;
+                }
+            }
+
+            return false;
+        } 
 
 
         public bool TriggerCallback<T>(T data, int callerId) where T : ISerializer, new()
@@ -83,26 +97,41 @@ namespace DistractorTask.Transport
 
             return false;
         }
+        
+        public bool TriggerCallback(Type type, ref DataStreamReader stream, out ISerializer data)
+        {
+            foreach (var invoker in _invocationHelper)
+            {
+                if (type == invoker.InvocationType)
+                {
+                    data = invoker.Invoke(ref stream);
+                    return true;
+                }
+            }
 
-        public void RegisterCallback<T>(Action<T, int> test) where T : ISerializer, new()
+            data = null;
+            return false;
+        }
+
+        public void RegisterCallback<T>(Action<T, int> callback) where T : ISerializer, new()
         {
             foreach (var invoker in _invocationHelper)
             {
                 if (invoker is InvocationHelper<T> helper)
                 {
-                    helper.RegisterCallback(test);
+                    helper.RegisterCallback(callback);
                     return;
                 }
             }
         }
         
-        public void UnregisterCallback<T>(Action<T, int> test) where T : ISerializer, new()
+        public void UnregisterCallback<T>(Action<T, int> callback) where T : ISerializer, new()
         {
             foreach (var invoker in _invocationHelper)
             {
                 if (invoker is InvocationHelper<T> helper)
                 {
-                    helper.UnregisterCallback(test);
+                    helper.UnregisterCallback(callback);
                     return;
                 }
             }
@@ -113,7 +142,9 @@ namespace DistractorTask.Transport
         {
             public Type InvocationType { get; }
             
-            public void Invoke(ref DataStreamReader stream);
+            public ISerializer Invoke(ref DataStreamReader stream);
+
+            public void Invoke(ISerializer data, int callerId);
         }
         
         public interface IInvoker<T> : IInvoker where T : ISerializer
@@ -130,12 +161,21 @@ namespace DistractorTask.Transport
             public Type InvocationType => typeof(T);
             
             private Action<T, int> _actionToInvoke = delegate {};
-
-            public void Invoke(ref DataStreamReader stream)
+            
+            public ISerializer Invoke(ref DataStreamReader stream)
             {
                 var data = new T();
                 data.Deserialize(ref stream);
                 _actionToInvoke.Invoke(data, 0);
+                return data;
+            }
+
+            public void Invoke(ISerializer data, int callerId)
+            {
+                if (data is T castedData)
+                {
+                    Invoke(castedData, callerId);
+                }
             }
 
             public void Invoke(T data, int callerId)
