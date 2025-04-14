@@ -12,11 +12,24 @@ namespace DistractorTask.Transport
 
         private NetworkMessageEventHandler _globalHandler = new();
         private Dictionary<ushort, ConnectionObject> _activeConnections = new();
-        
+        private Dictionary<ushort, NetworkMessageEventHandler> _inactiveEventHandlers = new();
+
+        private void OnDestroy()
+        {
+            var values = _activeConnections.Values;
+
+            foreach (var value in values)
+            {
+                value.ConnectionHandler.Dispose();
+            }
+        }
+
         public void RegisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new()
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
+                _inactiveEventHandlers.TryAdd(port, new NetworkMessageEventHandler());
+                _inactiveEventHandlers[port].RegisterCallback(callback);
                 return;
             }
             connectionObject.EventHandler.RegisterCallback(callback);
@@ -31,6 +44,8 @@ namespace DistractorTask.Transport
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
+                _inactiveEventHandlers.TryAdd(port, new NetworkMessageEventHandler());
+                _inactiveEventHandlers[port].UnregisterCallback(callback);
                 return;
             }
             connectionObject.EventHandler.UnregisterCallback(callback);
@@ -52,13 +67,18 @@ namespace DistractorTask.Transport
                 return connectionObject.ConnectionHandler.StartListening(endpoint, connectionType);
             }
 
+            if (!_inactiveEventHandlers.Remove(port, out var messageEventHandler))
+            {
+                messageEventHandler = new NetworkMessageEventHandler();
+            }
+
             connectionObject = new ConnectionObject
             {
                 ConnectionType = connectionType,
                 ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
-                EventHandler = new NetworkMessageEventHandler(),
+                EventHandler = messageEventHandler,
                 HasLocalConnection = false,
-                OnConnectionStateChange = _ => {}
+                OnConnectionStateChange = delegate { }
             };
             _activeConnections.Add(port, connectionObject);
             RegisterToConnectionStateChange(port, onConnectionStateChanged);
@@ -121,14 +141,20 @@ namespace DistractorTask.Transport
                 connectionObject.ConnectionHandler.Connect(endpoint, connectionType);
                 return;
             }
+            
+            
+            if (!_inactiveEventHandlers.Remove(endpoint.Port, out var messageEventHandler))
+            {
+                messageEventHandler = new NetworkMessageEventHandler();
+            }
 
             connectionObject = new ConnectionObject()
             {
                 ConnectionType = connectionType,
                 ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
-                EventHandler = new NetworkMessageEventHandler(),
+                EventHandler = messageEventHandler,
                 HasLocalConnection = isLocal,
-                OnConnectionStateChange = _ => {}
+                OnConnectionStateChange = delegate { }
             };
             _activeConnections.Add(endpoint.Port, connectionObject);
             RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);

@@ -16,6 +16,9 @@ namespace DistractorTask.Transport
         
         private readonly IInvoker[] _invocationHelper;
 
+        private static readonly Predicate<Type> IsValidType = t =>
+            (t.IsValueType || t.GetConstructor(Type.EmptyTypes) != null) && !t.IsAbstract;
+
         public NetworkMessageEventHandler()
         {
             var serializableData = GetSerializableTypes();
@@ -25,7 +28,7 @@ namespace DistractorTask.Transport
             {
                 var data = serializableData[i];
                 var invoker = typeof(InvocationHelper<>).MakeGenericType(data);
-
+                Debug.Log($"Type: {data}");
                 _invocationHelper[i] = (IInvoker)Activator.CreateInstance(invoker);
                 
             }
@@ -33,22 +36,26 @@ namespace DistractorTask.Transport
 
         public static List<Type> GetSerializableTypes()
         {
-            
 #if UNITY_EDITOR
-            return TypeCache.GetTypesDerivedFrom<ISerializer>().Where(s => s.IsValueType || s.GetConstructor(Type.EmptyTypes) != null).ToList();
+            return TypeCache.GetTypesDerivedFrom<ISerializer>().Where(t => IsValidType.Invoke(t)).ToList();
 #else
+            return GetSerializableTypesThroughAssemblies();
+#endif
+            
+        }
+
+        private static List<Type> GetSerializableTypesThroughAssemblies()
+        {
             var result = new List<Type>();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
                 result.AddRange(assembly.GetTypes().Where(t =>
-                    (t.IsValueType || t.GetConstructor(Type.EmptyTypes) != null) &&
+                    (IsValidType.Invoke(t)) &&
                     typeof(ISerializer).IsAssignableFrom(t)));
             }
 
             return result;
-#endif
-            
         }
 
 

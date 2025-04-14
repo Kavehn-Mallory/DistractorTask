@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using DistractorTask.Transport.DataContainer;
-using Unity.Networking.Transport;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace DistractorTask.Transport
 {
@@ -53,7 +51,13 @@ namespace DistractorTask.Transport
         private void OnIpAddressDataReceived(IpAddressData arg1, int arg2)
         {
             Debug.Log($"Connecting to {arg1.Endpoint}");
-            NetworkManager.Instance.Connect(arg1.Endpoint, null, ConnectionType.Multicast);
+            //todo test MarkerPointVisualizationController 
+            NetworkManager.Instance.Connect(arg1.Endpoint, OnVideoPortConnectionEstablished, ConnectionType.Multicast);
+        }
+
+        private void OnVideoPortConnectionEstablished(ConnectionState obj)
+        {
+            throw new NotImplementedException();
         }
 
         private void OnConnectionEstablished(ConnectionState state)
