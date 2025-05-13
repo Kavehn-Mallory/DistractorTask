@@ -56,7 +56,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             _currentLoadLevel = data.loadLevel;
             _markerOrder = data.markers;
             _currentMarker = 0;
-            _selectionCount = data.selectionCount;
+            _selectionCount = data.repetitionsPerTrial;
             distractorTaskComponent.EnableCanvas();
             StartTrialRun();
         }

@@ -79,5 +79,7 @@ namespace DistractorTask.Transport
                    GetLocalEndpoint(endpoint.Port, false) == endpoint || 
                    endpoint.IsLoopback || endpoint == NetworkEndpoint.AnyIpv4.WithPort(endpoint.Port);
         }
+        
+        
     }
 }

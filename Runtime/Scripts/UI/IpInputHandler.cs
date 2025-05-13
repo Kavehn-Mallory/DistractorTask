@@ -15,6 +15,7 @@ namespace DistractorTask.UI
         public TMP_InputField inputFieldPort;
 
 
+        public ushort targetPort = NetworkExtensions.DefaultPort;
         private NetworkEndpoint _endpoint;
 
         private void Awake()
@@ -33,6 +34,7 @@ namespace DistractorTask.UI
             
             inputFieldPort.contentType = TMP_InputField.ContentType.IntegerNumber;
             inputFieldPort.characterLimit = 5;
+            inputFieldPort.text = NetworkExtensions.IpListeningPort.ToString();
         }
 
 
@@ -42,7 +44,7 @@ namespace DistractorTask.UI
                 int.TryParse(inputFieldP2.text, out var p2) && int.TryParse(inputFieldP3.text, out var p3) && ushort.TryParse(inputFieldPort.text, out var port))
             {
                 Debug.Log($"Starting to listen on {NetworkExtensions.GetLocalEndpointWithDefaultPort(true)}");
-                NetworkManager.Instance.StartListening(NetworkExtensions.DefaultPort,
+                NetworkManager.Instance.StartListening(targetPort,
                     OnConnectionEstablished, ConnectionType.Broadcast);
                 _endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", port);
                 NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived, ConnectionType.Multicast);
@@ -65,7 +67,7 @@ namespace DistractorTask.UI
             Debug.Log("Sending Ip-Address");
             Debug.Log(NetworkManager.Instance.MulticastMessage(new IpAddressData
             {
-                Endpoint = NetworkExtensions.GetLocalEndpointWithDefaultPort(false),
+                Endpoint = NetworkExtensions.GetLocalEndpoint(targetPort,false),
             }, _endpoint.Port, this.GetInstanceID()));
         }
     }

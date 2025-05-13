@@ -3,7 +3,7 @@ using Unity.Collections;
 
 namespace DistractorTask.Transport
 {
-    public static class ConnectionDataReader
+    public static class DataStreamReaderExtensions
     {
         /// <summary>
         /// Extension method, allowing reading and writing of arbitrarily long strings
@@ -24,7 +24,7 @@ namespace DistractorTask.Transport
                 case 4: return reader.ReadFixedString4096().ToString();
                 case 5: return reader.ReadFixedString4096() + reader.ReadString();
             }
-            throw new ArgumentException($"The reader does not contain a fixed string that was sent by {nameof(ConnectionDataWriter.WriteString)}"); 
+            throw new ArgumentException($"The reader does not contain a fixed string that was sent by {nameof(DataStreamWriterExtensions.WriteString)}"); 
         }
         
     }

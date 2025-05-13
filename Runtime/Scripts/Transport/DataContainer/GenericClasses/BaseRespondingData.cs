@@ -15,7 +15,11 @@ namespace DistractorTask.Transport.DataContainer.GenericClasses
             };
             return response;
         }
-        
+
+        public T GenerateResponse(T value)
+        {
+            return GenerateResponse();
+        }
     }
 
 }

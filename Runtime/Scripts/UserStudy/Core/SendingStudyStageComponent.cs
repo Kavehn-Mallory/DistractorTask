@@ -16,6 +16,13 @@ namespace DistractorTask.UserStudy.Core
             TriggerStudyStartEvent();
         }
 
+        public async void StartStudy<TAwaitableStudyEvent, TResponse>(INetworkManager manager, TAwaitableStudyEvent studyEventData)
+            where TAwaitableStudyEvent : IStudyStageEvent, IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, new()
+        {
+            await manager.BroadcastMessageAndAwaitResponse<TAwaitableStudyEvent, TResponse>(studyEventData, GetInstanceID(),
+                studyEventData.MessageId);
+        }
+
         public override void EndStudy(INetworkManager manager)
         {
             manager.BroadcastMessage(new TStudyEvent

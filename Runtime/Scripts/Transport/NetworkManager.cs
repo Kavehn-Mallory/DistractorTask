@@ -233,6 +233,10 @@ namespace DistractorTask.Transport
             var success = false;
             foreach (var connection in handler.Connections)
             {
+                if (connection.GetState(handler.Driver) != NetworkConnection.State.Connected)
+                {
+                    continue;
+                }
                 var beginSend = handler.Driver.BeginSend(handler.Pipeline, connection, out var writer) == 0;
                 writer.SendMessage(data);
                 var endSend = handler.Driver.EndSend(writer) >= 0;

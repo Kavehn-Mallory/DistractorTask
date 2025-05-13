@@ -14,7 +14,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         private int _currentMarker;
 
         public int MarkerPointCount = 6;
-        
+
+        public MarkerPointVisualizationController controller;
 
         
         private static Image[] CreateMarkerPoints(Image image, Canvas markerPointCanvas, Vector2Int markerZones)
@@ -42,7 +43,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             manager.RegisterCallback<ConfirmationData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
         }
 
-        private void OnStartConfirmed(ConfirmationData obj, int callerId)
+        private async void OnStartConfirmed(ConfirmationData obj, int callerId)
         {
             if (callerId == GetInstanceID())
             {
@@ -50,7 +51,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             }
             Manager.UnregisterCallback<ConfirmationData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
             Manager.RegisterCallback<ConfirmationData>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort);
-
+            
+            await controller.InitializeMarkerPointSetup(MarkerPointCount);
             Manager.BroadcastMessage(new MarkerCountData
             {
                 markerCount = MarkerPointCount
@@ -62,7 +64,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             _currentMarker++;
         }
         
-        private void OnPointSelectionConfirmed(ConfirmationData data, int callerId)
+        private async void OnPointSelectionConfirmed(ConfirmationData data, int callerId)
         {
             if (callerId == GetInstanceID())
             {
@@ -79,15 +81,13 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 return;
             }
 
-            Manager.BroadcastMessage(new ActivateMarkerPoint
-            {
-                currentMarkerIndex = _currentMarker
-            }, GetInstanceID());
             ActivateMarker();
-            Manager.BroadcastMessage(new ConfirmationData
+            await controller.TriggerNextPoint(_currentMarker);
+            
+            Manager.MulticastMessage(new ConfirmationData
             {
                 confirmationNumber = _currentMarker
-            }, GetInstanceID());
+            }, NetworkExtensions.DefaultPort, GetInstanceID());
         }
         
         public void EndMarkerPointSetup()

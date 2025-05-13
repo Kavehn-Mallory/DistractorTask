@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DistractorTask.Core;
 using Unity.Collections;
+using Unity.Networking.Transport;
 using UnityEditor;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -28,9 +29,8 @@ namespace DistractorTask.Transport
             {
                 var data = serializableData[i];
                 var invoker = typeof(InvocationHelper<>).MakeGenericType(data);
-                Debug.Log($"Type: {data}");
+                //Debug.Log($"Type: {data}");
                 _invocationHelper[i] = (IInvoker)Activator.CreateInstance(invoker);
-                
             }
         }
 

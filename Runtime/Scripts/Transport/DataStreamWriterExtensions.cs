@@ -4,7 +4,7 @@ using Unity.Collections;
 
 namespace DistractorTask.Transport
 {
-    public static class ConnectionDataWriter
+    public static class DataStreamWriterExtensions
     {
 
         private const int ReservedByteCount = 4;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using DistractorTask.Core;
 using Unity.Networking.Transport;
 
@@ -20,17 +21,18 @@ namespace DistractorTask.Transport
 
         public ConnectionState CheckConnectionStatus(NetworkEndpoint endpoint);
 
-        public bool BroadcastMessage<T>(T data, int callerId, bool suppressInternalGlobalCall = false) where T : ISerializer, new();
+        public bool BroadcastMessage<T>(T data, int callerId, bool suppressLocalBroadcast = false) where T : ISerializer, new();
 
         public bool MulticastMessage<T>(T data, ushort port, int callerId) where T : ISerializer, new();
 
         public bool UnicastMessage<T>(T data, NetworkEndpoint endpoint, int callerId) where T : ISerializer, new();
-
+        
         public void RegisterToConnectionStateChange(ushort endpointPort,
             Action<ConnectionState> onConnectionStateChanged);
         
         public void UnregisterToConnectionStateChange(ushort endpointPort,
             Action<ConnectionState> onConnectionStateChanged);
+        
     }
 
     public enum ConnectionState : byte

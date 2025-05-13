@@ -23,29 +23,29 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         private bool waitForResponse;
 
         private NetworkEndpoint _clientEndpoint;
-
-        private TaskCompletionSource<TestData> _testTaskThing;
+        
 
         private ushort _tempPort;
 
         private int _messageId;
 
-        private MarkerPointVisTester _tester;
+       // private MarkerPointVisTester _tester;
 
 
         private void Awake()
         {
             
-            _tempPort = NetworkExtensions.DefaultPort;
-            _tester = new MarkerPointVisTester(this, NetworkExtensions.DefaultPort);
+            _tempPort = NetworkExtensions.DisplayWallControlPort;
+            //_tester = new MarkerPointVisTester(this, NetworkExtensions.DisplayWallControlPort);
             //this does work because it is a local connection so we do not have to wait for anything to be set up 
-            NetworkManager.Instance.StartListening(_tempPort, null, ConnectionType.Multicast);
-            NetworkManager.Instance.Connect(NetworkEndpoint.AnyIpv4.WithPort(_tempPort), null, ConnectionType.Multicast);
+            /*NetworkManager.Instance.StartListening(_tempPort, null, ConnectionType.Multicast);
+            NetworkManager.Instance.Connect(NetworkEndpoint.AnyIpv4.WithPort(_tempPort), null, ConnectionType.Multicast);*/
         }
         
         
 
         
+        /*
         [ContextMenu("Async Test")]
         public void TestAsyncWithAwaitCall()
         {
@@ -58,16 +58,17 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             Debug.Log("Test Case: Do not wait for response");
             _tester.SendMessageWithoutAwaitResponse();
-        }
+        }*/
 
 
         public async Task InitializeMarkerPointSetup(int markerCount)
         {
             //todo send message with marker point count / positions 
-            await SendMessageAndWaitForResponse(new MarkerCountData
+            await NetworkManager.Instance.MulticastMessageAndAwaitResponse<MarkerCountData, MarkerPointResponseData>(new MarkerCountData
             {
                 markerCount = markerCount
-            }, _tempPort);
+            }, _tempPort, GetInstanceID(), _messageId);
+            _messageId++;
         }
 
 
@@ -75,88 +76,26 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             //todo send message that transmits the start data 
             //should activate canvas and first point
-            await SendMessageAndWaitForResponse(new MarkerPointStartData(), _tempPort);
+            await NetworkManager.Instance.MulticastMessageAndAwaitResponse<MarkerPointStartData, MarkerPointResponseData>(new MarkerPointStartData(), _tempPort, GetInstanceID(), _messageId);
+            _messageId++;
         }
 
-        public async Task TriggerPoint(int index)
+        public async Task TriggerNextPoint(int index)
         {
-            await SendMessageAndWaitForResponse(new MarkerPointData(index), _tempPort);
+            await NetworkManager.Instance.MulticastMessageAndAwaitResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(new ActivateMarkerPoint(index), _tempPort, GetInstanceID(), _messageId);
+            _messageId++;
         }
 
         public async Task EndMarkerPointSetup()
         {
-            await SendMessageAndWaitForResponse(new MarkerPointEndData(), _tempPort);
-        }
-
-        private void OnResponseReceived()
-        {
-            _testTaskThing.SetResult(new TestData());
-        }
-        
-        private async Task SendMessageAndWaitForResponse<T>(T data, ushort targetPort) where T : IRespondingSerializer<MarkerPointResponseData>, new()
-        {
-            var task = ScheduleSendAndReceive<MarkerPointResponseData, T>(data, targetPort, GetInstanceID(), _messageId);
+            await NetworkManager.Instance.MulticastMessageAndAwaitResponse<MarkerPointEndData, MarkerPointResponseData>(new MarkerPointEndData(), _tempPort, GetInstanceID(), _messageId);
             _messageId++;
-            if (waitForResponse)
-            {
-                await task.Task;
-            }
-
-        }
-
-        private static TaskCompletionSource<T> ScheduleSendAndReceive<T, TS>(TS data, ushort targetPort, int senderId,
-            int messageId) where T : ISerializer, IResponseIdentifier, new() where TS : IRespondingSerializer<T>, new()
-        {
-            var returnValue = new TaskCompletionSource<T>();
-            var testStruct = new CallbackStruct<T>()
-            {
-                Source = returnValue,
-                ExpectedReturnValue = new T
-                {
-                    MessageId = messageId,
-                    SenderId = senderId
-                }
-            };
-
-            data.MessageId = messageId;
-            data.SenderId = senderId;
-            
-            
-            NetworkManager.Instance.RegisterCallback<T>(testStruct.Callback, targetPort);
-            NetworkManager.Instance.MulticastMessage(data, targetPort, senderId);
-            
-            return testStruct.Source;
-        }
-
-        private static void Respond<T>(IRespondingSerializer<T> respondingSerializer, ushort targetPort, int callerId) where T : IResponseIdentifier, ISerializer, new() 
-        {
-            NetworkManager.Instance.MulticastMessage(respondingSerializer.GenerateResponse(), targetPort, callerId);
-        }
-
-        private struct CallbackStruct<T> where T : ISerializer, IResponseIdentifier, new()
-        {
-            public TaskCompletionSource<T> Source;
-            public T ExpectedReturnValue;
-
-            public void Callback(T data, int id)
-            {
-                if (data.SenderId == ExpectedReturnValue.SenderId && data.MessageId == ExpectedReturnValue.MessageId)
-                {
-                    Debug.Log("Data received and setting result");
-                    NetworkManager.Instance.UnregisterCallback<T>(Callback, NetworkExtensions.DefaultPort);
-                    Source.SetResult(data);
-                }
-                
-            }
         }
         
 
-        public struct TestData
-        {
-            
-        }
 
-        public class MarkerPointVisTester
+        
+        /*public class MarkerPointVisTester
         {
             private readonly MarkerPointVisualizationController _controller;
             private readonly ushort _port;
@@ -171,7 +110,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             private async void OnMarkerPointStartDataReceived(MarkerPointStartData arg1, int arg2)
             {
                 await Task.Delay(1000);
-                NetworkManager.Instance.MulticastMessage(arg1.GenerateResponse(), _port, 0);
+                NetworkManagerAwaitableExtensions.MulticastRespond(arg1, _port, 0);
             }
 
 
@@ -188,7 +127,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 _ = _controller.StartMarkerPointSetup();
                 Debug.Log("End call");
             }
-        }
+        }*/
 
     }
 

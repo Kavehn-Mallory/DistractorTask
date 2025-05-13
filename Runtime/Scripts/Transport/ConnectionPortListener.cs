@@ -9,7 +9,7 @@ namespace DistractorTask.Transport
     {
 
         [SerializeField]
-        private ushort port;
+        private ushort port = NetworkExtensions.IpListeningPort;
 
         [SerializeField]
         private UnityEvent onConnectionEstablished;

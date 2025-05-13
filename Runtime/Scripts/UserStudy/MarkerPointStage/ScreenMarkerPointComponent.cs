@@ -2,15 +2,14 @@
 using DistractorTask.Core;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
-using DistractorTask.UserStudy.Core;
-using Unity.Collections;
+using DistractorTask.Transport.DataContainer.GenericClasses;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DistractorTask.UserStudy.MarkerPointStage
 {
-    public class MarkerPointSetupComponent2 : MonoBehaviour
+    public class ScreenMarkerPointComponent : MonoBehaviour
     {
         
         [SerializeField] private Canvas markerPointCanvas;
@@ -19,17 +18,20 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         private Image[] _markerPoints = Array.Empty<Image>();
         private int _currentMarker;
+
+        private ushort _port = NetworkExtensions.DisplayWallControlPort;
         
         public int MarkerPointCount => _markerPoints.Length;
 
         public NetworkManager Manager => NetworkManager.Instance;
+
+        private Action _activateMarkerPointsRegisterCallback;
         
         private void Awake()
         {
             markerPointCanvas.gameObject.SetActive(false);
             _markerPoints = CreateMarkerPoints(marker, markerPointCanvas, zones);
-            Manager.RegisterCallback<MarkerCountData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
-
+            Manager.RegisterMulticastResponse<MarkerCountData, MarkerPointResponseData>(OnStartConfirmed, _port, GetInstanceID());
         }
         
         private static Image[] CreateMarkerPoints(Image image, Canvas markerPointCanvas, Vector2Int markerZones)
@@ -59,9 +61,11 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 return;
             }
-            Manager.UnregisterCallback<MarkerCountData>(OnStartConfirmed, NetworkExtensions.DefaultPort);
-            Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort);
+            //Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port);
+            _activateMarkerPointsRegisterCallback = Manager.RegisterPersistentMulticastResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(
+                OnPointSelectionConfirmed, _port, GetInstanceID());
             _markerPoints[0].enabled = true;
+            _currentMarker++;
             markerPointCanvas.gameObject.SetActive(true);
         }
         
@@ -90,33 +94,17 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 return;
             }
             ActivateMarker();
-            Manager.BroadcastMessage(new ConfirmationData
-            {
-                confirmationNumber = _currentMarker
-            }, GetInstanceID());
         }
         
         public void EndMarkerPointSetup()
         {
             _markerPoints[^1].enabled = false;
             markerPointCanvas.gameObject.SetActive(false);
-            Manager.UnregisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, NetworkExtensions.DefaultPort); 
+            Manager.UnregisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port); 
         }
     }
+    
 
-    [Serializable]
-    internal struct ActivateMarkerPoint : ISerializer
-    {
 
-        [FormerlySerializedAs("nextMarkerIndex")] public int currentMarkerIndex;
-        public void Serialize(ref DataStreamWriter writer)
-        {
-            writer.WriteInt(currentMarkerIndex);
-        }
 
-        public void Deserialize(ref DataStreamReader reader)
-        {
-            currentMarkerIndex = reader.ReadInt();
-        }
-    }
 }

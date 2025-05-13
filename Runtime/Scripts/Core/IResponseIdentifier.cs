@@ -1,6 +1,6 @@
 ﻿namespace DistractorTask.Core
 {
-    public interface IResponseIdentifier
+    public interface IResponseIdentifier : ISerializer
     {
         /// <summary>
         /// Unique Id that identifies the sender (e.g. GetInstanceId())

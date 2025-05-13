@@ -1,6 +1,7 @@
 ﻿using System;
 using DistractorTask.Core;
 using Unity.Collections;
+using UnityEngine.Serialization;
 
 namespace DistractorTask.Transport.DataContainer
 {
@@ -9,13 +10,17 @@ namespace DistractorTask.Transport.DataContainer
     {
         public int[] markers;
         public byte loadLevel;
-        public int selectionCount;
+        public byte noiseLevel;
+        public int trialCount;
+        public int repetitionsPerTrial;
         
         public void Serialize(ref DataStreamWriter writer)
         {
             
             writer.WriteByte(loadLevel);
-            writer.WriteInt(selectionCount);
+            writer.WriteByte(noiseLevel);
+            writer.WriteInt(trialCount);
+            writer.WriteInt(repetitionsPerTrial);
             writer.WriteInt(markers.Length);
             for (int i = 0; i < markers.Length; i++)
             {
@@ -27,7 +32,9 @@ namespace DistractorTask.Transport.DataContainer
         {
             
             loadLevel = reader.ReadByte();
-            selectionCount = reader.ReadInt();
+            noiseLevel = reader.ReadByte();
+            trialCount = reader.ReadInt();
+            repetitionsPerTrial = reader.ReadInt();
             var markerCount = reader.ReadInt();
             markers = new int[markerCount];
 

@@ -4,64 +4,27 @@ using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DistractorTask.UserStudy.DistractorSelectionStage
 {
     public class DistractorTaskManager : SendingStudyStageComponent<DistractorSelectionStageEvent>
     {
-        public Study[] trials = Array.Empty<Study>();
-        private int _currentTrialIndex;
+        [FormerlySerializedAs("trials")] public Study[] studies = Array.Empty<Study>();
 
-        private int _currentConditionIndex;
+        [SerializeField] private int studyToStart = 0;
+        
+        [SerializeField, Tooltip("Determines the type of participant / order of conditions for the given study")]
+        private int startingCondition = 0;
+        
+        
         private int _tempVideoClipData = 0;
+        private StudyConditionsEnumerator _studyConditionsEnumerator;
 
-        private void Awake()
-        {
-            GenerateTrialOptions();
-        }
-
-        private void GenerateTrialOptions()
-        {
-            for (var i = 0; i < trials.Length; i++)
-            {
-                var trial = trials[i];
-                var noiseLevelValues = Mathf.Min(Count((uint)trial.conditions.noiseLevels),
-                    Enum.GetNames(typeof(NoiseLevel)).Length);
-                var loadLevels = Mathf.Min(Count((uint)trial.conditions.loadLevels),
-                    Enum.GetNames(typeof(LoadLevel)).Length);
-
-
-                var options = loadLevels * noiseLevelValues;
-
-                Debug.Log($"Options: {options}");
-
-                var optionList = new List<(LoadLevel, NoiseLevel)>();
-
-
-                var loadLevel = GenerateLoadLevels(trial.conditions.loadLevels);
-                var noiseLevel = GenerateNoiseLevels(trial.conditions.noiseLevels);
-
-
-                foreach (var level in loadLevel)
-                {
-                    foreach (var noise in noiseLevel)
-                    {
-                        optionList.Add((level, noise));
-                    }
-                }
-
-                foreach (var tuple in optionList)
-                {
-                    Debug.Log($"{tuple.Item1}, {tuple.Item2}");
-                }
-
-                trial.conditionList = optionList;
-                trials[i] = trial;
-            }
-        }
 
         public override void StartStudy(INetworkManager manager)
         {
+            _studyConditionsEnumerator = new StudyConditionsEnumerator(studies[studyToStart], startingCondition);
             Manager.RegisterCallback<ConfirmationData>(OnStudyBegin, NetworkExtensions.DefaultPort);
             base.StartStudy(manager);
         }
@@ -74,14 +37,31 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             }
             Manager.UnregisterCallback<ConfirmationData>(OnStudyBegin, NetworkExtensions.DefaultPort);
             Manager.RegisterCallback<TrialCompletedData>(OnTrialCompleted, NetworkExtensions.DefaultPort);
-            _currentTrialIndex = 0;
-            _currentConditionIndex = 0;
-            StartTrial();
+            if (_studyConditionsEnumerator.MoveNext())
+            {
+                StartTrial();
+            }
+            
+        }
+
+        private async void PerformAwaitableStudy()
+        {
+            _studyConditionsEnumerator = new StudyConditionsEnumerator(studies[studyToStart], startingCondition);
+            
+        }
+
+        private async void IterateAwaitableConditions()
+        {
+            //todo maybe implement it this way?
+            while (_studyConditionsEnumerator.MoveNext())
+            {
+                //await NetworkManagerExtensions.MulticastMessageAndAwaitResponse<>()
+            }
         }
 
         private void StartTrial()
         {
-            var trial = trials[_currentTrialIndex];
+            var trial = _studyConditionsEnumerator.Current;
             var positions = new int[]
             {
                 0, 1, 2, 3, 4, 5
@@ -91,13 +71,15 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 videoClipIndex = _tempVideoClipData
             }, GetInstanceID());
             _tempVideoClipData = (_tempVideoClipData + 1) % 2;
+            
             Manager.BroadcastMessage(new DistractorSelectionTrialData
             {
-                loadLevel = (byte)trial.conditionList[_currentConditionIndex].Item1,
-                selectionCount = trial.selectionsPerTrial,
+                loadLevel = (byte)trial.LoadLevel,
+                noiseLevel = (byte)trial.NoiseLevel,
+                trialCount = trial.TrialCount,
+                repetitionsPerTrial = trial.RepetitionsPerTrial,
                 markers = positions
             }, GetInstanceID());
-            _currentConditionIndex++;
         }
 
         private void OnTrialCompleted(TrialCompletedData obj, int callerId)
@@ -106,20 +88,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             {
                 return;
             }
-            if (_currentConditionIndex >= trials[_currentTrialIndex].conditionList.Count)
+            if (_studyConditionsEnumerator.MoveNext())
             {
-                _currentTrialIndex++;
-                //todo check if we have another condition 
-                if (_currentTrialIndex >= trials.Length)
-                {
-                    //we are done
-                    EndStudy(Manager);
-                    return;
-                }
-                _currentConditionIndex = 0;
+                StartTrial();
             }
-            StartTrial();
-            //todo check if there are more trials and start the next one 
+            EndStudy(Manager);
+            //todo start next study. Currently it will just end the entire process. Might require a small redesign of study setup / study should not end here but only if all studies are performed / operator ends study
         }
         
         public override void EndStudy(INetworkManager manager)
@@ -128,64 +102,16 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             base.EndStudy(manager);
         }
         
-
-        private static List<NoiseLevel> GenerateNoiseLevels(NoiseLevel noiseLevel)
-        {
-            var result = new List<NoiseLevel>();
-
-            AddNoiseLevel(noiseLevel, NoiseLevel.None, ref result);
-            AddNoiseLevel(noiseLevel, NoiseLevel.Low, ref result);
-            AddNoiseLevel(noiseLevel, NoiseLevel.Audio, ref result);
-            AddNoiseLevel(noiseLevel, NoiseLevel.Visual, ref result);
-            AddNoiseLevel(noiseLevel, NoiseLevel.High, ref result);
-            return result;
-        }
-        
-        private static List<LoadLevel> GenerateLoadLevels(LoadLevel loadLevel)
-        {
-            var result = new List<LoadLevel>();
-            
-            AddLoadLevel(loadLevel, LoadLevel.Low, ref result);
-            AddLoadLevel(loadLevel, LoadLevel.High, ref result);
-            return result;
-        }
-        
-        private static void AddLoadLevel(LoadLevel noiseLevel, LoadLevel targetNoiseLevel, ref List<LoadLevel> result)
-        {
-            if ((noiseLevel & targetNoiseLevel) == targetNoiseLevel)
-            {
-                result.Add(targetNoiseLevel);
-            }
-        }
-
-        private static void AddNoiseLevel(NoiseLevel noiseLevel, NoiseLevel targetNoiseLevel, ref List<NoiseLevel> result)
-        {
-            if ((noiseLevel & targetNoiseLevel) == targetNoiseLevel)
-            {
-                result.Add(targetNoiseLevel);
-            }
-        }
-
-
-        private static uint Count(uint enumValue)
-        {
-            var v = enumValue;
-            v = v - ((v >> 1) & 0x55555555); // reuse input as temporary
-            v = (v & 0x33333333) + ((v >> 2) & 0x33333333); // temp
-            var c = ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24; // count
-            return c;
-        }
     }
 
 
     [Serializable]
     public struct Study
     {
+        [Tooltip("Trial consists of these many selections. ")]
         public int selectionsPerTrial;
-        public int repeatsPerTrial;
+        public int trialsPerCondition;
         public Condition conditions;
-
-        public List<(LoadLevel, NoiseLevel)> conditionList;
 
     }
 }

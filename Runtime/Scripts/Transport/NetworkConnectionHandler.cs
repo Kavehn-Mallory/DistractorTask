@@ -214,7 +214,8 @@ namespace DistractorTask.Transport
     public enum ConnectionType
     {
         Broadcast,
-        Multicast
+        Multicast,
+        Unicast
     }
 }
 

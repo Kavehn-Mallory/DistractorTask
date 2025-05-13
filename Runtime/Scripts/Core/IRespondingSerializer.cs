@@ -3,5 +3,7 @@
     public interface IRespondingSerializer<T> : ISerializer, IResponseIdentifier where T : IResponseIdentifier, ISerializer, new()
     {
         public T GenerateResponse();
+
+        public T GenerateResponse(T value);
     }
 }
