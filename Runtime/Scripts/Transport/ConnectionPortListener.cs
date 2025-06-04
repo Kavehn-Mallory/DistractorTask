@@ -1,5 +1,4 @@
-﻿using System;
-using DistractorTask.Transport.DataContainer;
+﻿using DistractorTask.Transport.DataContainer;
 using UnityEngine;
 using UnityEngine.Events;
 

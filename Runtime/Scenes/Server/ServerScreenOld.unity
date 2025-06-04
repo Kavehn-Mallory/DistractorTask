@@ -5650,7 +5650,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1707515078}
         m_TargetAssemblyTypeName: DistractorProject.UserStudy.Core.UserStudyManager,
           Scripts
         m_MethodName: StartStudy
@@ -6195,8 +6195,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1707515074}
+  - component: {fileID: 1707515078}
+  - component: {fileID: 1707515079}
+  - component: {fileID: 1707515080}
   - component: {fileID: 1707515081}
-  - component: {fileID: 1707515082}
   m_Layer: 0
   m_Name: UserStudyManager
   m_TagString: Untagged
@@ -6219,6 +6221,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1707515078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707515071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27858f3f2dbe4f8ba85c6ae86881b0f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  studyStages:
+  - {fileID: 1707515079}
+  - {fileID: 1707515080}
+  broker: {fileID: 0}
+--- !u!114 &1707515079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707515071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 288ee7ed267c4c6b9b46207776191f24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DefaultPort: 7777
+  MarkerPointCount: 6
+  controller: {fileID: 1707515081}
+--- !u!114 &1707515080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707515071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dffd6c4527824ea2bfc71e2f4422aaea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DefaultPort: 7777
+  studies:
+  - selectionsPerTrial: 5
+    trialsPerCondition: 6
+    conditions:
+      loadLevels: -1
+      noiseLevels: 19
+  - selectionsPerTrial: 5
+    trialsPerCondition: 6
+    conditions:
+      loadLevels: 1
+      noiseLevels: 19
+  studyToStart: 0
+  startingCondition: 0
 --- !u!114 &1707515081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6232,27 +6291,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waitForResponse: 1
---- !u!114 &1707515082
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1707515071}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb066d3bac654eb4bcebba5330390504, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  markerPointController: {fileID: 1707515081}
-  studies:
-  - selectionsPerTrial: 5
-    trialsPerCondition: 6
-    conditions:
-      loadLevels: -1
-      noiseLevels: 19
-  markerPointCount: 6
-  startingCondition: 0
 --- !u!1 &1722344015
 GameObject:
   m_ObjectHideFlags: 0

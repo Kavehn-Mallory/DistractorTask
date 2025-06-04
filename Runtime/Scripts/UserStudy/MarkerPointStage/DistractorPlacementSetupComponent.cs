@@ -14,7 +14,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         [SerializeField] private ARRaycastManager raycastManager;
         [SerializeField] private Camera mainCamera;
-        [SerializeField] private FuzzyGazeInteractor gazeInteractor;
+        //[SerializeField] private FuzzyGazeInteractor gazeInteractor;
         [SerializeField] private DistractorTaskComponent distractorTaskComponent;
         [SerializeField] private RoomRaycaster raycastTarget;
         [SerializeField] private float distanceFromWall = 0.1f;

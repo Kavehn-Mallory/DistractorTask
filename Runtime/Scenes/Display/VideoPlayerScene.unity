@@ -222,9 +222,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 1608970027}
   debugIndex: 0
-  videoClips:
-  - {fileID: 32900000, guid: 9c2bad1b6dc2f5e4abeba335b37df4a6, type: 3}
-  - {fileID: 32900000, guid: 83c9c4cbfacdbb1479c7f3fd348bf763, type: 3}
+  videoClipGroups:
+  - noiseLevel: 6
+    videoClips: []
+  - noiseLevel: 24
+    videoClips: []
 --- !u!4 &440515708
 Transform:
   m_ObjectHideFlags: 0

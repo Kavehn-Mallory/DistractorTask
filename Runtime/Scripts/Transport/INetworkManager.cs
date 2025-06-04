@@ -7,9 +7,9 @@ namespace DistractorTask.Transport
 {
     public interface INetworkManager
     {
-        public void RegisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new();
+        public void RegisterCallback<T>(Action<T, int> callback, ushort port = NetworkExtensions.DefaultPort) where T : ISerializer, new();
         
-        public void UnregisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new();
+        public void UnregisterCallback<T>(Action<T, int> callback, ushort port = NetworkExtensions.DefaultPort) where T : ISerializer, new();
 
         public void RegisterCallbackAllPorts<T>(Action<T, int> callback) where T : ISerializer, new();
 

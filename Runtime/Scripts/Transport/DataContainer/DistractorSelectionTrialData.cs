@@ -1,7 +1,6 @@
 ﻿using System;
 using DistractorTask.Core;
 using Unity.Collections;
-using UnityEngine.Serialization;
 
 namespace DistractorTask.Transport.DataContainer
 {

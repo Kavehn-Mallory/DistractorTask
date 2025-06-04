@@ -1,4 +1,5 @@
 using System;
+using DistractorTask.Core;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -29,11 +30,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         [SerializeField] private DistractorShapeGroup[] distractorShapes;
         [Tooltip("Set to true if the target should never be the same target in two consecutiveTrials")]
         [SerializeField] private bool changeTargetAfterEveryTrial;
-
-        public event Action OnTaskCompleted = delegate { };
+        
     
         
-        private int _currentGroup;
 
         private string[][] _distractorShapes;
         private string[][] _targetShapes;
@@ -42,17 +41,11 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         private int _targetElementIndex;
         private Camera _mainCamera;
         private DistractorComponent _selectedDistractor;
-
-        private int _trialCount;
-        private int _currentTrial;
-        private bool _acceptingInput;
+        
 
 
         private void Start()
         {
-            _acceptingInput = false;
-            _currentGroup = 0;
-            _currentTrial = 0;
             _targetElementIndex = -1;
             _distractorShapes = new string[distractorShapes.Length][];
             _targetShapes = new string[distractorShapes.Length][];
@@ -78,8 +71,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             _peripheralDistractor = peripheralDistractor.GetComponent<TMP_Text>();
             _peripheralDistractor.gameObject.name = "Peripheral Distractor";
 
-
-            InputHandler.InputHandler.Instance.OnSelectionButtonPressed += OnSelectionConfirmed;
+            
             _mainCamera = Camera.main;
         
             if (!_mainCamera)
@@ -96,10 +88,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
         public void IncreaseDistance()
         {
-            if (!_acceptingInput)
-            {
-                return;
-            }
             var currentPosition = canvas.transform.position;
             var distance = math.distance(currentPosition, _mainCamera.transform.position);
             RepositionCanvas(_mainCamera.transform.position + (distance + 0.5f) * _mainCamera.transform.forward);
@@ -107,10 +95,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
         public void DecreaseDistance()
         {
-            if (!_acceptingInput)
-            {
-                return;
-            }
             var currentPosition = canvas.transform.position;
             var distance = math.distance(currentPosition, _mainCamera.transform.position);
             var multiplier = math.max(0.5f, distance - 0.5f);
@@ -161,21 +145,14 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             return math.abs(2f * r * math.tan((radians / 2f)));
         }
 
-        [ContextMenu("Next Trial")]
-        public void StartNextTrial()
+
+        
+        public void StartTrial(int loadLevel)
         {
-            if (_currentTrial >= _trialCount)
-            {
-                _acceptingInput = false;
-                OnTaskCompleted.Invoke();
-                return;
-            }
-            Debug.Log($"Starting next trial {_currentTrial + 1} / {_trialCount}");
-            var length = _distractorShapes[_currentGroup].Length;
             foreach (var distractor in _distractors)
             {
 
-                distractor.text = _distractorShapes[_currentGroup][Random.Range(0, length)];
+                distractor.text = _distractorShapes[loadLevel].RandomElement();
             }
 
             if (changeTargetAfterEveryTrial && _targetElementIndex >= 0)
@@ -189,26 +166,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             }
         
             _distractors[_targetElementIndex].text =
-                _targetShapes[_currentGroup][Random.Range(0, _targetShapes[_currentGroup].Length)];
+                _targetShapes[loadLevel].RandomElement();
         
-            _peripheralDistractor.text = _targetShapes[_currentGroup][Random.Range(0, _targetShapes[_currentGroup].Length)];
+            _peripheralDistractor.text = _targetShapes[loadLevel].RandomElement();
         }
         
-
-        public void OnButtonClicked(int id)
-        {
-            _currentTrial++;
-            if (_targetElementIndex == id && id >= 0)
-            {
-                OnCorrectButtonClicked();
-            }
-            else
-            {
-                OnIncorrectButtonClicked();
-            }
-            StartNextTrial();
         
-        }
     
         public void OnHoverEnter(UIHoverEventArgs args)
         {
@@ -220,34 +183,28 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         {
             _selectedDistractor = null;
         }
-
-        [ContextMenu("Select button")]
-        public void OnSelectionConfirmed()
+        
+        public void EnableCanvas()
         {
-            if (!_acceptingInput)
-            {
-                return;
-            }
+            canvas.enabled = true;
+        }
+        
+        public void DisableCanvas()
+        {
+            canvas.enabled = false;
+        }
+
+        public int OnInputReceived()
+        {
             if (_selectedDistractor)
             {
-                Debug.Log(_selectedDistractor.distractorIndex);
-                OnButtonClicked(_selectedDistractor.distractorIndex);
-                return;
+                return _selectedDistractor.distractorIndex;
             }
-            OnButtonClicked(-1);
+
+            return -1;
         }
-
-        private void OnIncorrectButtonClicked()
-        {
-            Debug.Log("Incorrect button pressed");
-        }
-
-        private void OnCorrectButtonClicked()
-        {
-            Debug.Log("Correct button pressed");
-        }
-
-
+        
+        
 
         [Serializable]
         public struct DistractorShapeGroup
@@ -261,25 +218,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             public string targetLetters;
         }
 
-
-        public void StartNewTrial(int repetitionCount, int distractorGroup)
-        {
-            _currentGroup = distractorGroup;
-            _trialCount = repetitionCount;
-            _acceptingInput = true;
-            _currentTrial = 0;
-            StartNextTrial();
-
-        }
-
-        public void EnableCanvas()
-        {
-            canvas.enabled = true;
-        }
         
-        public void DisableCanvas()
-        {
-            canvas.enabled = false;
-        }
+
+
     }
 }

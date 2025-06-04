@@ -1,4 +1,6 @@
 ﻿using System;
+using DistractorTask.UserStudy;
+using DistractorTask.UserStudy.Core;
 using Unity.Collections;
 
 namespace DistractorTask.Transport
@@ -25,6 +27,12 @@ namespace DistractorTask.Transport
                 case 5: return reader.ReadFixedString4096() + reader.ReadString();
             }
             throw new ArgumentException($"The reader does not contain a fixed string that was sent by {nameof(DataStreamWriterExtensions.WriteString)}"); 
+        }
+
+        public static StudyCondition ReadStudyCondition(this ref DataStreamReader reader)
+        {
+            return new StudyCondition(Enum.Parse<LoadLevel>(reader.ReadByte().ToString()),
+                Enum.Parse<NoiseLevel>(reader.ReadByte().ToString()), reader.ReadInt(), reader.ReadInt());
         }
         
     }

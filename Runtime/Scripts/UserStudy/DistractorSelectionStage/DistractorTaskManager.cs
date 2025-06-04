@@ -74,10 +74,10 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             
             Manager.BroadcastMessage(new DistractorSelectionTrialData
             {
-                loadLevel = (byte)trial.LoadLevel,
-                noiseLevel = (byte)trial.NoiseLevel,
-                trialCount = trial.TrialCount,
-                repetitionsPerTrial = trial.RepetitionsPerTrial,
+                loadLevel = (byte)trial.loadLevel,
+                noiseLevel = (byte)trial.noiseLevel,
+                trialCount = trial.trialCount,
+                repetitionsPerTrial = trial.repetitionsPerTrial,
                 markers = positions
             }, GetInstanceID());
         }

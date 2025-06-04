@@ -70,16 +70,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             }, _tempPort, GetInstanceID(), _messageId);
             _messageId++;
         }
-
-
-        public async Task StartMarkerPointSetup()
-        {
-            //todo send message that transmits the start data 
-            //should activate canvas and first point
-            await NetworkManager.Instance.MulticastMessageAndAwaitResponse<MarkerPointStartData, MarkerPointResponseData>(new MarkerPointStartData(), _tempPort, GetInstanceID(), _messageId);
-            _messageId++;
-        }
-
+        
         public async Task TriggerNextPoint(int index)
         {
             await NetworkManager.Instance.MulticastMessageAndAwaitResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(new ActivateMarkerPoint(index), _tempPort, GetInstanceID(), _messageId);
@@ -93,41 +84,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         }
         
 
-
         
-        /*public class MarkerPointVisTester
-        {
-            private readonly MarkerPointVisualizationController _controller;
-            private readonly ushort _port;
-
-            public MarkerPointVisTester(MarkerPointVisualizationController controller, ushort port)
-            {
-                _controller = controller;
-                _port = port;
-                NetworkManager.Instance.RegisterCallback<MarkerPointStartData>(OnMarkerPointStartDataReceived, _port);
-            }
-
-            private async void OnMarkerPointStartDataReceived(MarkerPointStartData arg1, int arg2)
-            {
-                await Task.Delay(1000);
-                NetworkManagerAwaitableExtensions.MulticastRespond(arg1, _port, 0);
-            }
-
-
-            public async void SendMessageAndAwaitResponse()
-            {
-                Debug.Log("Sending message");
-                await _controller.StartMarkerPointSetup();
-                Debug.Log("End call");
-            }
-            
-            public void SendMessageWithoutAwaitResponse()
-            {
-                Debug.Log("Sending message");
-                _ = _controller.StartMarkerPointSetup();
-                Debug.Log("End call");
-            }
-        }*/
 
     }
 
@@ -164,24 +121,6 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             MessageId = messageId;
         }
         
-        public override MarkerPointResponseData GenerateResponse() => new MarkerPointResponseData(SenderId, MessageId);
-        
-    }
-    
-    public class MarkerPointStartData : BaseRespondingData<MarkerPointResponseData>
-    {
-
-        public MarkerPointStartData()
-        {
-            
-        }
-        
-        public MarkerPointStartData(int senderId, int messageId)
-        {
-            SenderId = senderId;
-            MessageId = messageId;
-        }
-
         public override MarkerPointResponseData GenerateResponse() => new MarkerPointResponseData(SenderId, MessageId);
         
     }

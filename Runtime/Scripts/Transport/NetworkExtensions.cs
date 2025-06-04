@@ -11,6 +11,7 @@ namespace DistractorTask.Transport
         public const ushort IpListeningPort = 7500;
         public const ushort DefaultPort = 7777;
         public const ushort DisplayWallControlPort = 7600;
+        public const ushort LoggingPort = 7400;
         
         public static IPAddress GetLocalIPAddress()
         {

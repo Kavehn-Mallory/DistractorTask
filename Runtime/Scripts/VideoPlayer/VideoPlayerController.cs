@@ -1,9 +1,13 @@
 using System;
+using DistractorTask.Core;
 using DistractorTask.Transport;
-using DistractorTask.Transport.DataContainer;
+using DistractorTask.UserStudy.Core;
+using DistractorTask.UserStudy.DataDrivenSetup;
+using MixedReality.Toolkit;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Video;
+using Random = UnityEngine.Random;
 
 namespace DistractorTask.VideoPlayer
 {
@@ -16,34 +20,78 @@ namespace DistractorTask.VideoPlayer
         [SerializeField]
         private int debugIndex;
 
-        [SerializeField] private VideoClip[] videoClips = Array.Empty<VideoClip>();
+        [SerializeField] private VideoClipGroup[] videoClipGroups = Array.Empty<VideoClipGroup>();
+
+        private Action _unregisterVideoClipChangeEvent;
+
+        private Action _unregisterVideoClipResetEvent;
+        
+        
         
         // Start is called before the first frame update
         void Start()
         {
             Assert.IsNotNull(videoPlayer, "The video player was not set.");
-            NetworkManager.Instance.RegisterCallback<VideoClipChangeData>(SwitchVideoClip, NetworkExtensions.DisplayWallControlPort);
+            //NetworkManager.Instance.RegisterCallback<VideoClipChangeData>(SwitchVideoClip, NetworkExtensions.DisplayWallControlPort);
+            
         }
 
-        private void SwitchVideoClip(VideoClipChangeData changeData, int instanceId)
+        private void OnEnable()
         {
-            if (changeData.videoClipIndex < 0 && changeData.videoClipIndex >= videoClips.Length)
+            _unregisterVideoClipChangeEvent = NetworkManager.Instance
+                .RegisterPersistentMulticastResponse<StudyConditionData, OnVideoClipChangedData>(
+                    SwitchVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
+            
+            _unregisterVideoClipResetEvent = NetworkManager.Instance
+                .RegisterPersistentMulticastResponse<UpdateVideoClipData, OnVideoClipChangedData>(
+                    ResetVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
+        }
+
+        private void OnDisable()
+        {
+            _unregisterVideoClipChangeEvent?.Invoke();
+            _unregisterVideoClipResetEvent?.Invoke();
+        }
+
+        private void ResetVideoClip(UpdateVideoClipData videoClipData, int instanceId)
+        {
+            //todo not sure if we do anything here 
+        }
+
+        private void SwitchVideoClip(StudyConditionData studyCondition, int instanceId)
+        {
+            if (videoClipGroups == null || videoClipGroups.Length == 0)
             {
+                Debug.LogError("No video clips specified", this);
                 return;
             }
+            var noiseLevel = studyCondition.studyCondition.noiseLevel;
+            
 
-            videoPlayer.clip = videoClips[changeData.videoClipIndex];
+            foreach (var videoClipGroup in videoClipGroups)
+            {
+                if ((videoClipGroup.noiseLevel & noiseLevel) == noiseLevel)
+                {
+                    //choose clip 
+                    videoPlayer.clip = videoClipGroup.videoClips.RandomElement();
+                    videoPlayer.Play();
+                    return;
+                }
+            }
+            
+            Debug.LogWarning("Did not find a fitting clip. Playing first group as fallback", this);
+            videoPlayer.clip = videoClipGroups[0].videoClips.RandomElement();
             videoPlayer.Play();
         }
+        
+        
 
-
-        [ContextMenu("Play video clip")]
-        public void DebugTest()
+        [Serializable]
+        public struct VideoClipGroup
         {
-            SwitchVideoClip(new VideoClipChangeData
-            {
-                videoClipIndex = debugIndex
-            }, 0);
+            [EnumFlags]
+            public NoiseLevel noiseLevel;
+            public VideoClip[] videoClips;
         }
 
     }

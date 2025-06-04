@@ -70,8 +70,54 @@ namespace DistractorTask.Transport
             return testStruct.Source;
         }
 
+        /// <summary>
+        /// Expects a broadcast message of type <see cref="T"/>, triggering the given action and afterward responds with a message of type <see cref="TResponse"/>.
+        /// </summary>
+        /// <param name="networkManager">Network Manager to use</param>
+        /// <param name="actionToPerformBeforeResponse">Action to perform before sending out the response</param>
+        /// <param name="callerId">Caller id of the responder</param>
+        /// <param name="suppressLocalBroadcast">Determines whether a broadcast message should be propagated locally.</param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TResponse"></typeparam>
+        /// <returns>Awaitable task </returns>
+        public static Task AwaitBroadcastMessageAndRespond<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, int callerId, bool suppressLocalBroadcast = false) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            return networkManager.AwaitMessageAndRespond<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Broadcast, 0, ConnectionType.Broadcast, NetworkEndpoint.AnyIpv4.WithPort(0), callerId, suppressLocalBroadcast);
+        }
 
-        public static Task AwaitRespondableMessage<T, TResponse>(this INetworkManager networkManager,
+        /// <summary>
+        /// Expects a multicast message of type <see cref="T"/>, triggering the given action and afterward responds with a message of type <see cref="TResponse"/>.
+        /// </summary>
+        /// <param name="networkManager">Network Manager to use</param>
+        /// <param name="actionToPerformBeforeResponse">Action to perform before sending out the response</param>
+        /// <param name="targetPort">Port where arrival of message <see cref="T"/> is awaited</param>
+        /// <param name="callerId">Caller id of the responder</param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TResponse"></typeparam>
+        /// <returns></returns>
+        public static Task AwaitMulticastMessageAndRespond<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, ushort targetPort, int callerId) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            return networkManager.AwaitMessageAndRespond<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Multicast, targetPort, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(targetPort), callerId);
+        }
+        
+
+        /// <summary>
+        /// Expects a unicast message of type <see cref="T"/>, triggering the given action and afterward responds with a message of type <see cref="TResponse"/>.
+        /// </summary>
+        /// <param name="networkManager">Network Manager to use</param>
+        /// <param name="actionToPerformBeforeResponse">Action to perform before sending out the response</param>
+        /// <param name="targetEndpoint">Endpoint defines port where arrival of message <see cref="T"/> is awaited. Endpoint is also used to respond.</param>
+        /// <param name="callerId">Caller id of the responder</param>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TResponse"></typeparam>
+        /// <returns></returns>
+        public static Task AwaitUnicastMessageAndRespond<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, NetworkEndpoint targetEndpoint, int callerId) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            return networkManager.AwaitMessageAndRespond<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Multicast, targetEndpoint.Port, ConnectionType.Unicast, targetEndpoint, callerId);
+        }
+
+
+        internal static Task AwaitMessageAndRespond<T, TResponse>(this INetworkManager networkManager,
             Action<T, int> actionToPerformBeforeResponse, ConnectionType receivingMessageType, ushort receivingPort,
             ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId,
             bool suppressLocalBroadcast = false, bool persistent = false)
@@ -84,7 +130,7 @@ namespace DistractorTask.Transport
             //Todo this is not restartable yet? 
 
             var awaitableResponse = new AwaitMessageWrapper<T>(networkManager, actionToPerformBeforeResponse,
-                responseMessage, receivingMessageType, responseEndpoint.Port, persistent);
+                responseMessage, receivingMessageType, receivingPort, persistent);
             return awaitableResponse.AwaitMessage();
         }
 
@@ -105,27 +151,54 @@ namespace DistractorTask.Transport
             var oneTimeUse = networkManager.CreateOneTimeActionWrapper(receivingMessageType, actionToPerformBeforeResponse, responseEndpoint.Port, persistent);
             
 
-            switch (receivingMessageType)
-            {
-                case ConnectionType.Broadcast:
-                    networkManager.RegisterCallbackAllPorts<T>(oneTimeUse.TriggerEvent);
-                    
-                    break;
-                case ConnectionType.Multicast:
-                    networkManager.RegisterCallback<T>(oneTimeUse.TriggerEvent, receivingPort);
-                    break;
-                case ConnectionType.Unicast:
-                    networkManager.RegisterCallback<T>(oneTimeUse.TriggerEvent, receivingPort);
-                    break;
-                default:
-                    networkManager.RegisterCallback<T>(oneTimeUse.TriggerEvent, receivingPort);
-                    break;
-            }
+            RegisterCallback<T>(networkManager, receivingMessageType, receivingPort, oneTimeUse.TriggerEvent);
 
             return oneTimeUse.Unregister;
 
         }
+
+        private static void RegisterCallback<T>(INetworkManager networkManager, ConnectionType receivingMessageType,
+            ushort receivingPort, Action<T, int> callback) where T : ISerializer, new()
+        {
+            switch (receivingMessageType)
+            {
+                case ConnectionType.Broadcast:
+                    networkManager.RegisterCallbackAllPorts(callback);
+                    
+                    break;
+                case ConnectionType.Multicast:
+                    networkManager.RegisterCallback(callback, receivingPort);
+                    break;
+                case ConnectionType.Unicast:
+                    networkManager.RegisterCallback(callback, receivingPort);
+                    break;
+                default:
+                    networkManager.RegisterCallback(callback, receivingPort);
+                    break;
+            }
+        }
         
+        private static void UnregisterCallback<T>(INetworkManager networkManager, ConnectionType receivingMessageType,
+            ushort receivingPort, Action<T, int> callback) where T : ISerializer, new()
+        {
+            switch (receivingMessageType)
+            {
+                case ConnectionType.Broadcast:
+                    networkManager.UnregisterCallbackAllPorts(callback);
+                    
+                    break;
+                case ConnectionType.Multicast:
+                    networkManager.UnregisterCallback(callback, receivingPort);
+                    break;
+                case ConnectionType.Unicast:
+                    networkManager.UnregisterCallback(callback, receivingPort);
+                    break;
+                default:
+                    networkManager.UnregisterCallback(callback, receivingPort);
+                    break;
+            }
+        }
+
         /*public static Action RegisterResponse<T, TResponse>(Func<(T, int), TResponse> actionToPerformBeforeResponse, ConnectionType receivingMessageType, ushort receivingPort,
             ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId,
             bool suppressLocalBroadcast = false, bool persistent = false) where T : IRespondingSerializer<TResponse>, new()
@@ -452,6 +525,7 @@ namespace DistractorTask.Transport
             public AwaitMessageWrapper(INetworkManager networkManager, Action<T, int> actionBeforeResponse, Action<T, int> response, ConnectionType connectionType, ushort port, bool persistent)
             {
                 _networkManager = networkManager;
+                RegisterCallback<T>(_networkManager, _connectionType, _port, TriggerEvent);
                 _actionBeforeResponse = actionBeforeResponse;
                 _responseAction = response;
                 _port = port;
@@ -475,15 +549,7 @@ namespace DistractorTask.Transport
             public void Unregister()
             {
                 
-                if (_connectionType == ConnectionType.Broadcast)
-                {
-                    _networkManager.UnregisterCallbackAllPorts<T>(TriggerEvent);
-                    
-                }
-                else
-                {
-                    _networkManager.UnregisterCallback<T>(TriggerEvent, _port);
-                }
+                UnregisterCallback<T>(_networkManager, _connectionType, _port, TriggerEvent);
                 if (!_task.Task.IsCompleted)
                 {
                     _task.SetCanceled();
@@ -497,15 +563,15 @@ namespace DistractorTask.Transport
             private readonly ushort _port;
             private readonly bool _persistent;
             private readonly INetworkManager _networkManager;
-            private readonly ConnectionType _connectionType;
+            private readonly ConnectionType _receivingMessageType;
 
-            internal OneTimeActionWrapper(INetworkManager networkManager, ConnectionType connectionType, Action<T, int> oneTimeAction, ushort port, bool persistent)
+            internal OneTimeActionWrapper(INetworkManager networkManager, ConnectionType receivingMessageType, Action<T, int> oneTimeAction, ushort port, bool persistent)
             {
                 _oneTimeAction = oneTimeAction;
                 _port = port;
                 _persistent = persistent;
                 _networkManager = networkManager;
-                _connectionType = connectionType;
+                _receivingMessageType = receivingMessageType;
 
             }
 
@@ -521,17 +587,8 @@ namespace DistractorTask.Transport
                 Unregister();
             }
 
-            public void Unregister()
-            {
-                if (_connectionType == ConnectionType.Broadcast)
-                {
-                    _networkManager.UnregisterCallbackAllPorts<T>(TriggerEvent);
-                    return;
-                }
-                _networkManager.UnregisterCallback<T>(TriggerEvent, _port);
-                
-            }
-            
+            public void Unregister() => UnregisterCallback<T>(_networkManager, _receivingMessageType, _port, TriggerEvent);
+
         }
         
     }

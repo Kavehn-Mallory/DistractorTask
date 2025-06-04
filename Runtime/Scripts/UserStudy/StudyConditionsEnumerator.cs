@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DistractorSelectionStage;
+using UnityEngine.Serialization;
 
 namespace DistractorTask.UserStudy
 {
@@ -17,7 +19,7 @@ namespace DistractorTask.UserStudy
         {
             _trialCount = studyCondition.trialsPerCondition;
             _repetitionsPerTrial = studyCondition.selectionsPerTrial;
-
+            
             _permutations = PermutationGenerator.GeneratePermutations(studyCondition.conditions, startCondition);
         }
 
@@ -55,28 +57,31 @@ namespace DistractorTask.UserStudy
     
     
 
+    [Serializable]
     public struct StudyCondition
     {
+        
+        public LoadLevel loadLevel;
+        public NoiseLevel noiseLevel;
+        public int repetitionsPerTrial;
+        public int trialCount;
 
         internal StudyCondition(ConditionPermutation permutation, int trialCount, int repetitionsPerTrial)
         {
-            TrialCount = trialCount;
-            RepetitionsPerTrial = repetitionsPerTrial;
-            LoadLevel = permutation.LoadLevel;
-            NoiseLevel = permutation.NoiseLevel;
+            this.trialCount = trialCount;
+            this.repetitionsPerTrial = repetitionsPerTrial;
+            loadLevel = permutation.LoadLevel;
+            noiseLevel = permutation.NoiseLevel;
         }
         
         public StudyCondition(LoadLevel loadLevel, NoiseLevel noiseLevel, int trialCount, int repetitionsPerTrial)
         {
-            TrialCount = trialCount;
-            RepetitionsPerTrial = repetitionsPerTrial;
-            LoadLevel = loadLevel;
-            NoiseLevel = noiseLevel;
+            this.trialCount = trialCount;
+            this.repetitionsPerTrial = repetitionsPerTrial;
+            this.loadLevel = loadLevel;
+            this.noiseLevel = noiseLevel;
         }
         
-        public LoadLevel LoadLevel;
-        public NoiseLevel NoiseLevel;
-        public int RepetitionsPerTrial;
-        public int TrialCount;
+
     }
 }

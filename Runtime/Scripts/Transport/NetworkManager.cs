@@ -24,7 +24,7 @@ namespace DistractorTask.Transport
             }
         }
 
-        public void RegisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new()
+        public void RegisterCallback<T>(Action<T, int> callback, ushort port = NetworkExtensions.DefaultPort) where T : ISerializer, new()
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
@@ -40,7 +40,7 @@ namespace DistractorTask.Transport
             _globalHandler.RegisterCallback(callback);
         }
 
-        public void UnregisterCallback<T>(Action<T, int> callback, ushort port) where T : ISerializer, new()
+        public void UnregisterCallback<T>(Action<T, int> callback, ushort port = NetworkExtensions.DefaultPort) where T : ISerializer, new()
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {

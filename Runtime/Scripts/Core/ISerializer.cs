@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using DistractorTask.Transport.DataContainer;
+using Unity.Collections;
 
 namespace DistractorTask.Core
 {
@@ -7,5 +8,12 @@ namespace DistractorTask.Core
         public void Serialize(ref DataStreamWriter writer);
         
         public void Deserialize(ref DataStreamReader reader);
+    }
+
+    public interface ILogSerializer
+    {
+        public string Serialize();
+        
+        public LogCategory Category { get; }
     }
 }

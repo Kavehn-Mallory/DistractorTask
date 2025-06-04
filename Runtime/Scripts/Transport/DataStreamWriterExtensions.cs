@@ -1,5 +1,7 @@
 ﻿using System;
 using DistractorTask.Core;
+using DistractorTask.UserStudy;
+using DistractorTask.UserStudy.DataDrivenSetup;
 using Unity.Collections;
 
 namespace DistractorTask.Transport
@@ -62,6 +64,17 @@ namespace DistractorTask.Transport
                 //throw new ArgumentException("string is too long for all types of fixed string.");
             }
         }
+
+        public static void WriteStudyCondition(this ref DataStreamWriter writer, StudyCondition studyCondition)
+        {
+            writer.WriteByte((byte)studyCondition.loadLevel);
+            writer.WriteByte((byte)studyCondition.noiseLevel);
+            writer.WriteInt(studyCondition.repetitionsPerTrial);
+            writer.WriteInt(studyCondition.trialCount);
+            
+        }
+        
+        
         
         
         
