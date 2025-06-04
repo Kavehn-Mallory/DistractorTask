@@ -1,10 +1,7 @@
 ﻿using System;
-using DistractorTask.Core;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
-using DistractorTask.Transport.DataContainer.GenericClasses;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace DistractorTask.UserStudy.MarkerPointStage

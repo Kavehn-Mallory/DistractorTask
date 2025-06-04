@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DistractorTask.Transport;
@@ -7,14 +6,12 @@ using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
-using DistractorTask.UserStudy.MarkerPointStage;
 using UnityEngine;
-using UnityEngine.Serialization;
 using TrialCompletedData = DistractorTask.UserStudy.DataDrivenSetup.TrialCompletedData;
 
 namespace DistractorTask.UserStudy.DistractorSelectionStage
 {
-    public class DistractorSelectionComponent : ReceivingStudyStageComponent<DistractorSelectionStageEvent>
+    public class DistractorSelectionComponent : MonoBehaviour
     {
 
         public DistractorAnchorPointAsset distractorAnchorPointAsset;
@@ -29,10 +26,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         
         private bool _acceptingInput;
         
-        protected override void OnStudyStageStart(DistractorSelectionStageEvent studyEvent)
-        {
-
-        }
 
         private void OnEnable()
         {
@@ -46,13 +39,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             NetworkManager.Instance.UnregisterCallback<ConditionData>(StartStudyCondition);
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed -= OnReceiveInput;
         }
-
-        protected override void OnStudyStageEnd(DistractorSelectionStageEvent studyEvent)
-        {
-            throw new NotImplementedException();
-        }
-
-
+        
+        
         private void OnReceiveInput()
         {
             if (!_acceptingInput)

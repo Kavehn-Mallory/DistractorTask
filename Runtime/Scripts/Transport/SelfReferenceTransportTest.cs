@@ -28,9 +28,9 @@ namespace DistractorTask.Transport
         
         private IEnumerator Start()
         {
-            NetworkManager.Instance.StartListening(serverSettings.NetworkEndpoint.Port, OnConnectionEstablished, ConnectionType.Multicast);
-            NetworkManager.Instance.StartListening(ipConnectionAddress.NetworkEndpoint.Port, OnIpConnectionEstablished, ConnectionType.Multicast);
-            NetworkManager.Instance.StartListening(videoTransportSettings.port.Port, null, ConnectionType.Broadcast);
+            NetworkManager.Instance.StartListening(serverSettings.NetworkEndpoint.Port, OnConnectionEstablished);
+            NetworkManager.Instance.StartListening(ipConnectionAddress.NetworkEndpoint.Port, OnIpConnectionEstablished);
+            NetworkManager.Instance.StartListening(videoTransportSettings.port.Port, null);
             NetworkManager.Instance.RegisterCallbackAllPorts<LogfileData>(OnLogFileDataReceived);
             NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived, ipConnectionAddress.port.Port);
             NetworkManager.Instance.RegisterCallbackAllPorts<IpAddressData>(OnAllDataReceived);
@@ -40,7 +40,7 @@ namespace DistractorTask.Transport
             //NetworkManager.Instance.OnConnectionEstablished += OnConnectionEstablished;
             //we dont want to subscribe twice 
             Debug.Log("Trying to connect", this);
-            NetworkManager.Instance.Connect(ipConnectionAddress.NetworkEndpoint, null, ConnectionType.Multicast);
+            NetworkManager.Instance.Connect(ipConnectionAddress.NetworkEndpoint, null);
         }
 
         private void OnAllDataReceived(IpAddressData arg1, int arg2)
@@ -52,7 +52,7 @@ namespace DistractorTask.Transport
         {
             Debug.Log($"Connecting to {arg1.Endpoint}");
             //todo test MarkerPointVisualizationController 
-            NetworkManager.Instance.Connect(arg1.Endpoint, OnVideoPortConnectionEstablished, ConnectionType.Multicast);
+            NetworkManager.Instance.Connect(arg1.Endpoint, OnVideoPortConnectionEstablished);
         }
 
         private void OnVideoPortConnectionEstablished(ConnectionState obj)

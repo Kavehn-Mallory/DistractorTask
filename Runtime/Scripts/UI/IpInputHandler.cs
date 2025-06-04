@@ -45,9 +45,9 @@ namespace DistractorTask.UI
             {
                 Debug.Log($"Starting to listen on {NetworkExtensions.GetLocalEndpointWithDefaultPort(true)}");
                 NetworkManager.Instance.StartListening(targetPort,
-                    OnConnectionEstablished, ConnectionType.Broadcast);
+                    OnConnectionEstablished);
                 _endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", port);
-                NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived, ConnectionType.Multicast);
+                NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived);
             }
             
         }

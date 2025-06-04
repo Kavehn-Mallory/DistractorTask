@@ -1,8 +1,5 @@
-﻿using MixedReality.Toolkit.UX;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 
 namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 {

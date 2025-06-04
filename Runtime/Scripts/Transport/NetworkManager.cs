@@ -56,7 +56,7 @@ namespace DistractorTask.Transport
             _globalHandler.UnregisterCallback(callback);
         }
 
-        public bool StartListening(ushort port, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
+        public bool StartListening(ushort port, Action<ConnectionState> onConnectionStateChanged)
         {
             if (_activeConnections.TryGetValue(port, out var connectionObject))
             {
@@ -64,7 +64,7 @@ namespace DistractorTask.Transport
                 onConnectionStateChanged?.Invoke(connectionObject.ConnectionHandler.ConnectionState);
                 RegisterToConnectionStateChange(port, onConnectionStateChanged);
                 var endpoint = NetworkExtensions.GetLocalEndpoint(port, true);
-                return connectionObject.ConnectionHandler.StartListening(endpoint, connectionType);
+                return connectionObject.ConnectionHandler.StartListening(endpoint);
             }
 
             if (!_inactiveEventHandlers.Remove(port, out var messageEventHandler))
@@ -74,7 +74,6 @@ namespace DistractorTask.Transport
 
             connectionObject = new ConnectionObject
             {
-                ConnectionType = connectionType,
                 ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
                 EventHandler = messageEventHandler,
                 HasLocalConnection = false,
@@ -85,8 +84,7 @@ namespace DistractorTask.Transport
             
             //todo do we have the connection type twice?
             
-            return connectionObject.ConnectionHandler.StartListening(NetworkExtensions.GetLocalEndpoint(port, true),
-                connectionType);
+            return connectionObject.ConnectionHandler.StartListening(NetworkExtensions.GetLocalEndpoint(port, true));
         }
 
         private void OnConnectionStateChanged(ushort port, ConnectionState connectionState)
@@ -114,7 +112,7 @@ namespace DistractorTask.Transport
             }
         }
 
-        public void Connect(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast)
+        public void Connect(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged)
         {
             var isLocal = endpoint.IsLocalAddress();
 
@@ -138,7 +136,7 @@ namespace DistractorTask.Transport
                     return;
                 }
                 
-                connectionObject.ConnectionHandler.Connect(endpoint, connectionType);
+                connectionObject.ConnectionHandler.Connect(endpoint);
                 return;
             }
             
@@ -150,7 +148,6 @@ namespace DistractorTask.Transport
 
             connectionObject = new ConnectionObject()
             {
-                ConnectionType = connectionType,
                 ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
                 EventHandler = messageEventHandler,
                 HasLocalConnection = isLocal,
@@ -161,7 +158,7 @@ namespace DistractorTask.Transport
 
             if (!isLocal)
             {
-                connectionObject.ConnectionHandler.Connect(endpoint, connectionType);
+                connectionObject.ConnectionHandler.Connect(endpoint);
             }
 
         }
@@ -300,7 +297,6 @@ namespace DistractorTask.Transport
     internal class ConnectionObject
     {
         public bool HasLocalConnection;
-        public ConnectionType ConnectionType;
         public NetworkConnectionHandler ConnectionHandler;
         public NetworkMessageEventHandler EventHandler;
         public Action<ConnectionState> OnConnectionStateChange;

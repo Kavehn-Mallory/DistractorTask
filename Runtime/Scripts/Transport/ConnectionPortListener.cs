@@ -1,4 +1,5 @@
-﻿using DistractorTask.Transport.DataContainer;
+﻿using System;
+using DistractorTask.Transport.DataContainer;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,11 +13,13 @@ namespace DistractorTask.Transport
 
         [SerializeField]
         private UnityEvent onConnectionEstablished;
-        
+
+        public event Action<IpAddressData> OnDataReceived = delegate { };
+
         private void Start()
         {
             NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived, port);
-            NetworkManager.Instance.StartListening(port, null, ConnectionType.Multicast);
+            NetworkManager.Instance.StartListening(port, null);
         }
 
         private void OnIpAddressDataReceived(IpAddressData ipAddressData, int callerId)
@@ -25,7 +28,8 @@ namespace DistractorTask.Transport
             {
                 return;
             }
-            NetworkManager.Instance.Connect(ipAddressData.Endpoint, OnConnectionEstablished, ConnectionType.Broadcast);
+            NetworkManager.Instance.Connect(ipAddressData.Endpoint, OnConnectionEstablished);
+            OnDataReceived.Invoke(ipAddressData);
         }
 
         private void OnConnectionEstablished(ConnectionState connectionState)
@@ -36,6 +40,7 @@ namespace DistractorTask.Transport
             }
             onConnectionEstablished.Invoke();
         }
+        
     }
     
 }

@@ -3,7 +3,7 @@ using Unity.Collections;
 
 namespace DistractorTask.Transport.DataContainer.GenericClasses
 {
-    public abstract class BaseResponseData : IResponseIdentifier, ISerializer
+    public abstract class BaseResponseData : IResponseIdentifier, ISerializer, ILogSerializer
     {
         public int SenderId { get; set; }
         public int MessageId { get; set; }
@@ -18,6 +18,13 @@ namespace DistractorTask.Transport.DataContainer.GenericClasses
             SenderId = reader.ReadInt();
             MessageId = reader.ReadInt();
         }
+
+        public virtual string Serialize()
+        {
+            return $"{nameof(SenderId)}: {SenderId.ToString()};{nameof(MessageId)};{MessageId.ToString()}";
+        }
+
+        public virtual LogCategory Category => LogCategory.UserStudy;
     }
     
 }

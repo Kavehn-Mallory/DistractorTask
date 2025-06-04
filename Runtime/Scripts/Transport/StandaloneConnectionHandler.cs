@@ -13,10 +13,10 @@ namespace DistractorTask.Transport
         public IEnumerator Start()
         {
             NetworkManager.Instance.StartListening(NetworkExtensions.DefaultPort,
-                OnConnectionEstablished, ConnectionType.Broadcast);
+                OnConnectionEstablished);
             _endpoint = NetworkEndpoint.AnyIpv4.WithPort(NetworkExtensions.IpListeningPort);
             yield return new WaitForSeconds(2f);
-            NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived, ConnectionType.Multicast);
+            NetworkManager.Instance.Connect(_endpoint, OnConnectionStateReceived);
         }
 
         private void OnConnectionStateReceived(ConnectionState obj) =>

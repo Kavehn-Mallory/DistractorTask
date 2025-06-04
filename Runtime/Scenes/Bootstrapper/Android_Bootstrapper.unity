@@ -205,12 +205,6 @@ MonoBehaviour:
         asset: {fileID: 102900000, guid: c869832cbf4c0004eb996dd60622d9ae, type: 3}
         guid: c869832cbf4c0004eb996dd60622d9ae
       sceneType: 0
-  - groupName: StandaloneModule
-    scenes:
-    - reference:
-        asset: {fileID: 102900000, guid: 84d9280dae46db142b86a5387f685810, type: 3}
-        guid: 84d9280dae46db142b86a5387f685810
-      sceneType: 7
   targetProgress: 0
 --- !u!4 &1621033333
 Transform:

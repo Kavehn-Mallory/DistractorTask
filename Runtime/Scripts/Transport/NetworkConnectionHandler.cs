@@ -25,8 +25,6 @@ namespace DistractorTask.Transport
         private readonly ActionRef<DataStreamReader, ushort> _onDataReceived;
         public bool Internal;
         private NativeList<ushort> _endpointPorts;
-        [Obsolete]
-        public ConnectionType ConnectionType;
         public ConnectionState ConnectionState;
 
         public void Dispose()
@@ -142,9 +140,8 @@ namespace DistractorTask.Transport
         }
         
         
-        public void Connect(NetworkEndpoint endpoint, ConnectionType connectionType)
+        public void Connect(NetworkEndpoint endpoint)
         {
-            ConnectionType = connectionType;
             ChangeConnectionState(ConnectionState.ConnectionRequested);
             if (!_endpointPorts.Contains(endpoint.Port))
             {
@@ -153,9 +150,8 @@ namespace DistractorTask.Transport
             Connections.Add(Driver.Connect(endpoint));
         }
 
-        public bool StartListening(NetworkEndpoint endpoint, ConnectionType connectionType)
+        public bool StartListening(NetworkEndpoint endpoint)
         {
-            ConnectionType = connectionType;
             if (Driver.Listening)
             {
                 return true;

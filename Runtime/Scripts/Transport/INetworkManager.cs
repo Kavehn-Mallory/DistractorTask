@@ -15,9 +15,9 @@ namespace DistractorTask.Transport
 
         public void UnregisterCallbackAllPorts<T>(Action<T, int> callback) where T : ISerializer, new();
         
-        public bool StartListening(ushort port, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast);
+        public bool StartListening(ushort port, Action<ConnectionState> onConnectionStateChanged);
 
-        public void Connect(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged, ConnectionType connectionType = ConnectionType.Broadcast);
+        public void Connect(NetworkEndpoint endpoint, Action<ConnectionState> onConnectionStateChanged);
 
         public ConnectionState CheckConnectionStatus(NetworkEndpoint endpoint);
 

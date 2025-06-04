@@ -1,5 +1,6 @@
 ﻿using System;
 using DistractorTask.Core;
+using DistractorTask.Transport.DataContainer;
 using DistractorTask.Transport.DataContainer.GenericClasses;
 using Unity.Collections;
 
@@ -21,6 +22,13 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             base.Deserialize(ref reader);
             markerCount = reader.ReadInt();
         }
+
+        public override string Serialize()
+        {
+            return base.Serialize() + $"{nameof(markerCount)}: {markerCount.ToString()}";
+        }
+
+        public override LogCategory Category => LogCategory.UserStudy;
     }
 
     public class MarkerPointCountReceived : GenericNoValueData, IResponseIdentifier
