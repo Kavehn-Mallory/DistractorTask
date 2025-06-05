@@ -201,8 +201,8 @@ MonoBehaviour:
   - groupName: Default
     scenes:
     - reference:
-        asset: {fileID: 102900000, guid: 7b606e8bde5263345a82dbc0b9117163, type: 3}
-        guid: 7b606e8bde5263345a82dbc0b9117163
+        asset: {fileID: 102900000, guid: 2b00726fae15be44cacc5715059dd2f3, type: 3}
+        guid: 2b00726fae15be44cacc5715059dd2f3
       sceneType: 0
   targetProgress: 0
 --- !u!4 &1621033333

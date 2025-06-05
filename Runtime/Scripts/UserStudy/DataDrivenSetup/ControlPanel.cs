@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.Transport.DataContainer.GenericClasses;
-using DistractorTask.UserStudy.DistractorSelectionStage;
 using DistractorTask.UserStudy.MarkerPointStage;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -32,11 +31,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
 #region MarkerPointRegion
 
-        
-
-
-        
-        
         public async void StartMarkerPointCreation()
         {
             _markerPointEnumerator?.Dispose();
@@ -92,20 +86,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
      
 #endregion
         
-        
-        //todo distractor task itself.
-        //I know, I already started work on the new system but I would still like to implement it differently 
-        //Maybe this class manly serves as a central manager instead of actually doing any large implementation logic
-        
-        
-        //order: 
-        //broadcast trial information -> (make sure that responses work that way as well?)
-        //wait for response from video player -> send to client / have client wait for response? or maybe trial info as well
-        //wait for message from client that trial / condition completed -> inform video player 
-        //probably callback after each trial -> hand to video player 
-        //callback after each condition -> repeat 
-        //see if we can set this up so that it runs automatically
-        
+
         //todo look if we have to cancel tasks somehow
 
 
