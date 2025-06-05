@@ -65,8 +65,9 @@ namespace DistractorTask.Transport
         
         public static NetworkEndpoint GetLocalEndpoint(ushort port, bool binding)
         {
-            var ip = NetworkExtensions.GetLocalIPAddress();
+            var ip = GetLocalIPAddress();
             var endpoint = NetworkEndpoint.Parse(ip.ToString(), port);
+            endpoint = NetworkEndpoint.Parse("192.168.1.110", port);
             //if its used for binding we just return the default port
             if(binding)
                 endpoint = NetworkEndpoint.AnyIpv4.WithPort(port);

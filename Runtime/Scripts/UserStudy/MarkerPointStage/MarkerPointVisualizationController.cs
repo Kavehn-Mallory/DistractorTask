@@ -63,6 +63,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         public async Task InitializeMarkerPointSetup(int markerCount)
         {
+            Debug.Log("Sending marker point data");
             //todo send message with marker point count / positions 
             await NetworkManager.Instance.MulticastMessageAndAwaitResponse<MarkerCountData, MarkerPointResponseData>(new MarkerCountData
             {

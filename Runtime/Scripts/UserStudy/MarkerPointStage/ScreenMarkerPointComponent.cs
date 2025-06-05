@@ -28,6 +28,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             markerPointCanvas.gameObject.SetActive(false);
             _markerPoints = CreateMarkerPoints(marker, markerPointCanvas, zones);
+            //todo make persistent
             Manager.RegisterMulticastResponse<MarkerCountData, MarkerPointResponseData>(OnStartConfirmed, _port, GetInstanceID());
         }
         
@@ -85,6 +86,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 //todo throw error
             }
+
+            _currentMarker = data.currentMarkerIndex;
 
             if (_currentMarker >= _markerPoints.Length - 1)
             {
