@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DistractorTask.Core;
 using Unity.Collections;
 using Unity.Networking.Transport;
@@ -26,9 +27,10 @@ namespace DistractorTask.Transport
 
         private void Update()
         {
-            foreach (var activeConnection in _activeConnections)
+            var values = _activeConnections.Values.ToArray();
+            foreach (var activeConnection in values)
             {
-                activeConnection.Value.ConnectionHandler.UpdateConnectionHandler();
+                activeConnection.ConnectionHandler.UpdateConnectionHandler();
             }
         }
 
