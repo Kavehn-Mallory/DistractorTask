@@ -15,6 +15,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
 
         private Image[] _markerPoints = Array.Empty<Image>();
         private int _currentMarker;
+        private int _currentlyActiveMarker;
 
         private ushort _port = NetworkExtensions.DisplayWallControlPort;
         
@@ -63,15 +64,17 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             //Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port);
             _activateMarkerPointsRegisterCallback = Manager.RegisterPersistentMulticastResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(
                 OnPointSelectionConfirmed, _port, GetInstanceID());
-            _markerPoints[0].enabled = true;
-            _currentMarker++;
             markerPointCanvas.gameObject.SetActive(true);
+            _currentlyActiveMarker = -1;
         }
         
         private void ActivateMarker()
         {
-            _markerPoints[_currentMarker].enabled = false;
-            _currentMarker++;
+            if (_currentlyActiveMarker >= 0)
+            {
+                _markerPoints[_currentMarker].enabled = false;
+            }
+            _currentlyActiveMarker = _currentMarker;
             _markerPoints[_currentMarker].enabled = true;
         }
         
