@@ -26,6 +26,7 @@ namespace DistractorTask.Transport
         public bool Internal;
         private NativeList<ushort> _endpointPorts;
         public ConnectionState ConnectionState;
+        private ushort _assignedPort;
 
         public void Dispose()
         {
@@ -45,7 +46,7 @@ namespace DistractorTask.Transport
         
 
         
-        public NetworkConnectionHandler(ActionRef<DataStreamReader, ushort> onDataReceived, Action<ushort, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
+        public NetworkConnectionHandler(ushort assignedPort, ActionRef<DataStreamReader, ushort> onDataReceived, Action<ushort, ConnectionState> onConnectionStateChanged, int numberOfConnections = 1)
         {
             if (IsCreated)
             {
@@ -57,7 +58,7 @@ namespace DistractorTask.Transport
             OnConnectionStateChanged = onConnectionStateChanged;
             this._onDataReceived = onDataReceived;
             _endpointPorts = new NativeList<ushort>(numberOfConnections, Allocator.Persistent);
-
+            _assignedPort = assignedPort;
         }
 
 
@@ -108,7 +109,7 @@ namespace DistractorTask.Transport
                         if (cmd == NetworkEvent.Type.Data)
                         {
                             Debug.Log($"Data received {Driver.GetLocalEndpoint()}");
-                            _onDataReceived.Invoke(ref stream, Driver.GetLocalEndpoint().Port);
+                            _onDataReceived.Invoke(ref stream, _assignedPort);
                         }
                         else if (cmd == NetworkEvent.Type.Disconnect)
                         {

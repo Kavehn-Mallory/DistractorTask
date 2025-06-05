@@ -84,7 +84,7 @@ namespace DistractorTask.Transport
 
             connectionObject = new ConnectionObject
             {
-                ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
+                ConnectionHandler = new NetworkConnectionHandler(port, OnDataReceived, OnConnectionStateChanged),
                 EventHandler = messageEventHandler,
                 HasLocalConnection = false,
                 OnConnectionStateChange = delegate { }
@@ -158,7 +158,7 @@ namespace DistractorTask.Transport
 
             connectionObject = new ConnectionObject()
             {
-                ConnectionHandler = new NetworkConnectionHandler(OnDataReceived, OnConnectionStateChanged),
+                ConnectionHandler = new NetworkConnectionHandler(endpoint.Port, OnDataReceived, OnConnectionStateChanged),
                 EventHandler = messageEventHandler,
                 HasLocalConnection = isLocal,
                 OnConnectionStateChange = delegate { }
@@ -249,10 +249,11 @@ namespace DistractorTask.Transport
                 var endSend = handler.Driver.EndSend(writer) >= 0;
                 if (beginSend && endSend)
                 {
+                    Debug.Log($"Send message of type {typeof(T).Name} successfully with connection {handler.Driver.GetRemoteEndpoint(connection)}.");
                     success = true;
                 }
             }
-
+            Debug.Log($"Sending result: {success}");
             return success;
 
         }
