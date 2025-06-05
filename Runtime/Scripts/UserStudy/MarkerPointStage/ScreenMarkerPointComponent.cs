@@ -58,6 +58,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 return;
             }
+            Debug.Log("Marker Point Start Received");
             //Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port);
             _activateMarkerPointsRegisterCallback = Manager.RegisterPersistentMulticastResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(
                 OnPointSelectionConfirmed, _port, GetInstanceID());
