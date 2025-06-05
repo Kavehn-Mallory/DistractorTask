@@ -1,5 +1,6 @@
 ﻿using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
+using TMPro;
 using UnityEngine;
 
 namespace DistractorTask.UserStudy.DataDrivenSetup
@@ -9,6 +10,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         //listen for next marker is set 
         //listen for marker count data 
         //have array with marker points 
+        
+        public TextMeshProUGUI debugText;
         
         [SerializeField] private Camera mainCamera;
         [SerializeField] private float distanceFromWall = 0.1f;
@@ -60,12 +63,14 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private void OnMarkerPointActivated(OnMarkerPointActivatedData data, int callerId)
         {
+            debugText.text = "Marker Point Activated";
             _activeMarkerPointData = data;
         }
 
 
         private void OnMarkerPointCountReceived(MarkerPointCountData data, int callerId)
         {
+            debugText.text = "Marker Point Data Received";
             anchorPoints.InitializeContainer(data.markerCount);
         }
     }

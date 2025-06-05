@@ -249,7 +249,7 @@ namespace DistractorTask.Transport
                 var endSend = handler.Driver.EndSend(writer) >= 0;
                 if (beginSend && endSend)
                 {
-                    Debug.Log($"Send message of type {typeof(T).Name} successfully with connection {handler.Driver.GetRemoteEndpoint(connection)}.");
+                    Debug.Log($"Send message of type {typeof(T).Name} successfully with connection {handler.Driver.GetRemoteEndpoint(connection).WithPort(handler.Port)}.");
                     success = true;
                 }
             }

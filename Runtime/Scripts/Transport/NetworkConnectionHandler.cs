@@ -28,6 +28,8 @@ namespace DistractorTask.Transport
         public ConnectionState ConnectionState;
         private ushort _assignedPort;
 
+        public ushort Port => _assignedPort;
+
         public void Dispose()
         {
             if(Driver.IsCreated)

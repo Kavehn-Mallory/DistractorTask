@@ -9,6 +9,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
     public class ScreenMarkerPointComponent : MonoBehaviour
     {
         
+        
+       
         [SerializeField] private Canvas markerPointCanvas;
         [SerializeField] private Vector2Int zones;
         [SerializeField] private Image marker;
@@ -70,6 +72,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         
         private void ActivateMarker()
         {
+            Debug.Log("Switching to next marker point");
             if (_currentlyActiveMarker >= 0)
             {
                 _markerPoints[_currentMarker].enabled = false;
@@ -80,14 +83,10 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         
         private void OnPointSelectionConfirmed(ActivateMarkerPoint data, int callerId)
         {
-            
+            Debug.Log("Activate marker point data received");
             if (callerId == GetInstanceID())
             {
                 return;
-            }
-            if (data.currentMarkerIndex != _currentMarker)
-            {
-                //todo throw error
             }
 
             _currentMarker = data.currentMarkerIndex;

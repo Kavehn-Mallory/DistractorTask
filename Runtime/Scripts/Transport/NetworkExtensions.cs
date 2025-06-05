@@ -1,7 +1,10 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Error;
+using UnityEngine;
 
 namespace DistractorTask.Transport
 {
@@ -15,14 +18,27 @@ namespace DistractorTask.Transport
         
         public static IPAddress GetLocalIPAddress()
         {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
+
+            foreach(NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                if(ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
                 {
-                    return ip;
-                }
+
+                    if (ni.GetIPProperties().GatewayAddresses.Count == 0)
+                    {
+                        continue;
+                    }
+                    foreach (var ip in ni.GetIPProperties().UnicastAddresses)
+                    {
+                        if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        {
+
+                            return ip.Address;
+                        }
+                    }
+                }  
             }
+
             return null;
         }
         
@@ -68,7 +84,6 @@ namespace DistractorTask.Transport
             var ip = GetLocalIPAddress();
             var endpoint = NetworkEndpoint.Parse(ip.ToString(), port);
             //endpoint = NetworkEndpoint.Parse("192.168.1.110", port);
-            //if its used for binding we just return the default port
             if(binding)
                 endpoint = NetworkEndpoint.AnyIpv4.WithPort(port);
 
