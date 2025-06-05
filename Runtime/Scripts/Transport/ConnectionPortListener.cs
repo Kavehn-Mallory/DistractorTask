@@ -15,7 +15,11 @@ namespace DistractorTask.Transport
         [SerializeField]
         private UnityEvent onConnectionEstablished;
 
+        [SerializeField]
+        private UnityEvent<ConnectionState> onConnectionStateChanged;
+
         public event Action<IpAddressData> OnDataReceived = delegate { };
+        
 
         private void Start()
         {
@@ -38,11 +42,12 @@ namespace DistractorTask.Transport
 
         private void OnConnectionEstablished(ConnectionState connectionState)
         {
+            onConnectionStateChanged?.Invoke(connectionState);
             if (connectionState != ConnectionState.Connected)
             {
                 return;
             }
-            onConnectionEstablished.Invoke();
+            onConnectionEstablished?.Invoke();
         }
         
     }

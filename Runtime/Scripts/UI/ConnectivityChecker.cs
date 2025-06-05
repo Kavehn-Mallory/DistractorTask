@@ -28,7 +28,7 @@ namespace DistractorTask.UI
             NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DefaultPort, OnConnectionStateChanged);
         }
 
-        private void OnConnectionStateChanged(ConnectionState obj)
+        public void OnConnectionStateChanged(ConnectionState obj)
         {
             if (obj == ConnectionState.Connected)
             {
