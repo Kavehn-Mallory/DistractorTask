@@ -24,6 +24,14 @@ namespace DistractorTask.Transport
             }
         }
 
+        private void Update()
+        {
+            foreach (var activeConnection in _activeConnections)
+            {
+                activeConnection.Value.ConnectionHandler.UpdateConnectionHandler();
+            }
+        }
+
         public void RegisterCallback<T>(Action<T, int> callback, ushort port = NetworkExtensions.DefaultPort) where T : ISerializer, new()
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
