@@ -49,8 +49,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             var position = _mainCameraTransform.position + _mainCameraTransform.forward * distanceFromWall;
 
 
+            debugText.text = "Creating placement position";
+            
             if (anchorPoints.SetPosition(_activeMarkerPointData.MarkerPointIndex, position))
             {
+                debugText.text = _activeMarkerPointData.GenerateResponse().GetType().Name;
                 NetworkManager.Instance.MulticastRespond(_activeMarkerPointData, NetworkExtensions.DefaultPort, GetInstanceID());
                 //reset data 
                 _activeMarkerPointData = new OnMarkerPointActivatedData

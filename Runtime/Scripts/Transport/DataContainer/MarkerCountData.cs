@@ -8,7 +8,6 @@ namespace DistractorTask.Transport.DataContainer
     [Serializable]
     public class MarkerCountData : BaseRespondingData<MarkerPointResponseData>
     {
-        //todo maybe replace this with just an int?
         public int markerCount;
 
 

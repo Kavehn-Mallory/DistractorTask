@@ -71,8 +71,7 @@ namespace DistractorTask.Transport
         {
             return GetLocalEndpoint(DefaultPort, binding);
         }
-
-        //Todo fix this so that there are two different functions for display and listening
+        
         public static NetworkEndpoint GetBindableEndpoint(ushort port)
         {
             return NetworkEndpoint.AnyIpv4.WithPort(port);

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Error;
@@ -12,7 +9,6 @@ namespace DistractorTask.Transport
     public class NetworkConnectionHandler : IDisposable
     {
         
-        //Todo change this even further -> have a thing that has a driver, pipeline and connection(s) package 
         //have list with listeners?
         public delegate void ActionRef<T>(ref T item);
         public delegate void ActionRef<T, TS>(ref T item, TS item2);

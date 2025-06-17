@@ -139,9 +139,9 @@ namespace DistractorTask.Transport
                     return;
                 }
 
+                RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
                 if (connectionObject.IsConnectedTo(endpoint))
                 {
-                    RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
                     onConnectionStateChanged?.Invoke(ConnectionState.Connected);
                     return;
                 }
