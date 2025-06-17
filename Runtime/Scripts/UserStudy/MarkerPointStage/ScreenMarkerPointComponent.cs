@@ -88,7 +88,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             {
                 return;
             }
-
+            
             _currentMarker = data.currentMarkerIndex;
 
             if (_currentMarker >= _markerPoints.Length - 1)
@@ -103,7 +103,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             _markerPoints[^1].enabled = false;
             markerPointCanvas.gameObject.SetActive(false);
-            Manager.UnregisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port); 
+            _activateMarkerPointsRegisterCallback?.Invoke();
         }
     }
     

@@ -294,34 +294,34 @@ namespace DistractorTask.Transport
         public static Action RegisterPersistentBroadcastResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
-            return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Broadcast, default, ConnectionType.Broadcast, default, callerId, suppressLocalBroadcast);
+            return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Broadcast, default, ConnectionType.Broadcast, default, callerId, suppressLocalBroadcast, true);
         }
 
         public static Action RegisterPersistentBroadcastResponse<T, TResponse>(this INetworkManager networkManager, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
-            return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Broadcast, default, ConnectionType.Broadcast, default, callerId, suppressLocalBroadcast);
+            return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Broadcast, default, ConnectionType.Broadcast, default, callerId, suppressLocalBroadcast, true);
         }
         
         public static Action RegisterPersistentMulticastResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, ushort port,
             int callerId) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
-            return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Multicast, port, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(port), callerId);
+            return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Multicast, port, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(port), callerId, persistent: true);
         }
         
         public static Action RegisterPersistentMulticastResponse<T, TResponse>(this INetworkManager networkManager, ushort port,
             int callerId) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
-            return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Multicast, port, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(port), callerId);
+            return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Multicast, port, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(port), callerId, persistent: true);
         }
         
         public static Action RegisterPersistentUnicastResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, NetworkEndpoint endpoint,
             int callerId) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
-            return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Unicast,endpoint.Port, ConnectionType.Unicast, endpoint, callerId);
+            return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Unicast,endpoint.Port, ConnectionType.Unicast, endpoint, callerId, persistent: true);
 
         }
         
@@ -329,7 +329,7 @@ namespace DistractorTask.Transport
             int callerId) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
-            return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Unicast,endpoint.Port, ConnectionType.Unicast, endpoint, callerId);
+            return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Unicast,endpoint.Port, ConnectionType.Unicast, endpoint, callerId, persistent: true);
 
         }
         

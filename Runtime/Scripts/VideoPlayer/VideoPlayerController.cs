@@ -38,6 +38,8 @@ namespace DistractorTask.VideoPlayer
 
         private void OnEnable()
         {
+            _unregisterVideoClipChangeEvent?.Invoke();
+            _unregisterVideoClipResetEvent?.Invoke();
             _unregisterVideoClipChangeEvent = NetworkManager.Instance
                 .RegisterPersistentMulticastResponse<StudyConditionData, OnVideoClipChangedData>(
                     SwitchVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());

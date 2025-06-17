@@ -53,7 +53,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             
             if (anchorPoints.SetPosition(_activeMarkerPointData.MarkerPointIndex, position))
             {
-                debugText.text = _activeMarkerPointData.GenerateResponse().GetType().Name;
+                debugText.text = "Message was sent";
                 NetworkManager.Instance.MulticastRespond(_activeMarkerPointData, NetworkExtensions.DefaultPort, GetInstanceID());
                 //reset data 
                 _activeMarkerPointData = new OnMarkerPointActivatedData

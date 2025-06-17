@@ -35,11 +35,12 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         {
             _markerPointEnumerator?.Dispose();
             _markerPointEnumerator = new MarkerPointEnumerator(markerPointCount);
-            await markerPointController.InitializeMarkerPointSetup(markerPointCount);
             NetworkManager.Instance.MulticastMessage(new MarkerPointCountData
             {
                 markerCount = markerPointCount
             }, NetworkExtensions.DefaultPort, GetInstanceID());
+            await markerPointController.InitializeMarkerPointSetup(markerPointCount);
+            
             
 
             while (_markerPointEnumerator.MoveNext())
@@ -52,6 +53,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                         {
                             MarkerPointIndex = markerPointIndex
                         }, NetworkExtensions.DefaultPort, GetInstanceID(), markerPointIndex);
+                Debug.Log("Marker point done");
             }
             
             //todo make sure that the start / end thing works.
