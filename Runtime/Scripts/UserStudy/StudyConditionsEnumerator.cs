@@ -82,7 +82,11 @@ namespace DistractorTask.UserStudy
             this.loadLevel = loadLevel;
             this.noiseLevel = noiseLevel;
         }
-        
 
+        public override string ToString()
+        {
+            return
+                $"{nameof(loadLevel)}: {loadLevel.ToString()}; {nameof(noiseLevel)}: {noiseLevel.ToString()}; {nameof(repetitionsPerTrial)}: {repetitionsPerTrial.ToString()}; {nameof(trialCount)}: {trialCount.ToString()}";
+        }
     }
 }

@@ -57,6 +57,7 @@ namespace DistractorTask.Logging
                 }
             }
             StudyLog.RegisterLog<MarkerPointCountData>();
+            StudyLog.RegisterLog<StudyConditionData>();
         }
 
         private void OnIpDataReceived(IpAddressData ipAddressData)

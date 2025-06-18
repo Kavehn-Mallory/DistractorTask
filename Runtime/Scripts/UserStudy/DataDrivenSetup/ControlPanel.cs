@@ -214,6 +214,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             base.Deserialize(ref reader);
             studyCondition = reader.ReadStudyCondition();
         }
+
+        public override string Serialize()
+        {
+            return base.Serialize() + $"{nameof(studyCondition)}: {studyCondition.ToString()}";
+        }
     }
 
     internal class MarkerPointEnumerator : IEnumerator<int>

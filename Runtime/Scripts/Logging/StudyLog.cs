@@ -31,6 +31,8 @@ namespace DistractorTask.Logging
         }
 
         public static string UserId = "";
+
+        private static bool IsServer => UserId != string.Empty;
         
         private string KeyFrameLogPath
         {
@@ -97,7 +99,8 @@ namespace DistractorTask.Logging
                 Message = message
             });
             LogSystem._streamWriter.WriteLine($"{logfileData.Time:c},{logfileData.LogCategory.ToString()},{logfileData.NetworkEndpoint.ToString()},{logfileData.LogCategory.ToString()},{logfileData.Message}");
-            NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
+            if(!IsServer)
+                NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
         }
 
         public static void LogCustomKeyframe(LogCategory logCategory, string message)
@@ -111,7 +114,8 @@ namespace DistractorTask.Logging
                 Message = message
             });
             LogSystem._streamWriter.WriteLine($"{logfileData.Time:c},{logfileData.LogCategory.ToString()},{logfileData.NetworkEndpoint.ToString()},{logfileData.LogCategory.ToString()},{logfileData.Message}");
-            NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
+            if(!IsServer)
+                NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
         }
         
     }

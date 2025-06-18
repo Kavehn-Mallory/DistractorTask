@@ -109,7 +109,6 @@ namespace DistractorTask.VideoPlayer
             
         }
         
-        
 
         [Serializable]
         public struct VideoClipGroup
