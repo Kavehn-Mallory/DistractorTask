@@ -221,11 +221,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 1608970027}
-  debugIndex: 0
+  audioSource: {fileID: 0}
   videoClipGroups:
-  - noiseLevel: 6
+  - relativePath: Low
+    noiseLevel: 6
     videoClips: []
-  - noiseLevel: 24
+  - relativePath: High
+    noiseLevel: 24
     videoClips: []
 --- !u!4 &440515708
 Transform:
@@ -299,7 +301,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: IP Display
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -546,7 +548,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ec88146436a41b2896a1a84066a791a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  port: 7600
   onConnectionEstablished:
     m_PersistentCalls:
       m_Calls:
@@ -562,6 +563,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onConnectionStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!4 &1302131059
 Transform:
   m_ObjectHideFlags: 0
@@ -704,10 +708,10 @@ VideoPlayer:
   m_TargetMaterialProperty: <noninit>
   m_RenderMode: 1
   m_AspectRatio: 2
-  m_DataSource: 0
+  m_DataSource: 1
   m_TimeUpdateMode: 2
   m_PlaybackSpeed: 1
-  m_AudioOutputMode: 2
+  m_AudioOutputMode: 0
   m_TargetAudioSources:
   - {fileID: 0}
   m_DirectAudioVolumes:

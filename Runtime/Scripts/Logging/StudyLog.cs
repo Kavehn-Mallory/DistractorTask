@@ -23,20 +23,23 @@ namespace DistractorTask.Logging
                 if (_instance == null)
                 {
                     _instance = new StudyLog();
+                    UserId = "";
                 }
 
                 return _instance;
             }
         }
+
+        public static string UserId = "";
         
         private string KeyFrameLogPath
         {
             get
             {
 #if UNITY_EDITOR
-                return Application.streamingAssetsPath + $"/{_startTime}_Logfile.csv";
+                return Application.streamingAssetsPath + $"/{_startTime}_{UserId}_Logfile.csv";
 #else
-                return Application.persistentDataPath + $"/{_startTime}_Logfile.csv";
+                return Application.persistentDataPath + $"/{_startTime}_{UserId}_Logfile.csv";
 #endif
 
             }
@@ -61,6 +64,16 @@ namespace DistractorTask.Logging
                 _streamWriter.Close();
                 _streamWriter.Dispose();
             }
+        }
+
+        public static void RegisterLog<T>(ushort port) where T : ISerializer, ILogSerializer, new()
+        {
+            NetworkManager.Instance.RegisterCallback<T>(LogKeyframe, port);
+        }
+        
+        public static void UnregisterLog<T>(ushort port) where T : ISerializer, ILogSerializer, new()
+        {
+            NetworkManager.Instance.UnregisterCallback<T>(LogKeyframe, port);
         }
 
         public static void RegisterLog<T>() where T : ISerializer, ILogSerializer, new()
