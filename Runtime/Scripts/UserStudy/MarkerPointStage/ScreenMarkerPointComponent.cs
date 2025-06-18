@@ -104,6 +104,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             _markerPoints[^1].enabled = false;
             markerPointCanvas.gameObject.SetActive(false);
             _activateMarkerPointsRegisterCallback?.Invoke();
+            _activateMarkerPointsRegisterCallback = null;
         }
     }
     

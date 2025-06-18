@@ -198,44 +198,7 @@ namespace DistractorTask.Transport
                     break;
             }
         }
-
-        /*public static Action RegisterResponse<T, TResponse>(Func<(T, int), TResponse> actionToPerformBeforeResponse, ConnectionType receivingMessageType, ushort receivingPort,
-            ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId,
-            bool suppressLocalBroadcast = false, bool persistent = false) where T : IRespondingSerializer<TResponse>, new()
-            where TResponse : IResponseIdentifier, ISerializer, new()
-        {
-            
-            var responseMessage =
-                GetResponseMethod<T, TResponse>(responseMessageType, new TResponse(), responseEndpoint, callerId, suppressLocalBroadcast);
-
-
-            actionToPerformBeforeResponse ??= delegate { };
-
-            actionToPerformBeforeResponse += responseMessage;
-            var oneTimeUse = new OneTimeActionWrapper<T>(actionToPerformBeforeResponse, responseEndpoint.Port, persistent);
-            
-
-            switch (receivingMessageType)
-            {
-                case ConnectionType.Broadcast:
-                    networkManager.RegisterCallbackAllPorts<T>(oneTimeUse.TriggerEvent);
-                    
-                    break;
-                case ConnectionType.Multicast:
-                    networkManager.RegisterCallback<T>(oneTimeUse.TriggerEvent, receivingPort);
-                    break;
-                case ConnectionType.Unicast:
-                    networkManager.RegisterCallback<T>(oneTimeUse.TriggerEvent, receivingPort);
-                    break;
-                default:
-                    networkManager.RegisterCallback<T>(oneTimeUse.TriggerEvent, receivingPort);
-                    break;
-            }
-
-            return oneTimeUse.Unregister;
-
-        }*/
-
+        
         /// <summary>
         /// Allows for the receiving and responding messages to be sent via different calls.
         /// </summary>
@@ -274,22 +237,6 @@ namespace DistractorTask.Transport
                     return (T data, int _) => networkManager.MulticastRespond(data, response, responseEndpoint.Port, callerId);
             }
         }
-        
-        /*private static Action<T, int> GetResponseMethod<T, TResponse>(ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
-            where TResponse : IResponseIdentifier, ISerializer, new()
-        {
-            switch (responseMessageType)
-            {
-                case ConnectionType.Broadcast:
-                    return (T data, int _) => BroadcastRespond(data, callerId, suppressLocalBroadcast);
-                case ConnectionType.Multicast:
-                    return (T data, int _) => MulticastRespond(data, responseEndpoint.Port, callerId);
-                case ConnectionType.Unicast:
-                    return (T data, int _) => UnicastRespond(data, responseEndpoint, callerId);
-                default:
-                    return (T data, int _) => MulticastRespond(data, responseEndpoint.Port, callerId);
-            }
-        }*/
         
         public static Action RegisterPersistentBroadcastResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
@@ -332,8 +279,6 @@ namespace DistractorTask.Transport
             return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Unicast,endpoint.Port, ConnectionType.Unicast, endpoint, callerId, persistent: true);
 
         }
-        
-        
         
         public static void RegisterBroadcastResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
@@ -518,6 +463,7 @@ namespace DistractorTask.Transport
 
             private void CreateTask()
             {
+                _task.Task?.Dispose();
                 _task = new TaskCompletionSource<T>();
             }
 

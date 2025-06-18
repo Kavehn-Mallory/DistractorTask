@@ -21,11 +21,13 @@ namespace DistractorTask.UI
         private const string AttemptingConnection = "Attempting to connect";
         private const string ConnectionFailed = "Connection failed";
 
+        public ushort portToCheck = NetworkExtensions.DefaultPort;
+
         private void Start()
         {
             selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
-            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DefaultPort, OnConnectionStateChanged);
+            NetworkManager.Instance.RegisterToConnectionStateChange(portToCheck, OnConnectionStateChanged);
         }
 
         public void OnConnectionStateChanged(ConnectionState obj)

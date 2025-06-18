@@ -28,11 +28,14 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private MarkerPointEnumerator _markerPointEnumerator;
 
         private StudyConditionsEnumerator _enumerator;
+        public Action<string> OnStudyPhaseStart = delegate { };
+        public Action<int, int> OnNextIteration = delegate { };
 
-#region MarkerPointRegion
+        #region MarkerPointRegion
 
         public async void StartMarkerPointCreation()
         {
+            OnStudyPhaseStart.Invoke("Marker Point Creation Phase");
             _markerPointEnumerator?.Dispose();
             _markerPointEnumerator = new MarkerPointEnumerator(markerPointCount);
             NetworkManager.Instance.MulticastMessage(new MarkerPointCountData
@@ -45,7 +48,9 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
             while (_markerPointEnumerator.MoveNext())
             {
+                
                 var markerPointIndex = _markerPointEnumerator.Current;
+                OnNextIteration.Invoke(markerPointIndex, markerPointCount);
                 await markerPointController.TriggerNextPoint(markerPointIndex);
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<OnMarkerPointActivatedData, OnAnchorPointSelectionData>(
@@ -94,6 +99,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         public async void StartStudy()
         {
+            OnStudyPhaseStart.Invoke("Study Phase");
             _enumerator = new StudyConditionsEnumerator(GetCurrentStudy(), startingCondition);
 
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
@@ -102,7 +108,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             while (_enumerator.MoveNext())
             {
                 var studyCondition = _enumerator.Current;
-
+                
                 //todo set correct message id. Also maybe broadcast and make client understand that it has to wait for confirmation
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<StudyConditionData, OnVideoClipChangedData>(

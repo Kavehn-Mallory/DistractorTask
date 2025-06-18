@@ -7,7 +7,6 @@ using MixedReality.Toolkit;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Video;
-using Random = UnityEngine.Random;
 
 namespace DistractorTask.VideoPlayer
 {
@@ -16,6 +15,9 @@ namespace DistractorTask.VideoPlayer
 
         [SerializeField]
         private UnityEngine.Video.VideoPlayer videoPlayer;
+
+        [SerializeField]
+        private AudioSource audioSource;
 
         [SerializeField]
         private int debugIndex;
@@ -47,12 +49,15 @@ namespace DistractorTask.VideoPlayer
             _unregisterVideoClipResetEvent = NetworkManager.Instance
                 .RegisterPersistentMulticastResponse<UpdateVideoClipData, OnVideoClipChangedData>(
                     ResetVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
+            
         }
 
         private void OnDisable()
         {
             _unregisterVideoClipChangeEvent?.Invoke();
             _unregisterVideoClipResetEvent?.Invoke();
+            _unregisterVideoClipChangeEvent = null;
+            _unregisterVideoClipResetEvent = null;
         }
 
         private void ResetVideoClip(UpdateVideoClipData videoClipData, int instanceId)

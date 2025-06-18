@@ -1,10 +1,7 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using Unity.Networking.Transport;
 using Unity.Networking.Transport.Error;
-using UnityEngine;
 
 namespace DistractorTask.Transport
 {
@@ -21,7 +18,7 @@ namespace DistractorTask.Transport
 
             foreach(NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
             {
-                if(ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                if(ni.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet)
                 {
 
                     if (ni.GetIPProperties().GatewayAddresses.Count == 0)
