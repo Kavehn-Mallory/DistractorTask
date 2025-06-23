@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using DistractorTask.Core;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.Core;
@@ -7,6 +9,7 @@ using DistractorTask.UserStudy.DataDrivenSetup;
 using MixedReality.Toolkit;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Networking;
 using UnityEngine.Video;
 
 namespace DistractorTask.VideoPlayer
@@ -29,7 +32,7 @@ namespace DistractorTask.VideoPlayer
         
         
         // Start is called before the first frame update
-        void Start()
+        private void Start()
         {
             Assert.IsNotNull(videoPlayer, "The video player was not set.");
             //NetworkManager.Instance.RegisterCallback<VideoClipChangeData>(SwitchVideoClip, NetworkExtensions.DisplayWallControlPort);
@@ -37,9 +40,42 @@ namespace DistractorTask.VideoPlayer
 
             videoPlayer.source = VideoSource.Url;
             videoPlayer.isLooping = true;
+            audioSource.loop = true;
+
         }
 
-        private void PreprocessFilePaths()
+        private static async Task<AudioClip> LoadClip(string path)
+        {
+            AudioClip clip = null;
+            using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV))
+            {
+                uwr.SendWebRequest();
+
+                // wrap tasks in try/catch, otherwise it'll fail silently
+                try
+                {
+                    while (!uwr.isDone) await Task.Delay(5);
+
+                    if (uwr.result == UnityWebRequest.Result.ConnectionError)
+                    {
+                        Debug.Log($"{uwr.error}");
+                    }
+                    else
+                    {
+                        clip = DownloadHandlerAudioClip.GetContent(uwr);
+                    }
+                }
+                catch (Exception err)
+                {
+                    Debug.Log($"{err.Message}, {err.StackTrace}");
+                }
+            }
+
+            return clip;
+        }
+        
+
+        private async void PreprocessFilePaths()
         {
             for (var i = 0; i < videoClipGroups.Length; i++)
             {
@@ -50,7 +86,23 @@ namespace DistractorTask.VideoPlayer
                     Debug.LogWarning($"Path {path} does not exist. Video clip group {i} will be ignored.");
                     continue;
                 }
-                videoClipGroup.videoClips = Directory.GetFiles(path);
+
+                var files = Directory.GetFiles(path);
+                var videoClips = new List<string>();
+                var audioClips = new List<AudioClip>();
+
+                for (int j = 0; j < files.Length; j++)
+                {
+                    if (files[i].EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        audioClips.Add(await LoadClip(files[i]));
+                        continue;
+                    }
+                    videoClips.Add(files[i]);
+                }
+
+                videoClipGroup.videoClips = videoClips.ToArray();
+                videoClipGroup.audioClips = audioClips.ToArray();
                 videoClipGroups[i] = videoClipGroup;
             }
         }
@@ -79,7 +131,10 @@ namespace DistractorTask.VideoPlayer
 
         private void ResetVideoClip(UpdateVideoClipData videoClipData, int instanceId)
         {
-            //todo not sure if we do anything here 
+            videoPlayer.time = 0;
+            audioSource.time = 0;
+            videoPlayer.Play();
+            audioSource.Play();
         }
 
         private void SwitchVideoClip(StudyConditionData studyCondition, int instanceId)
@@ -97,18 +152,23 @@ namespace DistractorTask.VideoPlayer
                 if ((videoClipGroup.noiseLevel & noiseLevel) == noiseLevel)
                 {
                     //choose clip 
-                    videoPlayer.url = videoClipGroup.videoClips.RandomElement();
-                    videoPlayer.Play();
+                    SwitchVideoClip(videoClipGroup.videoClips.RandomElement(), videoClipGroup.audioClips.RandomElement());
                     return;
                 }
             }
             
             Debug.LogWarning("Did not find a fitting clip. Playing first group as fallback", this);
-            videoPlayer.url = videoClipGroups[0].videoClips.RandomElement();
-            videoPlayer.Play();
+            SwitchVideoClip(videoClipGroups[0].videoClips.RandomElement(), videoClipGroups[0].audioClips.RandomElement());
             
         }
-        
+
+        private void SwitchVideoClip(string videoUrl, AudioClip audioClip)
+        {
+            videoPlayer.url = videoUrl;
+            audioSource.clip = audioClip;
+            audioSource.Play();
+            videoPlayer.Play();
+        }
 
         [Serializable]
         public struct VideoClipGroup
@@ -120,6 +180,9 @@ namespace DistractorTask.VideoPlayer
             
             [HideInInspector]
             public string[] videoClips;
+            
+            [HideInInspector]
+            public AudioClip[] audioClips;
         }
         
 

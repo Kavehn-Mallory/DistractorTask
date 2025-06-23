@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
-using DistractorTask.UserStudy.DistractorSelectionStage;
-using UnityEngine.Serialization;
 
 namespace DistractorTask.UserStudy
 {
