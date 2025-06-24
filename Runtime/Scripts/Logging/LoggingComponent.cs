@@ -65,11 +65,14 @@ namespace DistractorTask.Logging
             }
             StudyLog.RegisterLog<MarkerPointCountData>();
             StudyLog.RegisterLog<StudyConditionData>();
+            StudyLog.RegisterLog<LogfileData>();
             
             StudyLog.LogCustomKeyframe(LogCategory.Default, "LogFile Start");
             
             RegisterStudyComponentEvents();
         }
+
+
 
         private void RegisterStudyComponentEvents()
         {

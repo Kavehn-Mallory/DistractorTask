@@ -11,7 +11,7 @@ namespace DistractorTask.Logging
 {
     public class StudyLog
     {
-        private const string LogFileHeadings = "Time,TimeStamp,Category,Endpoint,Sender,Data";
+        private const string LogFileHeadings = "Time,Category,Endpoint,Sender,Data";
 
         private static StudyLog _instance;
         
@@ -103,7 +103,7 @@ namespace DistractorTask.Logging
                 LogCategory = data.Category,
                 Message = message
             });
-            LogSystem._streamWriter.WriteLine($"{logfileData.Time:c},{logfileData.LogCategory.ToString()},{logfileData.NetworkEndpoint.ToString()},{logfileData.LogCategory.ToString()},{logfileData.Message}");
+            LogSystem._streamWriter.WriteLine($"{logfileData.Time:c},{logfileData.LogCategory.ToString()},{logfileData.NetworkEndpoint.ToString()},{senderId},{logfileData.Message}");
             if(!IsServer)
                 NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
         }

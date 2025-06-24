@@ -33,6 +33,7 @@ namespace DistractorTask.Transport
                 _invocationHelper[i] = (IInvoker)Activator.CreateInstance(invoker);
             }
         }
+        
 
         public static List<Type> GetSerializableTypes()
         {

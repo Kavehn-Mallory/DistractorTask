@@ -9,39 +9,36 @@ namespace DistractorTask.Transport
     public static class NetworkManagerExtensions
     {
 
-        public static async Task BroadcastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, int callerId, int messageId, bool suppressLocalBroadcast = false) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        public static Task BroadcastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, int callerId, int messageId, bool suppressLocalBroadcast = false) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(0), callerId, messageId, ConnectionType.Broadcast, suppressLocalBroadcast);
-            await task.Task;
+            return task.Task;
         }
 
-        public static async Task MulticastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, ushort targetPort, int callerId, int messageId)
+        public static Task MulticastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, ushort targetPort, int callerId, int messageId)
             where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(targetPort),
                 callerId, messageId, ConnectionType.Multicast);
-            await task.Task;
+            return task.Task;
         }
         
-        public static async Task UnicastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, NetworkEndpoint endpoint, int callerId, int messageId)
+        public static Task UnicastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, NetworkEndpoint endpoint, int callerId, int messageId)
             where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, endpoint,
                 callerId, messageId, ConnectionType.Unicast);
-            await task.Task;
+            return task.Task;
         }
         
         private static TaskCompletionSource<T> ScheduleSendAndReceive<T, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
             int messageId, ConnectionType connectionType, bool suppressLocalBroadcast = false) where T : ISerializer, IResponseIdentifier, new() where TS : IRespondingSerializer<T>, new()
         {
-            var returnValue = new TaskCompletionSource<T>();
-
-
             CallbackStruct<T> testStruct;
 
             if (connectionType == ConnectionType.Broadcast)
             {
-                testStruct = networkManager.CreateBroadcastCallback(returnValue, new T
+                testStruct = networkManager.CreateBroadcastCallback(new T
                 {
                     MessageId = messageId,
                     SenderId = callerId
@@ -49,7 +46,7 @@ namespace DistractorTask.Transport
             }
             else
             {
-                testStruct = networkManager.CreateCallback(returnValue, new T
+                testStruct = networkManager.CreateCallback(new T
                 {
                     MessageId = messageId,
                     SenderId = callerId
@@ -424,51 +421,48 @@ namespace DistractorTask.Transport
             return new OneTimeActionWrapper<T>(networkManager, receivingMessageType, oneTimeAction, port, persistent);
         }
 
-        private static CallbackStruct<T> CreateCallback<T>(this INetworkManager networkManager,
-            TaskCompletionSource<T> source, T expectedReturnValue, ushort port) where T : ISerializer, IResponseIdentifier, new()
+        private static CallbackStruct<T> CreateCallback<T>(this INetworkManager networkManager, T expectedReturnValue, ushort port) where T : ISerializer, IResponseIdentifier, new()
         {
-            return new CallbackStruct<T>
-            {
-                NetworkManager = networkManager,
-                ExpectedReturnValue = expectedReturnValue,
-                Source = source,
-                Port = port
-            };
+            return new CallbackStruct<T>(networkManager, expectedReturnValue, port, false);
         }
         
-        private static CallbackStruct<T> CreateBroadcastCallback<T>(this INetworkManager networkManager,
-            TaskCompletionSource<T> source, T expectedReturnValue) where T : ISerializer, IResponseIdentifier, new()
+        private static CallbackStruct<T> CreateBroadcastCallback<T>(this INetworkManager networkManager, T expectedReturnValue) where T : ISerializer, IResponseIdentifier, new()
         {
-            return new CallbackStruct<T>
-            {
-                NetworkManager = networkManager,
-                ExpectedReturnValue = expectedReturnValue,
-                Source = source,
-                IsBroadcast = true
-            };
+            return new CallbackStruct<T>(networkManager, expectedReturnValue, 0, true);
         }
         
         
         private struct CallbackStruct<T> where T : ISerializer, IResponseIdentifier, new()
         {
             public TaskCompletionSource<T> Source;
-            public T ExpectedReturnValue;
-            public INetworkManager NetworkManager;
-            public ushort Port;
-            public bool IsBroadcast;
+            private T _expectedReturnValue;
+            private readonly INetworkManager _networkManager;
+            private ushort _port;
+            private bool _isBroadcast;
+            
+            
+            internal CallbackStruct(INetworkManager networkManager, T expectedReturnValue, ushort port, bool isBroadcast)
+            {
+                Source = new TaskCompletionSource<T>();
+                _port = port;
+                _expectedReturnValue = expectedReturnValue;
+                _networkManager = networkManager;
+                _isBroadcast = isBroadcast;
+
+            }
 
             public void Callback(T data, int id)
             {
-                if (data.SenderId == ExpectedReturnValue.SenderId && data.MessageId == ExpectedReturnValue.MessageId)
+                if (data.SenderId == _expectedReturnValue.SenderId && data.MessageId == _expectedReturnValue.MessageId)
                 {
                     Debug.Log($"Data received and setting result {typeof(T).Name}. In state {Source.Task.Status}");
-                    if (IsBroadcast)
+                    if (_isBroadcast)
                     {
-                        NetworkManager.UnregisterCallbackAllPorts<T>(Callback);
+                        _networkManager.UnregisterCallbackAllPorts<T>(Callback);
                     }
                     else
                     {
-                        NetworkManager.UnregisterCallback<T>(Callback, Port);
+                        _networkManager.UnregisterCallback<T>(Callback, _port);
                     }
                     Source.SetResult(data);
                 }

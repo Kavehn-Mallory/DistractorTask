@@ -6,7 +6,7 @@ using Unity.Networking.Transport;
 
 namespace DistractorTask.Transport.DataContainer
 {
-    public struct LogfileData : ISerializer
+    public struct LogfileData : ISerializer, ILogSerializer
     {
 
         public TimeSpan Time;
@@ -35,6 +35,13 @@ namespace DistractorTask.Transport.DataContainer
             LogCategory = Enum.Parse<LogCategory>(reader.ReadString());
             Message = reader.ReadString();
         }
+
+        public string Serialize()
+        {
+            return $"{Time:c};{LogCategory.ToString()};{NetworkEndpoint.ToString()};{LogCategory.ToString()};{Message}";
+        }
+
+        public LogCategory Category => LogCategory.Logging;
     }
 
     public enum LogCategory
@@ -42,6 +49,7 @@ namespace DistractorTask.Transport.DataContainer
         Default,
         Network,
         UserStudy,
-        VideoPlayer
+        VideoPlayer,
+        Logging
     }
 }
