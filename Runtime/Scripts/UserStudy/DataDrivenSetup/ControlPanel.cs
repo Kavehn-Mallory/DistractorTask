@@ -23,7 +23,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private int markerPointCount = 6;
         
         [SerializeField, Tooltip("Determines the type of participant / order of conditions for the given study")]
-        private int startingCondition = 0;
+        private int startingCondition;
 
         private MarkerPointEnumerator _markerPointEnumerator;
 
@@ -170,9 +170,10 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             unregisterCallback.Invoke();
         }
 
-        private char TransformCurrentConditionToLetter(int currentCondition)
+        private static char TransformCurrentConditionToLetter(int currentCondition)
         {
-            return (char)(currentCondition + 64);
+            //assumes that the conditions start with 0 instead of 1
+            return (char)(currentCondition + 65);
         }
 
         private async void OnTrialCompleted(TrialCompletedData arg1, int arg2)

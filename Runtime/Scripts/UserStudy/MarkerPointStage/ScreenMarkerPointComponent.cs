@@ -75,7 +75,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             Debug.Log("Switching to next marker point");
             if (_currentlyActiveMarker >= 0)
             {
-                _markerPoints[_currentMarker].enabled = false;
+                _markerPoints[_currentlyActiveMarker].enabled = false;
             }
             _currentlyActiveMarker = _currentMarker;
             _markerPoints[_currentMarker].enabled = true;

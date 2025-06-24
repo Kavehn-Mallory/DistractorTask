@@ -1,5 +1,4 @@
-﻿using System;
-using DistractorTask.UserStudy.DataDrivenSetup;
+﻿using DistractorTask.UserStudy.DataDrivenSetup;
 using TMPro;
 using UnityEngine;
 

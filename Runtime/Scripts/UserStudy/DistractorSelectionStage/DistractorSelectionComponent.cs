@@ -6,6 +6,7 @@ using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
+using TMPro;
 using UnityEngine;
 using TrialCompletedData = DistractorTask.UserStudy.DataDrivenSetup.TrialCompletedData;
 
@@ -14,6 +15,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
     public class DistractorSelectionComponent : MonoBehaviour
     {
 
+        public TextMeshProUGUI debugText; 
         public DistractorAnchorPointAsset distractorAnchorPointAsset;
         public DistractorTaskComponent distractorTaskComponent;
         
@@ -76,6 +78,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
 
             var loadLevel = condition.studyCondition.loadLevel == LoadLevel.Low ? 0 : 1;
 
+
+            debugText.text = "Starting study condition";
             
             while (_conditionEnumerator.MoveNext())
             {
@@ -88,7 +92,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 _acceptingInput = true;
                 while (repetitionEnumerator.MoveNext())
                 {
-                    
+                    debugText.text = "Setting study visible";
                     _inputTask = new TaskCompletionSource<int>();
                     distractorTaskComponent.StartTrial(loadLevel);
                     await _inputTask.Task;

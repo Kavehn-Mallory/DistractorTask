@@ -11,7 +11,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 {
     public class DistractorTaskComponent : MonoBehaviour
     {
-    
+        
         [SerializeField] private Canvas canvas;
         [SerializeField] private DistractorComponent label;
         [SerializeField] private int numberOfDistractors = 5;
