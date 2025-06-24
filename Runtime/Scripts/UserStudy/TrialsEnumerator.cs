@@ -17,7 +17,7 @@ namespace DistractorTask.UserStudy
 
         public bool MoveNext()
         {
-            _trialCount++;
+            _currentTrial++;
             return _currentTrial < _trialCount;
         }
 

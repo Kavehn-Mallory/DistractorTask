@@ -182,7 +182,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 .MulticastMessageAndAwaitResponse<UpdateVideoClipData, OnVideoClipChangedData>(
                     new UpdateVideoClipData(), NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
                     0);
-            
+            Debug.Log("Received that trial was completed");
             //todo do we even want to do anything in here? 
             //todo try awaitable thing in here and make sure that it delays the response 
             //todo try to adjust values on TrialCompletedData to make sure that those actually make their way across 

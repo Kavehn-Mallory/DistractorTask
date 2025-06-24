@@ -105,6 +105,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                     
                 }
                 _acceptingInput = false;
+                debugText.text = "Sending trial end data";
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<TrialCompletedData, TrialCompletedResponseData>(
                         new TrialCompletedData(), NetworkExtensions.DefaultPort, GetInstanceID(),
