@@ -108,7 +108,12 @@ namespace DistractorTask.VideoPlayer
                 videoClipGroup.videoClips = videoClips.ToArray();
                 videoClipGroup.audioClips = audioClips.ToArray();
                 videoClipGroups[i] = videoClipGroup;
+                
+                Debug.Log($"Video Clip Count: {videoClipGroup.videoClips.Length}");
+                Debug.Log($"Audio Clip Count: {videoClipGroup.audioClips.Length}");
             }
+            
+            
         }
 
         private void OnEnable()
