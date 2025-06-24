@@ -97,6 +97,11 @@ namespace DistractorTask.VideoPlayer
 
                 foreach (var file in files)
                 {
+                    //todo maybe implement a list of acceptable file types 
+                    if (file.EndsWith(".meta", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        continue;
+                    }
                     if (file.EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase))
                     {
                         audioClips.Add(await LoadClip(file));
