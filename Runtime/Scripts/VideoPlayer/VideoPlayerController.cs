@@ -95,14 +95,14 @@ namespace DistractorTask.VideoPlayer
                 var videoClips = new List<string>();
                 var audioClips = new List<AudioClip>();
 
-                for (int j = 0; j < files.Length; j++)
+                foreach (var file in files)
                 {
-                    if (files[i].EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase))
+                    if (file.EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        audioClips.Add(await LoadClip(files[i]));
+                        audioClips.Add(await LoadClip(file));
                         continue;
                     }
-                    videoClips.Add(files[i]);
+                    videoClips.Add(file);
                 }
 
                 videoClipGroup.videoClips = videoClips.ToArray();
