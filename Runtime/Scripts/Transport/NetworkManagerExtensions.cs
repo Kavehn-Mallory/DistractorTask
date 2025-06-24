@@ -36,12 +36,25 @@ namespace DistractorTask.Transport
         {
             var returnValue = new TaskCompletionSource<T>();
 
-            var testStruct = networkManager.CreateCallback(returnValue, new T
-            {
-                MessageId = messageId,
-                SenderId = callerId
-            });
 
+            CallbackStruct<T> testStruct;
+
+            if (connectionType == ConnectionType.Broadcast)
+            {
+                testStruct = networkManager.CreateBroadcastCallback(returnValue, new T
+                {
+                    MessageId = messageId,
+                    SenderId = callerId
+                });
+            }
+            else
+            {
+                testStruct = networkManager.CreateCallback(returnValue, new T
+                {
+                    MessageId = messageId,
+                    SenderId = callerId
+                }, endpoint.Port);
+            }
 
             data.MessageId = messageId;
             data.SenderId = callerId;
@@ -412,13 +425,26 @@ namespace DistractorTask.Transport
         }
 
         private static CallbackStruct<T> CreateCallback<T>(this INetworkManager networkManager,
+            TaskCompletionSource<T> source, T expectedReturnValue, ushort port) where T : ISerializer, IResponseIdentifier, new()
+        {
+            return new CallbackStruct<T>
+            {
+                NetworkManager = networkManager,
+                ExpectedReturnValue = expectedReturnValue,
+                Source = source,
+                Port = port
+            };
+        }
+        
+        private static CallbackStruct<T> CreateBroadcastCallback<T>(this INetworkManager networkManager,
             TaskCompletionSource<T> source, T expectedReturnValue) where T : ISerializer, IResponseIdentifier, new()
         {
             return new CallbackStruct<T>
             {
                 NetworkManager = networkManager,
                 ExpectedReturnValue = expectedReturnValue,
-                Source = source
+                Source = source,
+                IsBroadcast = true
             };
         }
         
@@ -428,13 +454,22 @@ namespace DistractorTask.Transport
             public TaskCompletionSource<T> Source;
             public T ExpectedReturnValue;
             public INetworkManager NetworkManager;
+            public ushort Port;
+            public bool IsBroadcast;
 
             public void Callback(T data, int id)
             {
                 if (data.SenderId == ExpectedReturnValue.SenderId && data.MessageId == ExpectedReturnValue.MessageId)
                 {
-                    Debug.Log("Data received and setting result");
-                    NetworkManager.UnregisterCallback<T>(Callback, NetworkExtensions.DefaultPort);
+                    Debug.Log($"Data received and setting result {typeof(T).Name}. In state {Source.Task.Status}");
+                    if (IsBroadcast)
+                    {
+                        NetworkManager.UnregisterCallbackAllPorts<T>(Callback);
+                    }
+                    else
+                    {
+                        NetworkManager.UnregisterCallback<T>(Callback, Port);
+                    }
                     Source.SetResult(data);
                 }
                 

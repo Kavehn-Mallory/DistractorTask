@@ -37,9 +37,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         /// Triggers on each iteration. String represents the name of the study stage, first int is the current index, second int is the iteration count
         /// </summary>
         public Action<string, int, int> OnNextIteration = delegate { };
-
-        private int _tempStudyIndex = 0;
-
         private StudyEnumerator _studyEnumerator;
 
         private const string MarkerPointPhaseName = "Marker Point Creation Phase";
@@ -150,7 +147,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                         {
                             studyCondition = studyCondition
                         }, NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
-                        0);
+                        _enumerator.CurrentPermutationIndex);
                 
                 //todo await trial complete -> send message to video player?
                 await NetworkManager.Instance
@@ -159,7 +156,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                         {
                             studyCondition = studyCondition
                         }, NetworkExtensions.DefaultPort, GetInstanceID(),
-                        1);
+                        _enumerator.CurrentPermutationIndex);
                 
                 //todo await button presses?
                 /*await NetworkManager.Instance.AwaitMessageAndRespond<OnTrialCompleted, ChangeVideoClipData>(TestAction,

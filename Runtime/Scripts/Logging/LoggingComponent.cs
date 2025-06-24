@@ -73,9 +73,9 @@ namespace DistractorTask.Logging
 
         private void RegisterStudyComponentEvents()
         {
-            _controlPanel = FindFirstObjectByType<ControlPanel>();
-            _selectionComponent = FindFirstObjectByType<DistractorSelectionComponent>();
-            _videoPlayerController = FindObjectOfType<VideoPlayerController>();
+            _controlPanel = FindAnyObjectByType<ControlPanel>();
+            _selectionComponent = FindAnyObjectByType<DistractorSelectionComponent>();
+            _videoPlayerController = FindAnyObjectByType<VideoPlayerController>();
             if (_controlPanel)
             {
                 _controlPanel.OnStudyPhaseStart += OnStudyPhaseStart;

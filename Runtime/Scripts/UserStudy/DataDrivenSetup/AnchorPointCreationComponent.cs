@@ -47,13 +47,10 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         {
             //var targetPosition = raycastTarget.transform.position;
             var position = _mainCameraTransform.position + _mainCameraTransform.forward * distanceFromWall;
-
-
-            debugText.text = "Creating placement position";
             
             if (anchorPoints.SetPosition(_activeMarkerPointData.MarkerPointIndex, position))
             {
-                debugText.text = "Message was sent";
+                debugText.text = "Anchor Point was set";
                 NetworkManager.Instance.MulticastRespond(_activeMarkerPointData, NetworkExtensions.DefaultPort, GetInstanceID());
                 //reset data 
                 _activeMarkerPointData = new OnMarkerPointActivatedData

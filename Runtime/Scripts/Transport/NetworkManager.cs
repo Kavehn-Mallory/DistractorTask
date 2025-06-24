@@ -54,8 +54,8 @@ namespace DistractorTask.Transport
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
-                _inactiveEventHandlers.TryAdd(port, new NetworkMessageEventHandler());
-                _inactiveEventHandlers[port].UnregisterCallback(callback);
+                _inactiveEventHandlers.TryGetValue(port, out var inactiveConnectionObject);
+                inactiveConnectionObject?.UnregisterCallback(callback);
                 return;
             }
             connectionObject.EventHandler.UnregisterCallback(callback);
