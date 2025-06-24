@@ -2,6 +2,9 @@
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.DataDrivenSetup;
+using DistractorTask.UserStudy.DistractorSelectionStage;
+using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
+using DistractorTask.VideoPlayer;
 using UnityEngine;
 
 namespace DistractorTask.Logging
@@ -9,6 +12,10 @@ namespace DistractorTask.Logging
     public class LoggingComponent : MonoBehaviour
     {
         public bool IsServer => userId != string.Empty;
+
+        private ControlPanel _controlPanel;
+        private DistractorSelectionComponent _selectionComponent;
+        private VideoPlayerController _videoPlayerController;
 
         [SerializeField, ReadOnly]
         private string userId;
@@ -31,12 +38,12 @@ namespace DistractorTask.Logging
         private string GenerateUserId()
         {
             string characters = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
-            string generated_string = "";
+            string generatedString = "";
 
             for(int i = 0; i < IdLength; i++)
-                generated_string += characters[Random.Range(0, characters.Length)];
+                generatedString += characters[Random.Range(0, characters.Length)];
 
-            return generated_string;
+            return generatedString;
         }
 
 
@@ -58,6 +65,90 @@ namespace DistractorTask.Logging
             }
             StudyLog.RegisterLog<MarkerPointCountData>();
             StudyLog.RegisterLog<StudyConditionData>();
+            
+            StudyLog.LogCustomKeyframe(LogCategory.Default, "LogFile Start");
+            
+            RegisterStudyComponentEvents();
+        }
+
+        private void RegisterStudyComponentEvents()
+        {
+            _controlPanel = FindFirstObjectByType<ControlPanel>();
+            _selectionComponent = FindFirstObjectByType<DistractorSelectionComponent>();
+            _videoPlayerController = FindObjectOfType<VideoPlayerController>();
+            if (_controlPanel)
+            {
+                _controlPanel.OnStudyPhaseStart += OnStudyPhaseStart;
+                _controlPanel.OnNextIteration += OnNextIteration;
+                _controlPanel.OnStudyPhaseEnd += OnStudyPhaseEnd;
+                _controlPanel.OnStudyLog += OnStudyLog;
+                _controlPanel.OnStudyCompleted += OnStudyCompleted;
+            }
+
+            if (_selectionComponent)
+            {
+                _selectionComponent.OnDistractorSelection += OnDistractorSelected;
+            }
+
+            if (_videoPlayerController)
+            {
+                _videoPlayerController.OnVideoClipSelected += OnVideoClipSelected;
+                _videoPlayerController.OnVideoClipReset += OnVideoClipReset;
+            }
+        }
+
+        private static void OnVideoClipReset()
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.VideoPlayer, $"Video Clip Reset");
+        }
+
+        private static void OnVideoClipSelected(string videoClipName, string audioClipName)
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.VideoPlayer, $"New Video Clip selected: {videoClipName} with audio {audioClipName}");
+        }
+
+        private static void OnDistractorSelected(DistractorTaskComponent.DistractorSelectionResult result)
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.UserStudy, GenerateDistractorSelectionResponse(result));
+        }
+
+        private static string GenerateDistractorSelectionResponse(DistractorTaskComponent.DistractorSelectionResult result)
+        {
+            if (result.WasSuccessful())
+            {
+                return $"Correct Distractor {result.selectedDistractor} was selected";
+            }
+
+            if (result.selectedDistractor == -1)
+            {
+                return $"No Distractor was selected instead of {result.targetDistractor}";
+            }
+            return $"Incorrect Distractor {result.selectedDistractor} was selected instead of {result.targetDistractor}";
+        }
+
+        private void OnStudyCompleted()
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.UserStudy, $"Study was completed for user {userId}");
+        }
+
+        private void OnStudyLog(LogCategory studyCategory, string message)
+        {
+            StudyLog.LogCustomKeyframe(studyCategory, message);
+        }
+
+        private void OnStudyPhaseEnd(string studyPhaseName)
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.UserStudy, $"Ending {studyPhaseName}");
+        }
+
+        private static void OnNextIteration(string studyStage, int markerPointIndex, int markerPointCount)
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.UserStudy, $"Starting {studyStage} {markerPointIndex} of {markerPointCount}");
+        }
+
+        private static void OnStudyPhaseStart(string studyPhaseName)
+        {
+            StudyLog.LogCustomKeyframe(LogCategory.UserStudy, $"Starting {studyPhaseName}");
         }
 
         private void OnIpDataReceived(IpAddressData ipAddressData)

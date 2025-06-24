@@ -25,6 +25,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         private CancellationTokenSource _cancellationTokenForStudy;
         
         private bool _acceptingInput;
+
+        public Action<DistractorTaskComponent.DistractorSelectionResult> OnDistractorSelection = delegate { };
         
 
         private void OnEnable()
@@ -48,8 +50,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 return;
             }
 
-            var result = distractorTaskComponent.OnInputReceived();
-            _inputTask?.SetResult(result);
+            var result = distractorTaskComponent.CheckInput();
+            OnDistractorSelection.Invoke(result);
+            _inputTask?.SetResult(1);
         }
 
         private async void StartStudyCondition(ConditionData condition, int instanceId)

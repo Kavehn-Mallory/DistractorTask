@@ -203,6 +203,39 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
             return -1;
         }
+
+        public DistractorSelectionResult CheckInput()
+        {
+            if (!_selectedDistractor)
+            {
+                return new DistractorSelectionResult(-1, _targetElementIndex);
+            }
+
+            return new DistractorSelectionResult(_selectedDistractor.distractorIndex, _targetElementIndex);
+        }
+
+        [Serializable]
+        public struct DistractorSelectionResult
+        {
+            public int selectedDistractor;
+            public int targetDistractor;
+
+            public DistractorSelectionResult(int selectedDistractor, int targetDistractor)
+            {
+                this.selectedDistractor = selectedDistractor;
+                this.targetDistractor = targetDistractor;
+            }
+
+            public bool WasSuccessful()
+            {
+                if (selectedDistractor == -1)
+                {
+                    return false;
+                }
+
+                return selectedDistractor == targetDistractor;
+            }
+        }
         
         
 

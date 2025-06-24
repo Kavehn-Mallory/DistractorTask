@@ -29,13 +29,35 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private StudyConditionsEnumerator _enumerator;
         public Action<string> OnStudyPhaseStart = delegate { };
-        public Action<int, int> OnNextIteration = delegate { };
+        public Action<string> OnStudyPhaseEnd = delegate { };
+        public Action OnStudyCompleted = delegate { };
+        public Action<LogCategory, string> OnStudyLog = delegate { };
+        
+        /// <summary>
+        /// Triggers on each iteration. String represents the name of the study stage, first int is the current index, second int is the iteration count
+        /// </summary>
+        public Action<string, int, int> OnNextIteration = delegate { };
+
+        private int _tempStudyIndex = 0;
+
+        private StudyEnumerator _studyEnumerator;
+
+        private const string MarkerPointPhaseName = "Marker Point Creation Phase";
+        private const string StudyPhaseName = "Study Phase";
+
+        private void Awake()
+        {
+            _studyEnumerator = new StudyEnumerator(studies);
+        }
+
+
+
 
         #region MarkerPointRegion
 
         public async void StartMarkerPointCreation()
         {
-            OnStudyPhaseStart.Invoke("Marker Point Creation Phase");
+            OnStudyPhaseStart.Invoke(MarkerPointPhaseName);
             _markerPointEnumerator?.Dispose();
             _markerPointEnumerator = new MarkerPointEnumerator(markerPointCount);
             NetworkManager.Instance.MulticastMessage(new MarkerPointCountData
@@ -50,7 +72,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             {
                 
                 var markerPointIndex = _markerPointEnumerator.Current;
-                OnNextIteration.Invoke(markerPointIndex, markerPointCount);
+                OnNextIteration.Invoke("Marker Point", markerPointIndex, markerPointCount);
                 await markerPointController.TriggerNextPoint(markerPointIndex);
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<OnMarkerPointActivatedData, OnAnchorPointSelectionData>(
@@ -59,6 +81,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                             MarkerPointIndex = markerPointIndex
                         }, NetworkExtensions.DefaultPort, GetInstanceID(), markerPointIndex);
                 Debug.Log("Marker point done");
+                
+                
             }
             
             //todo make sure that the start / end thing works.
@@ -66,7 +90,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             //but end is probably still necessary if we want to adjust the process to a specific marker / set the desired index
 
             await markerPointController.EndMarkerPointSetup();
-            
+            OnStudyPhaseEnd.Invoke(MarkerPointPhaseName);
             _markerPointEnumerator.Dispose();
             _markerPointEnumerator = null;
         }
@@ -78,6 +102,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.LogError("Marker Point Setup hasn't been started yet.");
                 return;
             }
+            OnStudyLog.Invoke(LogCategory.UserStudy, "Regenerating Marker Points");
             _markerPointEnumerator.Reset();
         }
 
@@ -88,7 +113,9 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.LogError("Marker Point Setup hasn't been started yet.");
                 return;
             }
+            OnStudyLog.Invoke(LogCategory.UserStudy, $"Repeating Marker Point {_markerPointEnumerator.Current}");
             _markerPointEnumerator.MovePrevious();
+            
         }
      
 #endregion
@@ -99,7 +126,13 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         public async void StartStudy()
         {
-            OnStudyPhaseStart.Invoke("Study Phase");
+
+            if (!_studyEnumerator.MoveNext())
+            {
+                OnStudyCompleted.Invoke();
+                return;
+            }
+            OnStudyPhaseStart.Invoke($"{StudyPhaseName}: {_studyEnumerator.CurrentStudyIndex} Starting Condition: {TransformCurrentConditionToLetter(startingCondition)}");
             _enumerator = new StudyConditionsEnumerator(GetCurrentStudy(), startingCondition);
 
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
@@ -108,7 +141,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             while (_enumerator.MoveNext())
             {
                 var studyCondition = _enumerator.Current;
-                
+                OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
+                OnStudyLog.Invoke(LogCategory.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 //todo set correct message id. Also maybe broadcast and make client understand that it has to wait for confirmation
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<StudyConditionData, OnVideoClipChangedData>(
@@ -134,6 +168,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             }
             
             unregisterCallback.Invoke();
+        }
+
+        private char TransformCurrentConditionToLetter(int currentCondition)
+        {
+            return (char)(currentCondition + 64);
         }
 
         private async void OnTrialCompleted(TrialCompletedData arg1, int arg2)

@@ -14,6 +14,9 @@ namespace DistractorTask.UserStudy
         private int _repetitionsPerTrial;
         private int _currentCondition;
 
+        public int CurrentPermutationIndex => _currentCondition;
+        public int PermutationCount => _permutations.Length;
+
         public StudyConditionsEnumerator(Study studyCondition, int startCondition = 0)
         {
             _trialCount = studyCondition.trialsPerCondition;

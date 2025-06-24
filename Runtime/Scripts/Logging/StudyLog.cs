@@ -17,13 +17,16 @@ namespace DistractorTask.Logging
         
         private readonly string _startTime;
         
+        
+        //todo we should probably do that differently. maybe the stream writer is only allocated when the first message attempt is started? currently we have no way of guaranteeing that the id won't change at some random time 
+        
         private static StudyLog LogSystem {
             get
             {
                 if (_instance == null)
                 {
                     _instance = new StudyLog();
-                    UserId = "";
+                    //UserId = "";
                 }
 
                 return _instance;
@@ -66,6 +69,8 @@ namespace DistractorTask.Logging
                 _streamWriter.Close();
                 _streamWriter.Dispose();
             }
+
+            UserId = "";
         }
 
         public static void RegisterLog<T>(ushort port) where T : ISerializer, ILogSerializer, new()

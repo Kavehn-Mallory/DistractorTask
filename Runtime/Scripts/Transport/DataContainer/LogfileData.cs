@@ -41,6 +41,7 @@ namespace DistractorTask.Transport.DataContainer
     {
         Default,
         Network,
-        UserStudy
+        UserStudy,
+        VideoPlayer
     }
 }

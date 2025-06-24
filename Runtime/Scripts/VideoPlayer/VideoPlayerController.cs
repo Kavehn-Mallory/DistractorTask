@@ -28,6 +28,10 @@ namespace DistractorTask.VideoPlayer
         private Action _unregisterVideoClipChangeEvent;
 
         private Action _unregisterVideoClipResetEvent;
+
+
+        public Action OnVideoClipReset = delegate { };
+        public Action<string, string> OnVideoClipSelected = delegate { };
         
         
         
@@ -118,7 +122,6 @@ namespace DistractorTask.VideoPlayer
             _unregisterVideoClipResetEvent = NetworkManager.Instance
                 .RegisterPersistentMulticastResponse<UpdateVideoClipData, OnVideoClipChangedData>(
                     ResetVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
-            
         }
 
         private void OnDisable()
@@ -135,6 +138,7 @@ namespace DistractorTask.VideoPlayer
             audioSource.time = 0;
             videoPlayer.Play();
             audioSource.Play();
+            OnVideoClipReset.Invoke();
         }
 
         private void SwitchVideoClip(StudyConditionData studyCondition, int instanceId)
@@ -164,6 +168,7 @@ namespace DistractorTask.VideoPlayer
 
         private void SwitchVideoClip(string videoUrl, AudioClip audioClip)
         {
+            OnVideoClipSelected.Invoke(videoUrl, audioClip.name);
             videoPlayer.url = videoUrl;
             audioSource.clip = audioClip;
             audioSource.Play();
@@ -175,7 +180,6 @@ namespace DistractorTask.VideoPlayer
         {
             
             public string relativePath;
-            [EnumFlags]
             public NoiseLevel noiseLevel;
             
             [HideInInspector]

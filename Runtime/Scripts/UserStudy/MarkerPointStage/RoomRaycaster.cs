@@ -22,7 +22,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         protected void PerformRaycast()
         {
             
-            /*RayStep currentRay = new RayStep();
+            /*
+            RayStep currentRay = new RayStep();
             // The transform target is the transform of the TrackedTargetType, i.e. Controller Ray, Head or Hand Joint
             Transform transform = SolverHandler.TransformTarget;
 
@@ -31,7 +32,8 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             currentRay.UpdateRayStep(in origin, in endpoint);
 
             // Check if the current ray hits a magnetic surface
-            var didHitSurface = MixedRealityRaycaster.RaycastSimplePhysicsStep(currentRay, MaxRaycastDistance, MagneticSurfaces, false, out currentHit);*/
+            var didHitSurface = MixedRealityRaycaster.RaycastSimplePhysicsStep(currentRay, MaxRaycastDistance, MagneticSurfaces, false, out currentHit);
+            */
 
         }
     }
