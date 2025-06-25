@@ -12,7 +12,7 @@ namespace DistractorTask.Transport
         public static Task BroadcastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, int callerId, int messageId, bool suppressLocalBroadcast = false) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(0), callerId, messageId, ConnectionType.Broadcast, suppressLocalBroadcast);
-            return task.Task;
+            return task.AwaitMessage();
         }
 
         public static Task MulticastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, ushort targetPort, int callerId, int messageId)
@@ -20,7 +20,7 @@ namespace DistractorTask.Transport
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(targetPort),
                 callerId, messageId, ConnectionType.Multicast);
-            return task.Task;
+            return task.AwaitMessage();
         }
         
         public static Task UnicastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, NetworkEndpoint endpoint, int callerId, int messageId)
@@ -28,10 +28,10 @@ namespace DistractorTask.Transport
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, endpoint,
                 callerId, messageId, ConnectionType.Unicast);
-            return task.Task;
+            return task.AwaitMessage();
         }
         
-        private static TaskCompletionSource<T> ScheduleSendAndReceive<T, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
+        private static CallbackStruct<T> ScheduleSendAndReceive<T, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
             int messageId, ConnectionType connectionType, bool suppressLocalBroadcast = false) where T : ISerializer, IResponseIdentifier, new() where TS : IRespondingSerializer<T>, new()
         {
             CallbackStruct<T> testStruct;
@@ -77,7 +77,7 @@ namespace DistractorTask.Transport
                     break;
             }
             
-            return testStruct.Source;
+            return testStruct;
         }
 
         /// <summary>
@@ -434,7 +434,7 @@ namespace DistractorTask.Transport
         
         private struct CallbackStruct<T> where T : ISerializer, IResponseIdentifier, new()
         {
-            public TaskCompletionSource<T> Source;
+            private TaskCompletionSource<T> _source;
             private T _expectedReturnValue;
             private readonly INetworkManager _networkManager;
             private ushort _port;
@@ -443,19 +443,35 @@ namespace DistractorTask.Transport
             
             internal CallbackStruct(INetworkManager networkManager, T expectedReturnValue, ushort port, bool isBroadcast)
             {
-                Source = new TaskCompletionSource<T>();
+                _source = new TaskCompletionSource<T>();
                 _port = port;
                 _expectedReturnValue = expectedReturnValue;
                 _networkManager = networkManager;
                 _isBroadcast = isBroadcast;
 
             }
+            
+            public Task AwaitMessage()
+            {
+                if (_source.Task.IsCompleted)
+                {
+                    CreateTask();
+                }
+
+                return _source.Task;
+            }
+            
+            private void CreateTask()
+            {
+                _source.Task?.Dispose();
+                _source = new TaskCompletionSource<T>();
+            }
 
             public void Callback(T data, int id)
             {
                 if (data.SenderId == _expectedReturnValue.SenderId && data.MessageId == _expectedReturnValue.MessageId)
                 {
-                    Debug.Log($"Data received and setting result {typeof(T).Name}. In state {Source.Task.Status}");
+                    Debug.Log($"Data received and setting result {typeof(T).Name}. In state {_source.Task.Status}");
                     if (_isBroadcast)
                     {
                         _networkManager.UnregisterCallbackAllPorts<T>(Callback);
@@ -464,7 +480,7 @@ namespace DistractorTask.Transport
                     {
                         _networkManager.UnregisterCallback<T>(Callback, _port);
                     }
-                    Source.SetResult(data);
+                    _source.SetResult(data);
                 }
                 
             }

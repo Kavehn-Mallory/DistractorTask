@@ -87,6 +87,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             //but end is probably still necessary if we want to adjust the process to a specific marker / set the desired index
 
             await markerPointController.EndMarkerPointSetup();
+            Debug.Log("Marker points are over");
             OnStudyPhaseEnd.Invoke(MarkerPointPhaseName);
             _markerPointEnumerator.Dispose();
             _markerPointEnumerator = null;
@@ -163,7 +164,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                     ConnectionType.Multicast, NetworkExtensions.DefaultPort, ConnectionType.Multicast,
                     NetworkEndpoint.AnyIpv4.WithPort(NetworkExtensions.DisplayWallControlPort), GetInstanceID());*/
             }
-            
+            OnStudyPhaseEnd.Invoke(StudyPhaseName);
             unregisterCallback.Invoke();
         }
 

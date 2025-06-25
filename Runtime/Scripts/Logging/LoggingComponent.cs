@@ -6,6 +6,7 @@ using DistractorTask.UserStudy.DistractorSelectionStage;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using DistractorTask.VideoPlayer;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace DistractorTask.Logging
 {
@@ -72,6 +73,10 @@ namespace DistractorTask.Logging
             RegisterStudyComponentEvents();
         }
 
+        private void OnDisable()
+        {
+            StudyLog.DisposeLogSystem();
+        }
 
 
         private void RegisterStudyComponentEvents()
