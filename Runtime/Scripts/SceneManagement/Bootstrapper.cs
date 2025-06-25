@@ -24,7 +24,7 @@ namespace DistractorTask.SceneManagement
 #if UNITY_EDITOR
             //we just return because the EditorBootstrapper will handle the scene loading for us
             return;
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID || UNITY_WSA || UNITY_WSA_10_0
 //todo put custom scene for VR/AR
             if (IsSceneInBuild(HololensBootstrapper))
             {

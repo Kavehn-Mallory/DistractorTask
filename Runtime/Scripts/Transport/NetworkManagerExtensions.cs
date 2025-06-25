@@ -31,48 +31,30 @@ namespace DistractorTask.Transport
             return task.AwaitMessage();
         }
         
-        private static CallbackStruct<T> ScheduleSendAndReceive<T, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
-            int messageId, ConnectionType connectionType, bool suppressLocalBroadcast = false) where T : ISerializer, IResponseIdentifier, new() where TS : IRespondingSerializer<T>, new()
+        private static CallbackStruct<TResponse> ScheduleSendAndReceive<TResponse, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
+            int messageId, ConnectionType connectionType, bool suppressLocalBroadcast = false) where TResponse : ISerializer, IResponseIdentifier, new() where TS : IRespondingSerializer<TResponse>, new()
         {
-            CallbackStruct<T> testStruct;
-
-            if (connectionType == ConnectionType.Broadcast)
-            {
-                testStruct = networkManager.CreateBroadcastCallback(new T
+            CallbackStruct<TResponse> testStruct = networkManager.CreateCallback(new TResponse
                 {
                     MessageId = messageId,
                     SenderId = callerId
-                });
-            }
-            else
-            {
-                testStruct = networkManager.CreateCallback(new T
-                {
-                    MessageId = messageId,
-                    SenderId = callerId
-                }, endpoint.Port);
-            }
+                }, connectionType, endpoint.Port);
 
             data.MessageId = messageId;
             data.SenderId = callerId;
             
-            
             switch (connectionType)
             {
                 case ConnectionType.Broadcast:
-                    networkManager.RegisterCallbackAllPorts<T>(testStruct.Callback);
                     networkManager.BroadcastMessage(data, callerId, suppressLocalBroadcast);
                     break;
                 case ConnectionType.Multicast:
-                    networkManager.RegisterCallback<T>(testStruct.Callback, endpoint.Port);
                     networkManager.MulticastMessage(data, endpoint.Port, callerId);
                     break;
                 case ConnectionType.Unicast:
-                    networkManager.RegisterCallback<T>(testStruct.Callback, endpoint.Port);
                     networkManager.UnicastMessage(data, endpoint, callerId);
                     break;
                 default:
-                    networkManager.RegisterCallback<T>(testStruct.Callback, endpoint.Port);
                     networkManager.MulticastMessage(data, endpoint.Port, callerId);
                     break;
             }
@@ -135,7 +117,7 @@ namespace DistractorTask.Transport
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
             var responseMessage =
-                networkManager.GetResponseMethod<T, TResponse>(responseMessageType, new TResponse(), responseEndpoint, callerId, suppressLocalBroadcast);
+                networkManager.GetResponseMethod<T, TResponse>(responseMessageType, responseEndpoint, callerId, suppressLocalBroadcast);
 
             //Todo this is not restartable yet? 
 
@@ -152,7 +134,7 @@ namespace DistractorTask.Transport
         {
             
             var responseMessage =
-                networkManager.GetResponseMethod<T, TResponse>(responseMessageType, new TResponse(), responseEndpoint, callerId, suppressLocalBroadcast);
+                networkManager.GetResponseMethod<T, TResponse>(responseMessageType, responseEndpoint, callerId, suppressLocalBroadcast);
 
 
             actionToPerformBeforeResponse ??= delegate { };
@@ -232,19 +214,19 @@ namespace DistractorTask.Transport
             
         }
 
-        private static Action<T, int> GetResponseMethod<T, TResponse>(this INetworkManager networkManager, ConnectionType responseMessageType, TResponse response, NetworkEndpoint responseEndpoint, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
+        private static Action<T, int> GetResponseMethod<T, TResponse>(this INetworkManager networkManager, ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId, bool suppressLocalBroadcast) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
             switch (responseMessageType)
             {
                 case ConnectionType.Broadcast:
-                    return (T data, int _) => networkManager.BroadcastRespond(data, response, callerId, suppressLocalBroadcast);
+                    return (T data, int _) => networkManager.BroadcastRespond(data, callerId, suppressLocalBroadcast);
                 case ConnectionType.Multicast:
-                    return (T data, int _) => networkManager.MulticastRespond(data, response, responseEndpoint.Port, callerId);
+                    return (T data, int _) => networkManager.MulticastRespond(data, responseEndpoint.Port, callerId);
                 case ConnectionType.Unicast:
-                    return (T data, int _) => networkManager.UnicastRespond(data, response, responseEndpoint, callerId);
+                    return (T data, int _) => networkManager.UnicastRespond(data, responseEndpoint, callerId);
                 default:
-                    return (T data, int _) => networkManager.MulticastRespond(data, response, responseEndpoint.Port, callerId);
+                    return (T data, int _) => networkManager.MulticastRespond(data, responseEndpoint.Port, callerId);
             }
         }
         
@@ -332,28 +314,6 @@ namespace DistractorTask.Transport
 
         }
         
-        
-        public static void BroadcastRespond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer, T response,
-            int callerId, bool suppressLocalBroadcast = false)
-            where T : IResponseIdentifier, ISerializer, new()
-        {
-            networkManager.Respond(respondingSerializer, response, default, callerId, ConnectionType.Broadcast, suppressLocalBroadcast);
-        }
-        
-        public static void MulticastRespond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer, T response, ushort targetPort,
-            int callerId)
-            where T : IResponseIdentifier, ISerializer, new()
-        {
-            networkManager.Respond(respondingSerializer, response, NetworkEndpoint.AnyIpv4.WithPort(targetPort), callerId, ConnectionType.Multicast);
-        }
-        
-        public static void UnicastRespond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer, T response, NetworkEndpoint endpoint,
-            int callerId)
-            where T : IResponseIdentifier, ISerializer, new()
-        {
-            networkManager.Respond(respondingSerializer, response, endpoint, callerId, ConnectionType.Unicast);
-        }
-        
         public static void BroadcastRespond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer,
             int callerId, bool suppressLocalBroadcast = false)
             where T : IResponseIdentifier, ISerializer, new()
@@ -376,12 +336,12 @@ namespace DistractorTask.Transport
         }
         
         
-        private static void Respond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer, T response, NetworkEndpoint endpoint,
+        /*private static void Respond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer, T response, NetworkEndpoint endpoint,
             int callerId, ConnectionType connectionType, bool suppressLocalBroadcast = false)
             where T : IResponseIdentifier, ISerializer, new()
         {
             networkManager.Respond(respondingSerializer.GenerateResponse(response), endpoint, callerId, connectionType, suppressLocalBroadcast);
-        }
+        }*/
         
         private static void Respond<T>(this INetworkManager networkManager, IRespondingSerializer<T> respondingSerializer, NetworkEndpoint endpoint,
             int callerId, ConnectionType connectionType, bool suppressLocalBroadcast = false)
@@ -421,15 +381,11 @@ namespace DistractorTask.Transport
             return new OneTimeActionWrapper<T>(networkManager, receivingMessageType, oneTimeAction, port, persistent);
         }
 
-        private static CallbackStruct<T> CreateCallback<T>(this INetworkManager networkManager, T expectedReturnValue, ushort port) where T : ISerializer, IResponseIdentifier, new()
+        private static CallbackStruct<T> CreateCallback<T>(this INetworkManager networkManager, T expectedReturnValue, ConnectionType connectionType, ushort port) where T : ISerializer, IResponseIdentifier, new()
         {
-            return new CallbackStruct<T>(networkManager, expectedReturnValue, port, false);
+            return new CallbackStruct<T>(networkManager, expectedReturnValue, connectionType, port);
         }
         
-        private static CallbackStruct<T> CreateBroadcastCallback<T>(this INetworkManager networkManager, T expectedReturnValue) where T : ISerializer, IResponseIdentifier, new()
-        {
-            return new CallbackStruct<T>(networkManager, expectedReturnValue, 0, true);
-        }
         
         
         private struct CallbackStruct<T> where T : ISerializer, IResponseIdentifier, new()
@@ -439,16 +395,18 @@ namespace DistractorTask.Transport
             private readonly INetworkManager _networkManager;
             private ushort _port;
             private bool _isBroadcast;
+            private int _counter;
             
             
-            internal CallbackStruct(INetworkManager networkManager, T expectedReturnValue, ushort port, bool isBroadcast)
+            internal CallbackStruct(INetworkManager networkManager, T expectedReturnValue, ConnectionType connectionType, ushort port)
             {
                 _source = new TaskCompletionSource<T>();
                 _port = port;
                 _expectedReturnValue = expectedReturnValue;
                 _networkManager = networkManager;
-                _isBroadcast = isBroadcast;
-
+                _isBroadcast = connectionType == ConnectionType.Broadcast;
+                _counter = 0;
+                RegisterCallback<T>(networkManager, connectionType, port, Callback);
             }
             
             public Task AwaitMessage()
@@ -471,7 +429,8 @@ namespace DistractorTask.Transport
             {
                 if (data.SenderId == _expectedReturnValue.SenderId && data.MessageId == _expectedReturnValue.MessageId)
                 {
-                    Debug.Log($"Data received and setting result {typeof(T).Name}. In state {_source.Task.Status}");
+                    _counter++;
+                    Debug.Log($"Data received and setting result {typeof(T).Name}. In state {_source.Task.Status}. {data.SenderId} & {data.MessageId}");
                     if (_isBroadcast)
                     {
                         _networkManager.UnregisterCallbackAllPorts<T>(Callback);
@@ -480,7 +439,9 @@ namespace DistractorTask.Transport
                     {
                         _networkManager.UnregisterCallback<T>(Callback, _port);
                     }
+                    Debug.Log($"No of calls: {_counter}");
                     _source.SetResult(data);
+                    
                 }
                 
             }

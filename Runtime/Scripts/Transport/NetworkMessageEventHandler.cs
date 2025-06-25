@@ -198,7 +198,9 @@ namespace DistractorTask.Transport
 
             public void UnregisterCallback(Action<T, int> callback)
             {
+                Debug.Log($"Invocation Type {typeof(T).Name} before: {_actionToInvoke.GetInvocationList().Length}");
                 _actionToInvoke -= callback;
+                Debug.Log($"Invocation Type {typeof(T).Name} after: {_actionToInvoke.GetInvocationList().Length}");
             }
         }
     }

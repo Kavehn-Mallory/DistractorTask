@@ -257,6 +257,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         {
             return base.Serialize() + $"{nameof(studyCondition)}: {studyCondition.ToString()}";
         }
+        
     }
 
     internal class MarkerPointEnumerator : IEnumerator<int>

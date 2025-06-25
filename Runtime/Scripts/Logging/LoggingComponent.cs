@@ -12,7 +12,23 @@ namespace DistractorTask.Logging
 {
     public class LoggingComponent : MonoBehaviour
     {
-        public bool IsServer => userId != string.Empty;
+        public bool IsServer
+        {
+            get
+            {
+#if UNITY_EDITOR
+                
+                return userId != string.Empty;
+                
+ #elif UNITY_ANDROID || UNITY_WSA || UNITY_WSA_10_0
+                return false;
+ 
+ #else
+                return userId != string.Empty;
+
+#endif
+            }
+        }
 
         private ControlPanel _controlPanel;
         private DistractorSelectionComponent _selectionComponent;

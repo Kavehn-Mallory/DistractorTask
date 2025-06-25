@@ -18,10 +18,9 @@ namespace DistractorTask.InputHandler
             {
                 return; // No gamepad connected.
             }
-
+            
             if (clicker.escapeKey.wasPressedThisFrame)
             {
-                // 'Use' code here
                 OnSelectionButtonPressed.Invoke();
             }
 
