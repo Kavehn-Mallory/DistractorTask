@@ -67,7 +67,7 @@ namespace DistractorTask.Logging
 
         private void Start()
         {
-            if (DistractorTaskSettingsAsset.Instance.generateUserId && userId == string.Empty)
+            if (DistractorTaskSettingsAsset.Instance && DistractorTaskSettingsAsset.Instance.generateUserId && userId == string.Empty)
             {
                 GenerateNewId();
             }
