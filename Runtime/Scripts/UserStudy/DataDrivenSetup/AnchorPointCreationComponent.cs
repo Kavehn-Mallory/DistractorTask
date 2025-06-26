@@ -1,7 +1,11 @@
-﻿using DistractorTask.Transport;
+﻿using System;
+using DistractorTask.RoomAnalysis;
+using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
+using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using TMPro;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 
 namespace DistractorTask.UserStudy.DataDrivenSetup
 {
@@ -15,6 +19,10 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         
         [SerializeField] private Camera mainCamera;
         [SerializeField] private float distanceFromWall = 0.1f;
+        [SerializeField] private float targetDistance = 2.0f;
+        
+        [SerializeField] private AreaRaycaster areaRaycaster;
+        [SerializeField] private DistractorTaskComponent distractorTaskComponent;
 
         [SerializeField]
         private DistractorAnchorPointAsset anchorPoints;
@@ -41,12 +49,19 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             NetworkManager.Instance.RegisterCallback<OnMarkerPointActivatedData>(OnMarkerPointActivated);
             //Register everything in here 
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += AddPlacementPosition;
+            
+            
+        }
+
+        private void Start()
+        {
+            areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea(), targetDistance, distanceFromWall);
         }
 
         private void AddPlacementPosition()
         {
             //var targetPosition = raycastTarget.transform.position;
-            var position = _mainCameraTransform.position + _mainCameraTransform.forward * distanceFromWall;
+            var position = areaRaycaster.RequestAnchorPoint(targetDistance, distanceFromWall);
             
             if (anchorPoints.SetPosition(_activeMarkerPointData.MarkerPointIndex, position))
             {

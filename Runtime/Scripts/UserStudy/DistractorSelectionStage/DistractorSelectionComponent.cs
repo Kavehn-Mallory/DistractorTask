@@ -36,6 +36,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             NetworkManager.Instance.RegisterCallback<ConditionData>(StartStudyCondition);
             
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += OnReceiveInput;
+            
+            
+
         }
 
         private void OnDisable()
@@ -88,7 +91,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 var placementPosition =
                     distractorAnchorPointAsset.GetPosition(_conditionEnumerator.CurrentTrialIndex %
                                                            distractorAnchorPointAsset.Length);
-                distractorTaskComponent.RepositionCanvas(placementPosition);
+                distractorTaskComponent.RepositionCanvas(placementPosition.position);
                 _acceptingInput = true;
                 while (repetitionEnumerator.MoveNext())
                 {

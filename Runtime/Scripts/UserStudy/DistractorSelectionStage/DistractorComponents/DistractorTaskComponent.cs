@@ -107,9 +107,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
             //todo normalize the vector and place along the ray 
             var distanceFromCamera = math.distance(position, _mainCamera.transform.position);
-            var targetOffset = CalculateActualSize(distanceFromCamera, targetDistractorAngleFromCenter);
-            var targetSize = CalculateActualSize(distanceFromCamera, targetDistractorViewAngle);
-            var peripheralOffset = CalculateActualSize(distanceFromCamera, peripheralDistractorAngleFromCenter);
+            var targetOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorAngleFromCenter);
+            var targetSize = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorViewAngle);
+            var peripheralOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, peripheralDistractorAngleFromCenter);
         
             var dimensions = canvas.pixelRect;
         
@@ -136,14 +136,18 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             _peripheralDistractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel * 2f);
             _peripheralDistractor.rectTransform.anchoredPosition = peripheralDistractorPosition;
         }
-    
 
 
-        private static float CalculateActualSize(float r, float alpha)
+
+
+        public Vector2 GetBoundsForDistractorArea()
         {
-            var radians = math.radians(alpha);
-            return math.abs(2f * r * math.tan((radians / 2f)));
+            //peripheral distractor is double the size of the normal ones (therefore we take the normal viewing angle to account for half of it reaching further out than the distance from center
+            var horizontalDistance = DistractorPlacementExtension.CalculateActualSize(0.1f, targetDistractorViewAngle + peripheralDistractorAngleFromCenter);
+            var verticalDistance = DistractorPlacementExtension.CalculateActualSize(0.1f, targetDistractorViewAngle / 2f + targetDistractorAngleFromCenter);
+            return new Vector2(horizontalDistance, verticalDistance);
         }
+
 
 
         

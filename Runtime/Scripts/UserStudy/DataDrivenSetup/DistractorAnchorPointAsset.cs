@@ -1,5 +1,6 @@
 ﻿using System;
 using DistractorTask.Core;
+using DistractorTask.RoomAnalysis;
 using UnityEngine;
 
 namespace DistractorTask.UserStudy.DataDrivenSetup
@@ -8,22 +9,22 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
     public class DistractorAnchorPointAsset : ScriptableObject
     {
         [SerializeField, HideInInspector]
-        private Vector3[] distractorPlacementPositions = Array.Empty<Vector3>();
+        private AnchorPoint[] distractorPlacementPositions = Array.Empty<AnchorPoint>();
 
         public int Length => distractorPlacementPositions.Length;
         
         
         public void Reset()
         {
-            distractorPlacementPositions = Array.Empty<Vector3>();
+            distractorPlacementPositions = Array.Empty<AnchorPoint>();
         }
 
         public void InitializeContainer(int length)
         {
-            distractorPlacementPositions = new Vector3[length];
+            distractorPlacementPositions = new AnchorPoint[length];
         }
 
-        public bool SetPosition(int index, Vector3 position)
+        public bool SetPosition(int index, AnchorPoint position)
         {
             if (index < 0 || index >= distractorPlacementPositions.Length)
             {
@@ -34,12 +35,12 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             return true;
         }
 
-        public Vector3 GetRandomPosition()
+        public AnchorPoint GetRandomPosition()
         {
             return distractorPlacementPositions.RandomElement();
         }
 
-        public Vector3 GetPosition(int index)
+        public AnchorPoint GetPosition(int index)
         {
             if (index < 0 || index >= distractorPlacementPositions.Length)
             {
@@ -48,7 +49,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             return distractorPlacementPositions[index];
         }
         
-        public bool TryGetPosition(int index, out Vector3 position)
+        public bool TryGetPosition(int index, out AnchorPoint position)
         {
             if (index < 0 || index >= distractorPlacementPositions.Length)
             {
