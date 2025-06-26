@@ -6,13 +6,21 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
     public static class DistractorPlacementExtension
     {
     
-        public static void PlaceLabelsAtPosition(this TMP_Text label, Transform cameraTransform, float distanceFromCenter, float angle)
+        public static void PlaceLabelsAtPosition(this TMP_Text label, float distanceFromCenter, float angle)
         {
-            var rotation = Quaternion.AngleAxis(angle, -cameraTransform.forward);
         
-            var rotatedVector = rotation * new Vector2(0, distanceFromCenter);
+            var rotatedVector = Rotate(new Vector3(0, distanceFromCenter), angle * Mathf.Deg2Rad);
+            
+            Debug.Log(rotatedVector);
 
-            label.rectTransform.anchoredPosition = rotatedVector;
+            label.rectTransform.anchoredPosition = new Vector2(rotatedVector.x, rotatedVector.y);
+        }
+        
+        public static Vector2 Rotate(Vector2 v, float delta) {
+            return new Vector2(
+                v.x * Mathf.Cos(delta) - v.y * Mathf.Sin(delta),
+                v.x * Mathf.Sin(delta) + v.y * Mathf.Cos(delta)
+            );
         }
     
     }

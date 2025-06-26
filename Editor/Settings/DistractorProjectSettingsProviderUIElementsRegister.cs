@@ -18,7 +18,7 @@ namespace DistractorTask.Editor.Settings
             // Second parameter is the scope of this setting: it only appears in the Settings window for the Project scope.
             var provider = new SettingsProvider("Tools/DistractorTask", SettingsScope.Project)
             {
-                label = "Custom UI Elements",
+                label = "Distractor Task",
                 // activateHandler is called when the user clicks on the Settings item in the Settings window.
                 activateHandler = (searchContext, rootElement) =>
                 {

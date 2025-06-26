@@ -121,7 +121,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             var peripheralDistractorPosition = new Vector2(-peripheralOffset / scaleFactor, 0);
             var targetSizeInPixel = targetSize / scaleFactor;
 
-            canvas.transform.SetPositionAndRotation(position, _mainCamera.transform.rotation);
+            canvas.transform.SetPositionAndRotation(position, Quaternion.identity);
 
             var angle = 360f / (numberOfDistractors + 1);
 
@@ -129,7 +129,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             foreach (var distractor in _distractors)
             {
                 distractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel);
-                distractor.PlaceLabelsAtPosition(_mainCamera.transform, distanceFromCenter, currentAngle);
+                distractor.PlaceLabelsAtPosition(distanceFromCenter, currentAngle);
                 currentAngle += angle;
             }
 

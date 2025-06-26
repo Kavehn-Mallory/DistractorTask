@@ -1,4 +1,5 @@
 ﻿using DistractorTask.Core;
+using DistractorTask.Settings;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.DataDrivenSetup;
@@ -66,6 +67,11 @@ namespace DistractorTask.Logging
 
         private void Start()
         {
+            if (DistractorTaskSettingsAsset.Instance.generateUserId && userId == string.Empty)
+            {
+                GenerateNewId();
+            }
+            
             if (IsServer)
             {
                 StudyLog.UserId = userId;

@@ -4,7 +4,7 @@
 using System.IO;
 using UnityEditor;
 
-namespace DistractorTask.Settings
+namespace DistractorTask.Editor.Settings
 {
     public abstract class BaseSettings<T> : ScriptableSingleton<T> where T : BaseSettings<T>
     {

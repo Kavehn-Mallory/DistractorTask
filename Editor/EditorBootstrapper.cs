@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using DistractorTask.Core;
 using DistractorTask.Editor.Settings;
+using DistractorTask.Settings;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -35,6 +36,17 @@ namespace DistractorTask.Editor
             while (!bootstrapperLoadOperation.isDone)
             {
                 await Task.Delay(100);
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void AssignScriptableSettingsOnPlayModeStart()
+        {
+            if (DistractorTaskUserSettings.instance.SettingsAsset)
+            {
+                Debug.Log("Setting user settings");
+                DistractorTaskSettingsAsset.Instance = DistractorTaskUserSettings.instance.SettingsAsset;
+                DistractorTaskSettingsAsset.Instance.generateUserId = DistractorTaskUserSettings.instance.GenerateUserId;
             }
         }
         

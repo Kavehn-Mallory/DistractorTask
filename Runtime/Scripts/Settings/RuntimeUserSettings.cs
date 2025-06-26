@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace DistractorTask.Settings
 {
 
+    [Obsolete]
     public class RuntimeUserSettings : ScriptableObject
     {
         public UserSettings settings;

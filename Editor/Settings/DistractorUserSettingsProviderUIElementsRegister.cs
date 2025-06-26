@@ -3,6 +3,7 @@ using DistractorTask.Core;
 using DistractorTask.Settings;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace DistractorTask.Editor.Settings
@@ -22,16 +23,29 @@ namespace DistractorTask.Editor.Settings
         {
             DistractorTaskUserSettings.instance.UseBootstrapper = !DistractorTaskUserSettings.instance.UseBootstrapper;
         }
+        
+        [MenuItem("Tools/" + Constants.MenuPrefixBase + "/Toggle Generate UserID", true)]
+        private static bool SetGenerateIdToggleState()
+        {
+            Menu.SetChecked("Tools/" + Constants.MenuPrefixBase + "/Toggle Generate UserID", DistractorTaskUserSettings.instance.GenerateUserId);
+            return true;
+        }
+
+        [MenuItem("Tools/" + Constants.MenuPrefixBase + "/Toggle Generate UserID")]
+        public static void ToggleGenerateUserId()
+        {
+            DistractorTaskUserSettings.instance.GenerateUserId = !DistractorTaskUserSettings.instance.GenerateUserId;
+        }
 
         
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider()
         {
             // First parameter is the path in the Settings window.
-            // Second parameter is the scope of this setting: it only appears in the Settings window for the Project scope.
+            // Second parameter is the scope of this setting: it only appears in the Settings window for the User scope.
             var provider = new SettingsProvider("Tools/DistractorTask", SettingsScope.User)
             {
-                label = "Custom UI Elements",
+                label = "Distractor Task",
                 // activateHandler is called when the user clicks on the Settings item in the Settings window.
                 activateHandler = (searchContext, rootElement) =>
                 {
@@ -60,7 +74,13 @@ namespace DistractorTask.Editor.Settings
                     properties.AddToClassList("property-list");
                     rootElement.Add(properties);
 
-                    properties.Add(new PropertyField(settings.FindProperty("useBootstrapper")));
+                    properties.Add(new PropertyField(settings.FindProperty(DistractorTaskUserSettings.UseBootstrapperSettingName)));
+                    properties.Add(new PropertyField(settings.FindProperty(DistractorTaskUserSettings.GenerateUserIdSettingName)));
+                    properties.Add(new PropertyField(settings.FindProperty(DistractorTaskUserSettings.DistractorTaskSettingsSettingName)));
+                    
+                    properties.TrackPropertyValue(settings.FindProperty(DistractorTaskUserSettings.DistractorTaskSettingsSettingName), UpdateGlobalSettingsInstance);
+
+                    properties.TrackPropertyValue(settings.FindProperty(DistractorTaskUserSettings.GenerateUserIdSettingName), UpdateSettingsAsset);
 
                     rootElement.Bind(settings);
                 },
@@ -70,6 +90,37 @@ namespace DistractorTask.Editor.Settings
             };
 
             return provider;
+        }
+
+        private static void UpdateGlobalSettingsInstance(SerializedProperty obj)
+        {
+            var settings = DistractorTaskUserSettings.GetSerializedSettings();
+            var objectRef = settings.FindProperty((DistractorTaskUserSettings.DistractorTaskSettingsSettingName))
+                .objectReferenceValue;
+            if (!objectRef || objectRef is not DistractorTaskSettingsAsset settingsAsset)
+            {
+                return;
+            }
+
+            DistractorTaskSettingsAsset.Instance = settingsAsset;
+        }
+
+        private static void UpdateSettingsAsset(SerializedProperty obj)
+        {
+            var settings = DistractorTaskUserSettings.GetSerializedSettings();
+            var objectRef = settings.FindProperty((DistractorTaskUserSettings.DistractorTaskSettingsSettingName))
+                .objectReferenceValue;
+            if (!objectRef)
+            {
+                return;
+            }
+            var asset = new SerializedObject(objectRef);
+
+            asset.FindProperty("generateUserId").boolValue = obj.boolValue;
+            asset.ApplyModifiedProperties();
+            settings.ApplyModifiedProperties();
+            AssetDatabase.SaveAssetIfDirty(objectRef);
+
         }
     }
 }
