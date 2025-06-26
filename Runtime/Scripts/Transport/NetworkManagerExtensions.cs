@@ -31,10 +31,10 @@ namespace DistractorTask.Transport
             return task.AwaitMessage();
         }
         
-        private static CallbackStruct<TResponse> ScheduleSendAndReceive<TResponse, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
+        private static ResponseCallback<TResponse> ScheduleSendAndReceive<TResponse, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
             int messageId, ConnectionType connectionType, bool suppressLocalBroadcast = false) where TResponse : ISerializer, IResponseIdentifier, new() where TS : IRespondingSerializer<TResponse>, new()
         {
-            CallbackStruct<TResponse> testStruct = networkManager.CreateCallback(new TResponse
+            ResponseCallback<TResponse> test = networkManager.CreateCallback(new TResponse
                 {
                     MessageId = messageId,
                     SenderId = callerId
@@ -59,7 +59,7 @@ namespace DistractorTask.Transport
                     break;
             }
             
-            return testStruct;
+            return test;
         }
 
         /// <summary>
@@ -381,14 +381,14 @@ namespace DistractorTask.Transport
             return new OneTimeActionWrapper<T>(networkManager, receivingMessageType, oneTimeAction, port, persistent);
         }
 
-        private static CallbackStruct<T> CreateCallback<T>(this INetworkManager networkManager, T expectedReturnValue, ConnectionType connectionType, ushort port) where T : ISerializer, IResponseIdentifier, new()
+        private static ResponseCallback<T> CreateCallback<T>(this INetworkManager networkManager, T expectedReturnValue, ConnectionType connectionType, ushort port) where T : ISerializer, IResponseIdentifier, new()
         {
-            return new CallbackStruct<T>(networkManager, expectedReturnValue, connectionType, port);
+            return new ResponseCallback<T>(networkManager, expectedReturnValue, connectionType, port);
         }
         
         
         
-        private struct CallbackStruct<T> where T : ISerializer, IResponseIdentifier, new()
+        private class ResponseCallback<T> where T : ISerializer, IResponseIdentifier, new()
         {
             private TaskCompletionSource<T> _source;
             private T _expectedReturnValue;
@@ -398,7 +398,7 @@ namespace DistractorTask.Transport
             private int _counter;
             
             
-            internal CallbackStruct(INetworkManager networkManager, T expectedReturnValue, ConnectionType connectionType, ushort port)
+            internal ResponseCallback(INetworkManager networkManager, T expectedReturnValue, ConnectionType connectionType, ushort port)
             {
                 _source = new TaskCompletionSource<T>();
                 _port = port;

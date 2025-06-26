@@ -141,7 +141,9 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 var studyCondition = _enumerator.Current;
                 OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
                 OnStudyLog.Invoke(LogCategory.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
+                Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 //todo set correct message id. Also maybe broadcast and make client understand that it has to wait for confirmation
+                Debug.Log($"Awaiting response with sender id {GetInstanceID()} and message id {_enumerator.CurrentPermutationIndex}");
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<StudyConditionData, OnVideoClipChangedData>(
                         new StudyConditionData
@@ -164,6 +166,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                     ConnectionType.Multicast, NetworkExtensions.DefaultPort, ConnectionType.Multicast,
                     NetworkEndpoint.AnyIpv4.WithPort(NetworkExtensions.DisplayWallControlPort), GetInstanceID());*/
             }
+            Debug.Log("Study Phase Ended");
             OnStudyPhaseEnd.Invoke(StudyPhaseName);
             unregisterCallback.Invoke();
         }
