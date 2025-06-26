@@ -132,11 +132,24 @@ namespace DistractorTask.RoomAnalysis
                 var position = startPosition + (new Vector2(-movePerCast.x, 0) * i);
                 _raycasts[i + offset] = manager.AddRaycast(position, targetDistance);
             }
+
+
         }
 
         public AnchorPoint RequestAnchorPoint(float targetDistance, float minDistanceFromWall)
         {
-            if (!_isRaycastingEnabled)
+            var counter = 0;
+            foreach (var raycast in _raycasts)
+            {
+                if (!raycast)
+                {
+                    counter++;
+                }
+                
+            }
+
+            debugText.text = counter.ToString();
+            if (!_isRaycastingEnabled || counter == _raycasts.Length)
             {
                 return new AnchorPoint
                 {

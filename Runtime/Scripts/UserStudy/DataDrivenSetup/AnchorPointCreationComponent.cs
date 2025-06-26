@@ -53,13 +53,19 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             
         }
 
+        public void DebugInput()
+        {
+            AddPlacementPosition();
+        }
+
         private void Start()
         {
-            areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea(), targetDistance, distanceFromWall);
+            
         }
 
         private void AddPlacementPosition()
         {
+            debugText.text = "Input Received";
             //var targetPosition = raycastTarget.transform.position;
             var position = areaRaycaster.RequestAnchorPoint(targetDistance, distanceFromWall);
             
@@ -78,7 +84,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private void OnMarkerPointActivated(OnMarkerPointActivatedData data, int callerId)
         {
-            debugText.text = "Marker Point Activated";
             _activeMarkerPointData = data;
         }
 
@@ -86,6 +91,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private void OnMarkerPointCountReceived(MarkerPointCountData data, int callerId)
         {
             debugText.text = "Marker Point Data Received";
+            areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea(), targetDistance, distanceFromWall);
             anchorPoints.InitializeContainer(data.markerCount);
         }
     }
