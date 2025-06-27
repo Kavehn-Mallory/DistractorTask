@@ -1,11 +1,9 @@
-﻿using System;
-using DistractorTask.RoomAnalysis;
+﻿using DistractorTask.RoomAnalysis;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using TMPro;
 using UnityEngine;
-using UnityEngine.XR.ARFoundation;
 
 namespace DistractorTask.UserStudy.DataDrivenSetup
 {
@@ -57,11 +55,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         {
             AddPlacementPosition();
         }
-
-        private void Start()
-        {
-            
-        }
+        
 
         private void AddPlacementPosition()
         {
@@ -91,7 +85,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private void OnMarkerPointCountReceived(MarkerPointCountData data, int callerId)
         {
             debugText.text = "Marker Point Data Received";
-            areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea(), targetDistance, distanceFromWall);
+            areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea());
             anchorPoints.InitializeContainer(data.markerCount);
         }
     }

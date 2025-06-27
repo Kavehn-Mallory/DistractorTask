@@ -45,6 +45,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private void Awake()
         {
             _studyEnumerator = new StudyEnumerator(studies);
+
         }
 
 
@@ -131,7 +132,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 return;
             }
             OnStudyPhaseStart.Invoke($"{StudyPhaseName}: {_studyEnumerator.CurrentStudyIndex} Starting Condition: {TransformCurrentConditionToLetter(startingCondition)}");
-            _enumerator = new StudyConditionsEnumerator(GetCurrentStudy(), startingCondition);
+            _enumerator = new StudyConditionsEnumerator(_studyEnumerator.Current, startingCondition);
 
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
                 OnTrialCompleted, NetworkExtensions.DefaultPort, GetInstanceID());
@@ -142,7 +143,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
                 OnStudyLog.Invoke(LogCategory.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
-                //todo set correct message id. Also maybe broadcast and make client understand that it has to wait for confirmation
                 Debug.Log($"Awaiting response with sender id {GetInstanceID()} and message id {_enumerator.CurrentPermutationIndex}");
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<StudyConditionData, OnVideoClipChangedData>(
@@ -152,7 +152,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                         }, NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
                         _enumerator.CurrentPermutationIndex);
                 
-                //todo await trial complete -> send message to video player?
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<ConditionData, OnConditionCompleted>(
                         new ConditionData
@@ -161,10 +160,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                         }, NetworkExtensions.DefaultPort, GetInstanceID(),
                         _enumerator.CurrentPermutationIndex);
                 
-                //todo await button presses?
-                /*await NetworkManager.Instance.AwaitMessageAndRespond<OnTrialCompleted, ChangeVideoClipData>(TestAction,
-                    ConnectionType.Multicast, NetworkExtensions.DefaultPort, ConnectionType.Multicast,
-                    NetworkEndpoint.AnyIpv4.WithPort(NetworkExtensions.DisplayWallControlPort), GetInstanceID());*/
             }
             Debug.Log("Study Phase Ended");
             OnStudyPhaseEnd.Invoke(StudyPhaseName);
@@ -190,11 +185,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         }
         //todo register persistent callback for trial end data? this way we can send new data without interrupting the current study process?
         
-
-        private Study GetCurrentStudy()
-        {
-            return studies[0];
-        }
         
     }
     

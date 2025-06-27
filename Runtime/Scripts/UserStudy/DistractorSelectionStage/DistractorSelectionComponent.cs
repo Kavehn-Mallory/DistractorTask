@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using DistractorTask.Transport;
-using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;

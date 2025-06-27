@@ -31,8 +31,13 @@ namespace DistractorTask.Transport
 
         public static StudyCondition ReadStudyCondition(this ref DataStreamReader reader)
         {
-            return new StudyCondition(Enum.Parse<LoadLevel>(reader.ReadByte().ToString()),
-                Enum.Parse<NoiseLevel>(reader.ReadByte().ToString()), reader.ReadInt(), reader.ReadInt());
+            var loadLevel = Enum.Parse<LoadLevel>(reader.ReadByte().ToString());
+            var noiseLevel = Enum.Parse<NoiseLevel>(reader.ReadByte().ToString());
+            var repetitionsPerTrial = reader.ReadInt();
+            var trialCount = reader.ReadInt();
+            
+            return new StudyCondition(loadLevel,
+                noiseLevel, trialCount, repetitionsPerTrial);
         }
         
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
+using UnityEngine;
 
 namespace DistractorTask.UserStudy
 {
@@ -55,6 +56,11 @@ namespace DistractorTask.UserStudy
     {
         public LoadLevel LoadLevel;
         public NoiseLevel NoiseLevel;
+
+        public override string ToString()
+        {
+            return $"Condition Permutation: {LoadLevel.ToString()}, {NoiseLevel.ToString()}";
+        }
     }
     
     

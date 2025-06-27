@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using TMPro;
 using Unity.Mathematics;
@@ -22,7 +23,7 @@ namespace DistractorTask.RoomAnalysis
         
         private Transform _mainCameraTransform;
 
-        private ARRaycast[] _raycasts;
+        private Vector2[] _raycastStartPositions;
 
         private float _debugDistance;
         private float _debugDistanceFromWall;
@@ -65,17 +66,15 @@ namespace DistractorTask.RoomAnalysis
 
         private void Update()
         {
-            if (_raycasts == null || _raycasts.Length == 0 || !_isRaycastingEnabled)
+            if (_raycastStartPositions == null || _raycastStartPositions.Length == 0 || !_isRaycastingEnabled)
             {
                 return;
             }
             target?.SetPositionAndRotation(RequestAnchorPoint(_debugDistance, _debugDistanceFromWall).position, Quaternion.identity);
         }
 
-        public void InitializeRaycasts(Vector2 distanceFromCenter, float targetDistance, float minDistanceFromWall)
+        public void InitializeRaycasts(Vector2 distanceFromCenter)
         {
-
-            targetDistance += minDistanceFromWall;
             var center = _mainCameraTransform.position + _mainCameraTransform.forward * 0.1f;
 
             var bottomLeft = center - _mainCameraTransform.right * distanceFromCenter.x - _mainCameraTransform.up * distanceFromCenter.y;
@@ -85,14 +84,12 @@ namespace DistractorTask.RoomAnalysis
             var bottomLeftScreenSpace = mainCamera.WorldToScreenPoint(bottomLeft, mainCamera.stereoActiveEye).XY();
             var topRightScreenSpace = mainCamera.WorldToScreenPoint(topRight, mainCamera.stereoActiveEye).XY();
             
-            
-
-            _raycasts = new ARRaycast[5 + raycastCountPerEdge * 4];
-            _raycasts[0] = manager.AddRaycast(centerPointScreenSpace, maxRaycastDistance);
-            _raycasts[1] = manager.AddRaycast(bottomLeftScreenSpace, targetDistance);
-            _raycasts[2] = manager.AddRaycast(new Vector2(bottomLeftScreenSpace.x, topRightScreenSpace.y), targetDistance);
-            _raycasts[3] = manager.AddRaycast(topRightScreenSpace, targetDistance);
-            _raycasts[4] = manager.AddRaycast(new Vector2(topRightScreenSpace.x, bottomLeftScreenSpace.y), targetDistance);
+            _raycastStartPositions = new Vector2[5 + raycastCountPerEdge * 4];
+            _raycastStartPositions[0] = centerPointScreenSpace;
+            _raycastStartPositions[1] = bottomLeftScreenSpace;
+            _raycastStartPositions[2] = new Vector2(bottomLeftScreenSpace.x, topRightScreenSpace.y);
+            _raycastStartPositions[3] = topRightScreenSpace;
+            _raycastStartPositions[4] = new Vector2(topRightScreenSpace.x, bottomLeftScreenSpace.y);
 
 
             var movePerCast = new Vector2(topRightScreenSpace.x - bottomLeftScreenSpace.x,
@@ -104,8 +101,7 @@ namespace DistractorTask.RoomAnalysis
             //left
             for (int i = 0; i < raycastCountPerEdge; i++)
             {
-                var position = startPosition + (new Vector2(0, movePerCast.y) * i);
-                _raycasts[i + offset] = manager.AddRaycast(position, targetDistance);
+                _raycastStartPositions[i + offset] = startPosition + (new Vector2(0, movePerCast.y) * i);
             }
 
             offset += raycastCountPerEdge;
@@ -113,24 +109,21 @@ namespace DistractorTask.RoomAnalysis
             //top
             for (int i = 0; i < raycastCountPerEdge; i++)
             {
-                var position = startPosition + (new Vector2(movePerCast.x, 0) * i);
-                _raycasts[i + offset] = manager.AddRaycast(position, targetDistance);
+                _raycastStartPositions[i + offset] = startPosition + (new Vector2(movePerCast.x, 0) * i);
             }
             offset += raycastCountPerEdge;
             startPosition = topRightScreenSpace;
             //right
             for (int i = 0; i < raycastCountPerEdge; i++)
             {
-                var position = startPosition + (new Vector2(0, -movePerCast.y) * i);
-                _raycasts[i + offset] = manager.AddRaycast(position, targetDistance);
+                _raycastStartPositions[i + offset] = startPosition + (new Vector2(0, -movePerCast.y) * i);
             }
             offset += raycastCountPerEdge;
             startPosition = new Vector2(topRightScreenSpace.x, bottomLeftScreenSpace.y);
             //bottom
             for (int i = 0; i < raycastCountPerEdge; i++)
             {
-                var position = startPosition + (new Vector2(-movePerCast.x, 0) * i);
-                _raycasts[i + offset] = manager.AddRaycast(position, targetDistance);
+                _raycastStartPositions[i + offset] = startPosition + (new Vector2(-movePerCast.x, 0) * i);
             }
 
 
@@ -138,18 +131,7 @@ namespace DistractorTask.RoomAnalysis
 
         public AnchorPoint RequestAnchorPoint(float targetDistance, float minDistanceFromWall)
         {
-            var counter = 0;
-            foreach (var raycast in _raycasts)
-            {
-                if (!raycast)
-                {
-                    counter++;
-                }
-                
-            }
-
-            debugText.text = counter.ToString();
-            if (!_isRaycastingEnabled || counter == _raycasts.Length)
+            if (!_isRaycastingEnabled || _raycastStartPositions == null || _raycastStartPositions.Length == 0)
             {
                 return new AnchorPoint
                 {
@@ -158,18 +140,37 @@ namespace DistractorTask.RoomAnalysis
                 };
             }
             var minDistance = targetDistance + minDistanceFromWall;
-            foreach (var raycast in _raycasts)
+            var hits = new List<ARRaycastHit>();
+
+            var centerHitResults = new List<ARRaycastHit>();
+
+            var centerDistance = minDistance;
+            
+            if(manager.Raycast(_raycastStartPositions[0], centerHitResults))
             {
-                minDistance = math.min(raycast.distance, minDistance);
+                centerDistance = centerHitResults[0].distance;
+                minDistance = math.min(centerDistance, minDistance);
+                
             }
             
+            for (var i = 1; i < _raycastStartPositions.Length; i++)
+            {
+                var raycast = _raycastStartPositions[i];
+                hits.Clear();
+                if (manager.Raycast(raycast, hits))
+                {
+                    minDistance = math.min(hits[0].distance, minDistance);
+                }
+            }
+
             minDistance -= minDistanceFromWall;
             var raycastPosition = _mainCameraTransform.position + _mainCameraTransform.forward * minDistance;
+            
 
             return new AnchorPoint
             {
                 position = raycastPosition,
-                distanceFromWall = _raycasts[0].distance - minDistance
+                distanceFromWall = centerDistance - minDistance
             };
         }
         
