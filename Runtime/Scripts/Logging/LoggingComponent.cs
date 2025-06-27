@@ -1,4 +1,5 @@
 ﻿using DistractorTask.Core;
+using DistractorTask.Logging.Components;
 using DistractorTask.Settings;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
@@ -76,6 +77,7 @@ namespace DistractorTask.Logging
             {
                 StudyLog.UserId = userId;
                 NetworkManager.Instance.StartListening(NetworkExtensions.LoggingPort, OnConnectionStateChanged);
+
             }
             else
             {
@@ -93,6 +95,16 @@ namespace DistractorTask.Logging
             StudyLog.LogCustomKeyframe(LogCategory.Default, "LogFile Start");
             
             RegisterStudyComponentEvents();
+        }
+
+        private void OnHeadPositionDataReceived(HeadPositionData arg1, int arg2)
+        {
+            throw new System.NotImplementedException();
+        }
+        
+        private void OnEyetrackingDataReceived(EyetrackingLookDirection arg1, int arg2)
+        {
+            throw new System.NotImplementedException();
         }
 
         private void OnDisable()
@@ -125,6 +137,9 @@ namespace DistractorTask.Logging
                 _videoPlayerController.OnVideoClipSelected += OnVideoClipSelected;
                 _videoPlayerController.OnVideoClipReset += OnVideoClipReset;
             }
+            
+            NetworkManager.Instance.RegisterCallbackAllPorts<HeadPositionData>(OnHeadPositionDataReceived);
+            NetworkManager.Instance.RegisterCallbackAllPorts<EyetrackingLookDirection>(OnEyetrackingDataReceived);
         }
 
         private static void OnVideoClipReset()
