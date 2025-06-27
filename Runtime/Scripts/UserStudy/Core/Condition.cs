@@ -7,6 +7,7 @@ namespace DistractorTask.UserStudy.Core
     {
         public LoadLevel loadLevels;
         public NoiseLevel noiseLevels;
+        public bool hasAudioTask;
     }
 
     [Serializable, Flags]

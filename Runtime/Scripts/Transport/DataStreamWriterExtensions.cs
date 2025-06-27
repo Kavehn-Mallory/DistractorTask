@@ -23,6 +23,18 @@ namespace DistractorTask.Transport
             return DataSerializationIndexer.GetTypeIndex(type);
         }
 
+        public static void WriteBoolean(this ref DataStreamWriter writer, bool data)
+        {
+            if (data)
+            {
+                writer.WriteByte(1);
+                return;
+            }
+
+            writer.WriteByte(0);
+
+        }
+
         public static void WriteString(this ref DataStreamWriter writer, string data)
         {
             while (true)
@@ -71,7 +83,8 @@ namespace DistractorTask.Transport
             writer.WriteByte((byte)studyCondition.noiseLevel);
             writer.WriteInt(studyCondition.repetitionsPerTrial);
             writer.WriteInt(studyCondition.trialCount);
-            
+            writer.WriteBoolean(studyCondition.hasAudioTask);
+
         }
         
         

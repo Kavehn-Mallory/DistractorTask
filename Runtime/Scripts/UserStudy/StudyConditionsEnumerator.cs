@@ -56,10 +56,11 @@ namespace DistractorTask.UserStudy
     {
         public LoadLevel LoadLevel;
         public NoiseLevel NoiseLevel;
+        public bool HasAudioTask;
 
         public override string ToString()
         {
-            return $"Condition Permutation: {LoadLevel.ToString()}, {NoiseLevel.ToString()}";
+            return $"Condition Permutation: {LoadLevel.ToString()}, {NoiseLevel.ToString()}, {HasAudioTask.ToString()}";
         }
     }
     
@@ -73,6 +74,7 @@ namespace DistractorTask.UserStudy
         public NoiseLevel noiseLevel;
         public int repetitionsPerTrial;
         public int trialCount;
+        public bool hasAudioTask;
 
         internal StudyCondition(ConditionPermutation permutation, int trialCount, int repetitionsPerTrial)
         {
@@ -80,20 +82,22 @@ namespace DistractorTask.UserStudy
             this.repetitionsPerTrial = repetitionsPerTrial;
             loadLevel = permutation.LoadLevel;
             noiseLevel = permutation.NoiseLevel;
+            this.hasAudioTask = permutation.HasAudioTask;
         }
         
-        public StudyCondition(LoadLevel loadLevel, NoiseLevel noiseLevel, int trialCount, int repetitionsPerTrial)
+        public StudyCondition(LoadLevel loadLevel, NoiseLevel noiseLevel, int trialCount, int repetitionsPerTrial, bool hasAudioTask)
         {
             this.trialCount = trialCount;
             this.repetitionsPerTrial = repetitionsPerTrial;
             this.loadLevel = loadLevel;
             this.noiseLevel = noiseLevel;
+            this.hasAudioTask = hasAudioTask;
         }
 
         public override string ToString()
         {
             return
-                $"{nameof(loadLevel)}: {loadLevel.ToString()}; {nameof(noiseLevel)}: {noiseLevel.ToString()}; {nameof(repetitionsPerTrial)}: {repetitionsPerTrial.ToString()}; {nameof(trialCount)}: {trialCount.ToString()}";
+                $"{nameof(loadLevel)}: {loadLevel.ToString()}; {nameof(noiseLevel)}: {noiseLevel.ToString()}; {nameof(repetitionsPerTrial)}: {repetitionsPerTrial.ToString()}; {nameof(trialCount)}: {trialCount.ToString()}; {nameof(hasAudioTask)}: {hasAudioTask.ToString()}";
         }
     }
 }

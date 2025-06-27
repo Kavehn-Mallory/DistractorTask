@@ -7385,21 +7385,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   markerPointController: {fileID: 1707515081}
   studies:
-  - selectionsPerTrial: 6
+  - studyName: Study 1
+    selectionsPerTrial: 6
     trialsPerCondition: 5
     conditions:
       loadLevels: -1
       noiseLevels: 19
-  - selectionsPerTrial: 6
+      hasAudioTask: 0
+  - studyName: Study 2
+    selectionsPerTrial: 6
     trialsPerCondition: 10
     conditions:
       loadLevels: -1
       noiseLevels: -1
-  - selectionsPerTrial: 6
+      hasAudioTask: 0
+  - studyName: Study 3
+    selectionsPerTrial: 6
     trialsPerCondition: 10
     conditions:
       loadLevels: -1
-      noiseLevels: -1
+      noiseLevels: 16
+      hasAudioTask: 1
   markerPointCount: 6
   startingCondition: 0
 --- !u!1 &1722344015

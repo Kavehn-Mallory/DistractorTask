@@ -35,6 +35,21 @@ namespace DistractorTask.UserStudy
                 }
             }
 
+            
+            if (condition.hasAudioTask)
+            {
+                var resultWithAudioTask = new ConditionPermutation[result.Length * 2];
+                for (int i = 0; i < result.Length; i++)
+                {
+                    var permutation = result[i];
+                    resultWithAudioTask[i * 2] = permutation;
+                    permutation.HasAudioTask = true;
+                    resultWithAudioTask[i * 2 + 1] = permutation;
+                }
+
+                return resultWithAudioTask;
+            }
+
             return result;
         }
 

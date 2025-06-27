@@ -145,8 +145,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 Debug.Log($"Awaiting response with sender id {GetInstanceID()} and message id {_enumerator.CurrentPermutationIndex}");
                 await NetworkManager.Instance
-                    .MulticastMessageAndAwaitResponse<StudyConditionData, OnVideoClipChangedData>(
-                        new StudyConditionData
+                    .MulticastMessageAndAwaitResponse<StudyConditionVideoInfoData, OnVideoClipChangedData>(
+                        new StudyConditionVideoInfoData
                         {
                             studyCondition = studyCondition
                         }, NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
@@ -230,7 +230,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
     }
 
     [Serializable]
-    public class StudyConditionData : BaseRespondingData<OnVideoClipChangedData>
+    public class StudyConditionVideoInfoData : BaseRespondingData<OnVideoClipChangedData>
     {
         public StudyCondition studyCondition;
         

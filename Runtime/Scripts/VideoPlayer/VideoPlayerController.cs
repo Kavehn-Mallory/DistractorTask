@@ -126,7 +126,7 @@ namespace DistractorTask.VideoPlayer
             _unregisterVideoClipChangeEvent?.Invoke();
             _unregisterVideoClipResetEvent?.Invoke();
             _unregisterVideoClipChangeEvent = NetworkManager.Instance
-                .RegisterPersistentMulticastResponse<StudyConditionData, OnVideoClipChangedData>(
+                .RegisterPersistentMulticastResponse<StudyConditionVideoInfoData, OnVideoClipChangedData>(
                     SwitchVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
             
             _unregisterVideoClipResetEvent = NetworkManager.Instance
@@ -151,14 +151,14 @@ namespace DistractorTask.VideoPlayer
             OnVideoClipReset.Invoke();
         }
 
-        private void SwitchVideoClip(StudyConditionData studyCondition, int instanceId)
+        private void SwitchVideoClip(StudyConditionVideoInfoData studyConditionVideoInfo, int instanceId)
         {
             if (videoClipGroups == null || videoClipGroups.Length == 0)
             {
                 Debug.LogError("No video clips specified", this);
                 return;
             }
-            var noiseLevel = studyCondition.studyCondition.noiseLevel;
+            var noiseLevel = studyConditionVideoInfo.studyCondition.noiseLevel;
             
 
             foreach (var videoClipGroup in videoClipGroups)

@@ -87,7 +87,7 @@ namespace DistractorTask.Logging
                 }
             }
             StudyLog.RegisterLog<MarkerPointCountData>();
-            StudyLog.RegisterLog<StudyConditionData>();
+            StudyLog.RegisterLog<StudyConditionVideoInfoData>();
             StudyLog.RegisterLog<LogfileData>();
             
             StudyLog.LogCustomKeyframe(LogCategory.Default, "LogFile Start");

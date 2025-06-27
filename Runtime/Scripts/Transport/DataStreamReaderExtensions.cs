@@ -29,15 +29,21 @@ namespace DistractorTask.Transport
             throw new ArgumentException($"The reader does not contain a fixed string that was sent by {nameof(DataStreamWriterExtensions.WriteString)}"); 
         }
 
+        public static bool ReadBoolean(this ref DataStreamReader reader)
+        {
+            return reader.ReadByte() == 1;
+        }
+
         public static StudyCondition ReadStudyCondition(this ref DataStreamReader reader)
         {
             var loadLevel = Enum.Parse<LoadLevel>(reader.ReadByte().ToString());
             var noiseLevel = Enum.Parse<NoiseLevel>(reader.ReadByte().ToString());
             var repetitionsPerTrial = reader.ReadInt();
             var trialCount = reader.ReadInt();
+            var hasAudioTask = reader.ReadBoolean();
             
             return new StudyCondition(loadLevel,
-                noiseLevel, trialCount, repetitionsPerTrial);
+                noiseLevel, trialCount, repetitionsPerTrial, hasAudioTask);
         }
         
     }

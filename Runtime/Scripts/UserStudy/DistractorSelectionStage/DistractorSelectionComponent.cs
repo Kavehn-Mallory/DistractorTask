@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using DistractorTask.Transport;
+using DistractorTask.UserStudy.AudioTask;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
@@ -17,6 +18,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         public TextMeshProUGUI debugText; 
         public DistractorAnchorPointAsset distractorAnchorPointAsset;
         public DistractorTaskComponent distractorTaskComponent;
+        public AudioTaskComponent audioTaskComponent;
         
         private Action _unregisterStudyStartData;
         private ConditionEnumerator _conditionEnumerator;
@@ -80,7 +82,11 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
 
             var loadLevel = condition.studyCondition.loadLevel == LoadLevel.Low ? 0 : 1;
 
-
+            if (condition.studyCondition.hasAudioTask)
+            {
+                audioTaskComponent.BeginAudioTask();
+            }
+            
             debugText.text = "Starting study condition";
             
             while (_conditionEnumerator.MoveNext())
@@ -113,6 +119,11 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                         new TrialCompletedData(), NetworkExtensions.DefaultPort, GetInstanceID(),
                         _conditionEnumerator.CurrentTrialIndex);
                 
+            }
+            
+            if (condition.studyCondition.hasAudioTask)
+            {
+                audioTaskComponent.EndAudioTask();
             }
 
             NetworkManager.Instance.MulticastMessage(new OnConditionCompleted(), NetworkExtensions.DefaultPort,
