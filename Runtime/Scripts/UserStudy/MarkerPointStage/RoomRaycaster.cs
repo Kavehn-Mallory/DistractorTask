@@ -1,11 +1,10 @@
-﻿using MixedReality.Toolkit;
-using MixedReality.Toolkit.SpatialManipulation;
+﻿using System;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.Interaction.Toolkit;
 
 namespace DistractorTask.UserStudy.MarkerPointStage
 {
+    [Obsolete]
     public class RoomRaycaster : MonoBehaviour
     {
         

@@ -7,10 +7,10 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
     public static class DistractorPlacementExtension
     {
     
-        public static void PlaceLabelsAtPosition(this TMP_Text label, float distanceFromCenter, float angle)
+        public static void PlaceLabelsAtPosition(this RectTransform rectTransform, float distanceFromCenter, float angle)
         {
             var rotatedVector = Rotate(new Vector2(0, distanceFromCenter), angle * Mathf.Deg2Rad);
-            label.rectTransform.anchoredPosition = rotatedVector;
+            rectTransform.anchoredPosition = rotatedVector;
         }
 
         private static Vector2 Rotate(Vector2 v, float delta) {

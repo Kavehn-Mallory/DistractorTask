@@ -1,4 +1,5 @@
-﻿using DistractorTask.RoomAnalysis;
+﻿using DistractorTask.Debugging;
+using DistractorTask.RoomAnalysis;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
@@ -13,7 +14,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         //listen for marker count data 
         //have array with marker points 
         
-        public TextMeshProUGUI debugText;
+        public DebuggingScriptableObject debugText;
         
         [SerializeField] private Camera mainCamera;
         [SerializeField] private float distanceFromWall = 0.1f;
@@ -59,13 +60,13 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private void AddPlacementPosition()
         {
-            debugText.text = "Input Received";
+            debugText.SetDebugText("Input Received");
             //var targetPosition = raycastTarget.transform.position;
             var position = areaRaycaster.RequestAnchorPoint(targetDistance, distanceFromWall);
             
             if (anchorPoints.SetPosition(_activeMarkerPointData.MarkerPointIndex, position))
             {
-                debugText.text = "Anchor Point was set";
+                debugText.SetDebugText("Anchor Point was set");
                 NetworkManager.Instance.MulticastRespond(_activeMarkerPointData, NetworkExtensions.DefaultPort, GetInstanceID());
                 //reset data 
                 _activeMarkerPointData = new OnMarkerPointActivatedData
@@ -84,7 +85,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private void OnMarkerPointCountReceived(MarkerPointCountData data, int callerId)
         {
-            debugText.text = "Marker Point Data Received";
+            debugText.SetDebugText("Marker Point Data Received");
             areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea());
             anchorPoints.InitializeContainer(data.markerCount);
         }

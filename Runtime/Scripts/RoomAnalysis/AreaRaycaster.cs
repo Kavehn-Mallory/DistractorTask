@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DistractorTask.Debugging;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using TMPro;
 using Unity.Mathematics;
@@ -19,7 +20,7 @@ namespace DistractorTask.RoomAnalysis
 
         [SerializeField] private float maxRaycastDistance = 5f;
         
-        public TextMeshProUGUI debugText;
+        public DebuggingScriptableObject debugText;
         
         private Transform _mainCameraTransform;
 
@@ -41,8 +42,6 @@ namespace DistractorTask.RoomAnalysis
                 Debug.LogError($"No main camera found. Please either add one to {nameof(AreaRaycaster)} or tag an active camera with \"MainCamera\"");
                 enabled = false;
             }
-            
-
         }
 
         private void Start()
@@ -53,13 +52,13 @@ namespace DistractorTask.RoomAnalysis
             {
                 // XRPlaneSubsystem was loaded. The platform supports plane detection.
                 Debug.Log("Raycasting is possible");
-                debugText.text = "Raycasting is possible";
+                debugText.SetDebugText("Raycasting is possible");
                 _isRaycastingEnabled = true;
             }
             else
             {
                 Debug.Log("Raycasting is not possible");
-                debugText.text = "Raycasting is not possible";
+                debugText.SetDebugText("Raycasting is not possible");
                 _isRaycastingEnabled = false;
             }
         }

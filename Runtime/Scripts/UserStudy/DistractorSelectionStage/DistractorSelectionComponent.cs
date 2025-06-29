@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using DistractorTask.Debugging;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.AudioTask;
 using DistractorTask.UserStudy.Core;
@@ -15,7 +16,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
     public class DistractorSelectionComponent : MonoBehaviour
     {
 
-        public TextMeshProUGUI debugText; 
+        public DebuggingScriptableObject debugText; 
         public DistractorAnchorPointAsset distractorAnchorPointAsset;
         public DistractorTaskComponent distractorTaskComponent;
         public AudioTaskComponent audioTaskComponent;
@@ -87,7 +88,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 audioTaskComponent.BeginAudioTask();
             }
             
-            debugText.text = "Starting study condition";
+            debugText.SetDebugText("Starting study condition");
             
             while (_conditionEnumerator.MoveNext())
             {
@@ -100,7 +101,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 _acceptingInput = true;
                 while (repetitionEnumerator.MoveNext())
                 {
-                    debugText.text = "Setting study visible";
+                    debugText.SetDebugText("Setting study visible");
                     _inputTask = new TaskCompletionSource<int>();
                     distractorTaskComponent.StartTrial(loadLevel);
                     await _inputTask.Task;
@@ -113,7 +114,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                     
                 }
                 _acceptingInput = false;
-                debugText.text = "Sending trial end data";
+                debugText.SetDebugText("Sending trial end data");
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<TrialCompletedData, TrialCompletedResponseData>(
                         new TrialCompletedData(), NetworkExtensions.DefaultPort, GetInstanceID(),

@@ -10,6 +10,8 @@ namespace DistractorTask.FrameCapture
         private PhotoCapture _photoCapture;
 
 
+        
+        //todo implement for magic leap 
         private void Start()
         {
             PhotoCapture.CreateAsync(false, OnPhotoCaptureCreated);

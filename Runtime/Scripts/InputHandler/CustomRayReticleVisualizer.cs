@@ -1,15 +1,16 @@
-﻿using MixedReality.Toolkit.Input;
-using UnityEngine;
+﻿using UnityEngine;
 
 using UnityEngine.XR.Interaction.Toolkit.UI;
 
 namespace DistractorTask.InputHandler
 {
-    public class CustomRayReticleVisualizer : BaseReticleVisual
+    public class CustomRayReticleVisualizer : MonoBehaviour
     {
-        [SerializeField]
-        [Tooltip("The interactor which this visual represents.")]
-        private UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor;
+        
+        //todo implement a new center reticle 
+        //[SerializeField]
+        /*[Tooltip("The interactor which this visual represents.")]
+        private UnityEngine.XR.Interaction.Toolkit.Interactors.XRRayInteractor rayInteractor;*/
 
         [SerializeField]
         [Tooltip("The GameObject which holds the proximity light for the reticle")]
@@ -45,13 +46,13 @@ namespace DistractorTask.InputHandler
         private void Start()
         {
             _mainCameraTransform = Camera.main?.transform;
-            rayInteractor.uiHoverEntered.AddListener(OnHoverEnter);
-            rayInteractor.uiHoverExited.AddListener(OnHoverExit);
+            /*rayInteractor.uiHoverEntered.AddListener(OnHoverEnter);
+            rayInteractor.uiHoverExited.AddListener(OnHoverExit);*/
         }
 
         private void OnHoverExit(UIHoverEventArgs uiHoverExit)
         {
-            Reticle.SetActive(false);
+            //Reticle.SetActive(false);
             _onUIObject = false;
             if (proximityLight)
             {
@@ -64,8 +65,8 @@ namespace DistractorTask.InputHandler
         {
             var uiPosition = uiHoverEnter.uiObject.transform.position;
             _onUIObject = true;
-            ReticleRoot.position = uiPosition;
-            Reticle.SetActive(true);
+            /*ReticleRoot.position = uiPosition;
+            Reticle.SetActive(true);*/
             if (proximityLight)
             {
                 proximityLight.SetActive(true);
@@ -79,8 +80,8 @@ namespace DistractorTask.InputHandler
         {
             if (!_onUIObject)
             {
-                headGazeVisualizer.position = rayInteractor.rayOriginTransform.position +
-                                              rayInteractor.rayOriginTransform.forward * DistanceFromCamera();
+                /*headGazeVisualizer.position = rayInteractor.rayOriginTransform.position +
+                                              rayInteractor.rayOriginTransform.forward * DistanceFromCamera();*/
             }
             
         }

@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 {
-    [RequireComponent(typeof(TMP_Text))]
     public class DistractorComponent : MonoBehaviour
     {
         public int distractorIndex = -1;
@@ -12,10 +11,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
         private TMP_Text _text;
         private RectTransform _rectTransform;
+        public RectTransform RectTransform => _rectTransform;
+        public TMP_Text Text => _text;
     
         private void Awake()
         {
-            _text = GetComponent<TMP_Text>();
+            _text = GetComponentInChildren<TMP_Text>();
             _rectTransform = GetComponent<RectTransform>();
         }
     

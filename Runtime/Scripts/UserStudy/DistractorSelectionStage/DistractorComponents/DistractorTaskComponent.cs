@@ -36,8 +36,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
         private string[][] _distractorShapes;
         private string[][] _targetShapes;
-        private TMP_Text[] _distractors;
-        private TMP_Text _peripheralDistractor;
+        private DistractorComponent[] _distractors;
+        private DistractorComponent _peripheralDistractor;
         private int _targetElementIndex;
         private Camera _mainCamera;
         private DistractorComponent _selectedDistractor;
@@ -56,19 +56,19 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
                 _targetShapes[i] = shapeGroup.targetLetters.Split(',');
             }
 
-            _distractors = new TMP_Text[numberOfDistractors + 1];
+            _distractors = new DistractorComponent[numberOfDistractors + 1];
             for (int i = 0; i < numberOfDistractors + 1; i++)
             {
                 var labelInstance = Instantiate(label, canvas.transform, false);
                 labelInstance.gameObject.name = "Distractor";
                 labelInstance.distractorIndex = i;
                 labelInstance.Component = this;
-                _distractors[i] = labelInstance.GetComponent<TMP_Text>();
+                _distractors[i] = labelInstance.GetComponent<DistractorComponent>();
             }
 
             var peripheralDistractor = Instantiate(label, canvas.transform, false);
             peripheralDistractor.Component = this;
-            _peripheralDistractor = peripheralDistractor.GetComponent<TMP_Text>();
+            _peripheralDistractor = peripheralDistractor.GetComponent<DistractorComponent>();
             _peripheralDistractor.gameObject.name = "Peripheral Distractor";
 
             
@@ -129,12 +129,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             foreach (var distractor in _distractors)
             {
                 distractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel);
-                distractor.PlaceLabelsAtPosition(distanceFromCenter, currentAngle);
+                distractor.RectTransform.PlaceLabelsAtPosition(distanceFromCenter, currentAngle);
                 currentAngle += angle;
             }
 
             _peripheralDistractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel * 2f);
-            _peripheralDistractor.rectTransform.anchoredPosition = peripheralDistractorPosition;
+            _peripheralDistractor.RectTransform.anchoredPosition = peripheralDistractorPosition;
         }
 
 
@@ -156,7 +156,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             foreach (var distractor in _distractors)
             {
 
-                distractor.text = _distractorShapes[loadLevel].RandomElement();
+                distractor.Text.text = _distractorShapes[loadLevel].RandomElement();
             }
 
             if (changeTargetAfterEveryTrial && _targetElementIndex >= 0)
@@ -169,10 +169,10 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
                 _targetElementIndex = Random.Range(0, _distractors.Length);
             }
         
-            _distractors[_targetElementIndex].text =
+            _distractors[_targetElementIndex].Text.text =
                 _targetShapes[loadLevel].RandomElement();
         
-            _peripheralDistractor.text = _targetShapes[loadLevel].RandomElement();
+            _peripheralDistractor.Text.text = _targetShapes[loadLevel].RandomElement();
         }
         
         

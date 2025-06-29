@@ -6,7 +6,6 @@ using DistractorTask.Core;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
-using MixedReality.Toolkit;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;

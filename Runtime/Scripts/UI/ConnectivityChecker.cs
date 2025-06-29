@@ -1,5 +1,4 @@
 ﻿using DistractorTask.Transport;
-using MixedReality.Toolkit.UX;
 using TMPro;
 using UnityEngine;
 
@@ -7,10 +6,10 @@ namespace DistractorTask.UI
 {
     public class ConnectivityChecker : MonoBehaviour
     {
-        public FontIconSelector selector;
         public TextMeshProUGUI text;
 
 
+        //todo update this 
         public string connectedIconName = "Icon 114";
         public string disconnectedIconName = "Icon 126";
         public string attemptingConnectionIconName = "Icon 3";
@@ -25,7 +24,6 @@ namespace DistractorTask.UI
 
         private void Start()
         {
-            selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
             NetworkManager.Instance.RegisterToConnectionStateChange(portToCheck, OnConnectionStateChanged);
         }
@@ -52,7 +50,6 @@ namespace DistractorTask.UI
 
         private void OnConnectionDisconnected()
         {
-            selector.CurrentIconName = disconnectedIconName;
             text.text = Disconnected;
         }
         
@@ -61,19 +58,16 @@ namespace DistractorTask.UI
 
         private void OnConnectionEstablished()
         {
-            selector.CurrentIconName = connectedIconName;
             text.text = Connected;
         }
 
         private void OnConnectionFailed()
         {
-            selector.CurrentIconName = connectionFailedIconName;
             text.text = ConnectionFailed;
         }
 
         private void OnConnectionRequested()
         {
-            selector.CurrentIconName = attemptingConnectionIconName;
             text.text = AttemptingConnection;
         }
     }
