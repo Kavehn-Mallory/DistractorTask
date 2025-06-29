@@ -52,13 +52,13 @@ namespace DistractorTask.RoomAnalysis
             {
                 // XRPlaneSubsystem was loaded. The platform supports plane detection.
                 Debug.Log("Raycasting is possible");
-                debugText.SetDebugText("Raycasting is possible");
+                debugText.AddDebugText("Raycasting is possible");
                 _isRaycastingEnabled = true;
             }
             else
             {
                 Debug.Log("Raycasting is not possible");
-                debugText.SetDebugText("Raycasting is not possible");
+                debugText.AddDebugText("Raycasting is not possible");
                 _isRaycastingEnabled = false;
             }
         }

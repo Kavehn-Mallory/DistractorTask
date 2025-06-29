@@ -88,7 +88,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 audioTaskComponent.BeginAudioTask();
             }
             
-            debugText.SetDebugText("Starting study condition");
+            debugText.AddDebugText("Starting study condition");
             
             while (_conditionEnumerator.MoveNext())
             {
@@ -101,7 +101,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 _acceptingInput = true;
                 while (repetitionEnumerator.MoveNext())
                 {
-                    debugText.SetDebugText("Setting study visible");
+                    debugText.AddDebugText("Setting study visible");
                     _inputTask = new TaskCompletionSource<int>();
                     distractorTaskComponent.StartTrial(loadLevel);
                     await _inputTask.Task;
@@ -114,7 +114,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                     
                 }
                 _acceptingInput = false;
-                debugText.SetDebugText("Sending trial end data");
+                debugText.AddDebugText("Sending trial end data");
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<TrialCompletedData, TrialCompletedResponseData>(
                         new TrialCompletedData(), NetworkExtensions.DefaultPort, GetInstanceID(),

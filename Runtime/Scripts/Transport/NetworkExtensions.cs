@@ -16,7 +16,8 @@ namespace DistractorTask.Transport
         public static IPAddress GetLocalIPAddress()
         {
 
-            foreach(NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            return IPManager.GetIP(ADDRESSFAM.IPv4);
+            /*foreach(NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
             {
                 if(ni.NetworkInterfaceType is NetworkInterfaceType.Wireless80211 or NetworkInterfaceType.Ethernet)
                 {
@@ -36,7 +37,7 @@ namespace DistractorTask.Transport
                 }  
             }
 
-            return null;
+            return null;*/
         }
         
         public static bool DidConnectionThrowError(ConnectionState reason)

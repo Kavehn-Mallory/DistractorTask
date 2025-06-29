@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using DistractorTask.Debugging;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using UnityEngine;
@@ -18,7 +19,10 @@ namespace DistractorTask.UserStudy.AudioTask
 
         [SerializeField, Tooltip("Min and max delay between repetitions in seconds")] private Vector2 taskFrequency = new Vector2(15, 25);
 
-        [SerializeField] private float maxReactionTime = 5f;
+        [SerializeField] private float maxReactionTime = 2f;
+
+        [SerializeField]
+        private DebuggingScriptableObject debugObject;
 
         private Transform _mainCameraTransform;
 
@@ -27,13 +31,14 @@ namespace DistractorTask.UserStudy.AudioTask
         private bool _taskIsActive;
 
         private float _timestampLastAudioTask = -1;
+        
 
 
         private void Start()
         {
             audioClipTarget.clip = audioClip;
             _mainCameraTransform = Camera.main.transform;
-            
+            InputHandler.InputHandler.Instance.OnTriggerButtonPressed += OnButtonPressReceived;
         }
         
 
@@ -76,6 +81,12 @@ namespace DistractorTask.UserStudy.AudioTask
             if (Time.time - _timestampLastAudioTask <= maxReactionTime)
             {
                 //success 
+                debugObject.AddDebugText("Audio Task Success");
+            }
+            else
+            {
+                debugObject.AddDebugText("Audio Task Failure");
+                //too late
             }
 
             _taskIsActive = false;

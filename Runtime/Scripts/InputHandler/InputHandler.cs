@@ -1,39 +1,56 @@
 ﻿using System;
 using DistractorTask.Core;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace DistractorTask.InputHandler
 {
     public class InputHandler : Singleton<InputHandler>
     {
+
+        private MagicLeapOpenXRInput _magicLeapInputs;
+
         public event Action OnSelectionButtonPressed = delegate { };
 
-        public event Action<string> OnDeviceAdded = delegate { };
+        public event Action OnTriggerButtonPressed = delegate { };
         
-        void Update()
-        {
-            //todo check this and implement it properly: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.11/manual/HID.html
-            var clicker = Keyboard.current;
-            if (clicker == null)
-            {
-                return; // No gamepad connected.
-            }
-            
-            if (clicker.escapeKey.wasPressedThisFrame)
-            {
-                OnSelectionButtonPressed.Invoke();
-            }
-
-        }
-
+        private MagicLeapOpenXRInput.ControllerActions _controllerActions;
+        private MagicLeapOpenXRInput.EyesActions _eyesActions;
+        
         private void Start()
         {
-            InputSystem.onDeviceChange +=
-                (device, change) =>
-                {
-                    if (change == InputDeviceChange.Added) OnDeviceAdded.Invoke(device.name);
-                };
+            _magicLeapInputs = new MagicLeapOpenXRInput();
+            _magicLeapInputs.Enable();
+
+            _controllerActions = new MagicLeapOpenXRInput.ControllerActions(_magicLeapInputs);
+
+            _controllerActions.Bumper.performed += OnBumperPressed;
+            _controllerActions.Trigger.performed += OnTriggerPressed;
+            _eyesActions = new MagicLeapOpenXRInput.EyesActions(_magicLeapInputs);
+
         }
+
+        private void OnTriggerPressed(InputAction.CallbackContext obj)
+        {
+            OnTriggerButtonPressed.Invoke();
+        }
+
+        private void OnBumperPressed(InputAction.CallbackContext obj)
+        {
+            OnSelectionButtonPressed.Invoke();
+        }
+
+        void Update()
+        {
+            if (_eyesActions.enabled)
+            {
+                //Debug.Log(_eyesActions.GazePosition.ReadValue<Vector3>());
+            }
+            //Todo track everything that we need 
+
+        }
+
+
         
     }
 }
