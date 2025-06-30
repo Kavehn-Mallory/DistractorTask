@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Globalization;
 using DistractorTask.Core;
 using DistractorTask.UserStudy;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using Unity.Collections;
+using UnityEngine;
 
 namespace DistractorTask.Transport
 {
@@ -85,6 +87,19 @@ namespace DistractorTask.Transport
             writer.WriteInt(studyCondition.trialCount);
             writer.WriteBoolean(studyCondition.hasAudioTask);
 
+        }
+        
+        
+        public static string WriteVector3ToCSVString(this Vector3 vector, char delimiter = ',')
+        {
+            return
+                $"{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.x.ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        public static string WriteQuaternionToCSVString(this Quaternion quaternion, char delimiter = ',')
+        {
+            return
+                $"{quaternion.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{quaternion.y.ToString(CultureInfo.InvariantCulture)}{delimiter}{quaternion.z.ToString(CultureInfo.InvariantCulture)}{delimiter}{quaternion.w.ToString(CultureInfo.InvariantCulture)}";
         }
         
         

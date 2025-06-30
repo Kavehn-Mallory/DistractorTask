@@ -6,12 +6,13 @@ using Unity.Networking.Transport;
 
 namespace DistractorTask.Transport.DataContainer
 {
-    public struct LogfileData : ISerializer, ILogSerializer
+    [Obsolete]
+    public struct LogfileDataOld : ISerializer, ILogSerializer
     {
 
         public TimeSpan Time;
         public NetworkEndpoint NetworkEndpoint;
-        public LogCategory LogCategory;
+        public LogCategoryOld LogCategoryOld;
         public string Message;
         
         public void Serialize(ref DataStreamWriter writer)
@@ -22,7 +23,7 @@ namespace DistractorTask.Transport.DataContainer
                 Endpoint = NetworkEndpoint
             };
             ipAddressData.Serialize(ref writer);
-            writer.WriteString(LogCategory.ToString());
+            writer.WriteString(LogCategoryOld.ToString());
             writer.WriteString(Message);
         }
 
@@ -32,19 +33,20 @@ namespace DistractorTask.Transport.DataContainer
             var ipAddressData = new IpAddressData();
             ipAddressData.Deserialize(ref reader);
             NetworkEndpoint = ipAddressData.Endpoint;
-            LogCategory = Enum.Parse<LogCategory>(reader.ReadString());
+            LogCategoryOld = Enum.Parse<LogCategoryOld>(reader.ReadString());
             Message = reader.ReadString();
         }
 
         public string Serialize()
         {
-            return $"{Time:c};{LogCategory.ToString()};{NetworkEndpoint.ToString()};{LogCategory.ToString()};{Message}";
+            return $"{Time:c};{LogCategoryOld.ToString()};{NetworkEndpoint.ToString()};{LogCategoryOld.ToString()};{Message}";
         }
 
-        public LogCategory Category => LogCategory.Logging;
+        public LogCategoryOld CategoryOld => LogCategoryOld.Logging;
     }
-
-    public enum LogCategory
+    
+    [Obsolete]
+    public enum LogCategoryOld
     {
         Default,
         Network,

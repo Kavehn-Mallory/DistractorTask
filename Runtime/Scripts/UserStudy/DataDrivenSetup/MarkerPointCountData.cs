@@ -28,7 +28,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             return base.Serialize() + $"{nameof(markerCount)}: {markerCount.ToString()}";
         }
 
-        public override LogCategory Category => LogCategory.UserStudy;
+        public override LogCategoryOld CategoryOld => LogCategoryOld.UserStudy;
     }
 
     public class MarkerPointCountReceived : GenericNoValueData, IResponseIdentifier

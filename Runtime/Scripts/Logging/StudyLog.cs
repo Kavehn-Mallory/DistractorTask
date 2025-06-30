@@ -13,7 +13,7 @@ namespace DistractorTask.Logging
 {
     public class StudyLog : IDisposable, IAsyncDisposable
     {
-        private const string LogFileHeadings = "Time,Category,Endpoint,Sender,Data";
+        private const string LogFileHeadings = "Time,Timestamp,Category,UserId,ParticipantType,CameraPosition,CameraRotation,MarkerPointCount,DistanceFromCamera,DistanceToWall,HitPointWallPosition,HitPointWallNormal,AnchorPointPosition,StudyName,StudyIndex,NoiseLevel,LoadLevel,TrialCount,RepetitionsPerTrial,AudioTaskReactionTime,TrialTargetIndex,TrialSymbolOrder,AnchorPointIndex,StartTime,ReactionTime,LeftEyePosition,LeftEyeRotation,RightEyePosition,RightEyeRotation,PupilDiameter";
 
         private static StudyLog _instance;
         
@@ -101,29 +101,29 @@ namespace DistractorTask.Logging
         private static void LogKeyframe<T>(T data, int senderId) where T : ISerializer, ILogSerializer, new()
         {
             var message = SanitizeMessage(data.Serialize());
-            var logfileData = (new LogfileData
+            var logfileData = (new LogfileDataOld
             {
                 NetworkEndpoint = NetworkEndpoint.AnyIpv4,
                 Time = DateTime.Now.TimeOfDay,
-                LogCategory = data.Category,
+                LogCategoryOld = data.CategoryOld,
                 Message = message
             });
-            LogSystem._streamWriter.WriteLine($"{logfileData.Time:c}{Delimiter}{logfileData.LogCategory.ToString()}{Delimiter}{logfileData.NetworkEndpoint.ToString()}{Delimiter}{senderId}{Delimiter}{logfileData.Message}");
+            LogSystem._streamWriter.WriteLine($"{logfileData.Time:c}{Delimiter}{logfileData.LogCategoryOld.ToString()}{Delimiter}{logfileData.NetworkEndpoint.ToString()}{Delimiter}{senderId}{Delimiter}{logfileData.Message}");
             if(!IsServer)
                 NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
         }
 
-        public static void LogCustomKeyframe(LogCategory logCategory, string message)
+        public static void LogCustomKeyframe(Transport.DataContainer.LogCategoryOld logCategoryOld, string message)
         {
             message = SanitizeMessage(message);
-            var logfileData = (new LogfileData
+            var logfileData = (new LogfileDataOld
             {
                 NetworkEndpoint = NetworkEndpoint.AnyIpv4,
                 Time = DateTime.Now.TimeOfDay,
-                LogCategory = logCategory,
+                LogCategoryOld = logCategoryOld,
                 Message = message
             });
-            LogSystem._streamWriter.WriteLine($"{logfileData.Time:c}{Delimiter}{logfileData.LogCategory.ToString()}{Delimiter}{logfileData.NetworkEndpoint.ToString()}{Delimiter}{logfileData.LogCategory.ToString()}{Delimiter}{logfileData.Message}");
+            LogSystem._streamWriter.WriteLine($"{logfileData.Time:c}{Delimiter}{logfileData.LogCategoryOld.ToString()}{Delimiter}{logfileData.NetworkEndpoint.ToString()}{Delimiter}{logfileData.LogCategoryOld.ToString()}{Delimiter}{logfileData.Message}");
             if(!IsServer)
                 NetworkManager.Instance.MulticastMessage(logfileData, NetworkExtensions.LoggingPort, -1);
         }

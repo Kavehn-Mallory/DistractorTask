@@ -487,7 +487,7 @@ MonoBehaviour:
   audioClipTarget: {fileID: 604807606}
   distanceOfAudioSource: {x: 1, y: 1}
   taskFrequency: {x: 15, y: 25}
-  maxReactionTime: 5
+  maxReactionTime: 2
   debugObject: {fileID: 0}
 --- !u!114 &392145802
 MonoBehaviour:
@@ -1122,7 +1122,7 @@ GameObject:
   - component: {fileID: 1307999731}
   - component: {fileID: 1307999730}
   m_Layer: 0
-  m_Name: ConnectionListener-TODO
+  m_Name: ConnectionListener
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

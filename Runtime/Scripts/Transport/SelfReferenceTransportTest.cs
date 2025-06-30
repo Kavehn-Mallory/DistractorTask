@@ -31,7 +31,7 @@ namespace DistractorTask.Transport
             NetworkManager.Instance.StartListening(serverSettings.NetworkEndpoint.Port, OnConnectionEstablished);
             NetworkManager.Instance.StartListening(ipConnectionAddress.NetworkEndpoint.Port, OnIpConnectionEstablished);
             NetworkManager.Instance.StartListening(videoTransportSettings.port.Port, null);
-            NetworkManager.Instance.RegisterCallbackAllPorts<LogfileData>(OnLogFileDataReceived);
+            NetworkManager.Instance.RegisterCallbackAllPorts<LogfileDataOld>(OnLogFileDataReceived);
             NetworkManager.Instance.RegisterCallback<IpAddressData>(OnIpAddressDataReceived, ipConnectionAddress.port.Port);
             NetworkManager.Instance.RegisterCallbackAllPorts<IpAddressData>(OnAllDataReceived);
             yield return new WaitForSeconds(5f);
@@ -65,12 +65,12 @@ namespace DistractorTask.Transport
             
             if (state == ConnectionState.Connected)
             {
-                NetworkManager.Instance.MulticastMessage(new LogfileData
+                NetworkManager.Instance.MulticastMessage(new LogfileDataOld
                 {
                     Message = "Hello",
                     NetworkEndpoint = ipConnectionAddress.NetworkEndpoint,
                     Time = new TimeSpan(10, 1, 1, 1),
-                    LogCategory = LogCategory.Network
+                    LogCategoryOld = LogCategoryOld.Network
                 }, serverSettings.NetworkEndpoint.Port, this.GetInstanceID());
                 NetworkManager.Instance.UnregisterToConnectionStateChange(serverSettings.NetworkEndpoint.Port, OnConnectionEstablished);
                 return;
@@ -91,7 +91,7 @@ namespace DistractorTask.Transport
             }
         }
 
-        private void OnLogFileDataReceived(LogfileData obj, int callerId)
+        private void OnLogFileDataReceived(LogfileDataOld obj, int callerId)
         {
             Debug.Log(obj.Message);
         }

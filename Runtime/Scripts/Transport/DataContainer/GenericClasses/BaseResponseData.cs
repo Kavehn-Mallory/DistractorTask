@@ -24,7 +24,7 @@ namespace DistractorTask.Transport.DataContainer.GenericClasses
             return $"{nameof(SenderId)}: {SenderId.ToString()};{nameof(MessageId)};{MessageId.ToString()}";
         }
 
-        public virtual LogCategory Category => LogCategory.UserStudy;
+        public virtual LogCategoryOld CategoryOld => LogCategoryOld.UserStudy;
     }
     
 }

@@ -31,7 +31,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         public Action<string> OnStudyPhaseStart = delegate { };
         public Action<string> OnStudyPhaseEnd = delegate { };
         public Action OnStudyCompleted = delegate { };
-        public Action<LogCategory, string> OnStudyLog = delegate { };
+        public Action<LogCategoryOld, string> OnStudyLog = delegate { };
         
         /// <summary>
         /// Triggers on each iteration. String represents the name of the study stage, first int is the current index, second int is the iteration count
@@ -101,7 +101,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.LogError("Marker Point Setup hasn't been started yet.");
                 return;
             }
-            OnStudyLog.Invoke(LogCategory.UserStudy, "Regenerating Marker Points");
+            OnStudyLog.Invoke(LogCategoryOld.UserStudy, "Regenerating Marker Points");
             _markerPointEnumerator.Reset();
         }
 
@@ -112,7 +112,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.LogError("Marker Point Setup hasn't been started yet.");
                 return;
             }
-            OnStudyLog.Invoke(LogCategory.UserStudy, $"Repeating Marker Point {_markerPointEnumerator.Current}");
+            OnStudyLog.Invoke(LogCategoryOld.UserStudy, $"Repeating Marker Point {_markerPointEnumerator.Current}");
             _markerPointEnumerator.MovePrevious();
             
         }
@@ -141,7 +141,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             {
                 var studyCondition = _enumerator.Current;
                 OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
-                OnStudyLog.Invoke(LogCategory.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
+                OnStudyLog.Invoke(LogCategoryOld.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 Debug.Log($"Awaiting response with sender id {GetInstanceID()} and message id {_enumerator.CurrentPermutationIndex}");
                 await NetworkManager.Instance

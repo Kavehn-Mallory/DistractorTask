@@ -14,6 +14,6 @@ namespace DistractorTask.Core
     {
         public string Serialize();
         
-        public LogCategory Category { get; }
+        public LogCategoryOld CategoryOld { get; }
     }
 }
