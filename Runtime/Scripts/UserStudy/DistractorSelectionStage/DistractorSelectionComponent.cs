@@ -8,7 +8,6 @@ using DistractorTask.UserStudy.AudioTask;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
-using TMPro;
 using UnityEngine;
 using TrialCompletedData = DistractorTask.UserStudy.DataDrivenSetup.TrialCompletedData;
 
@@ -58,8 +57,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 return;
             }
             var currentRepetition = _conditionEnumerator.Current?.CurrentRepetition ?? -1;
-            var result = distractorTaskComponent.CheckInput(_conditionEnumerator.TrialCount, _conditionEnumerator.RepetitionsPerTrial, _conditionEnumerator.CurrentTrialIndex, currentRepetition, DateTime.Now.TimeOfDay, _conditionEnumerator.CurrentTrialIndex %
-                distractorAnchorPointAsset.Length);
+            var result = distractorTaskComponent.CheckInput();
+            
+            LoggingComponent.Log(LogData.CreateTrialConfirmationLogData(result.targetDistractor, result.selectedDistractor,
+                result.symbolOrder, result.startTime, DateTime.Now.TimeOfDay, _conditionEnumerator.CurrentTrialIndex,
+                currentRepetition, _conditionEnumerator.CurrentTrialIndex %
+                                   distractorAnchorPointAsset.Length));
             OnDistractorSelection.Invoke(result);
             _inputTask?.SetResult(1);
         }

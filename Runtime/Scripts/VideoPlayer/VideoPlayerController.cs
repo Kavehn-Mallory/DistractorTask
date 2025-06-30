@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using DistractorTask.Core;
+using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
@@ -30,7 +31,7 @@ namespace DistractorTask.VideoPlayer
 
 
         public Action OnVideoClipReset = delegate { };
-        public Action<string, string> OnVideoClipSelected = delegate { };
+        public readonly Action<string, string> OnVideoClipSelected = delegate { };
         
         
         
@@ -177,6 +178,7 @@ namespace DistractorTask.VideoPlayer
 
         private void SwitchVideoClip(string videoUrl, AudioClip audioClip)
         {
+            LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoUrl, audioClip.name));
             OnVideoClipSelected.Invoke(videoUrl, audioClip.name);
             videoPlayer.url = videoUrl;
             audioSource.clip = audioClip;

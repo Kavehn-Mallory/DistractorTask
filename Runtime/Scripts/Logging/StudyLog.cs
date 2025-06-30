@@ -73,5 +73,11 @@ namespace DistractorTask.Logging
             _streamWriter.WriteLine(
                 $"{DateTime.Now.TimeOfDay:c}{LoggingExtensions.Delimiter}{LogData.WriteLogData(logData)}");
         }
+
+        public void WriteReceivedLogData(LogFileData logFileData)
+        {
+            _streamWriter.WriteLine(
+                $"{DateTime.Now.TimeOfDay:c}{logFileData.Value}");
+        }
     }
 }

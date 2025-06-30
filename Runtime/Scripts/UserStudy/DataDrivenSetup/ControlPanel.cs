@@ -135,6 +135,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             }
             OnStudyPhaseStart.Invoke($"{StudyPhaseName}", _studyEnumerator.CurrentStudyIndex);
             _enumerator = new StudyConditionsEnumerator(_studyEnumerator.Current, startingCondition);
+            
+            LoggingComponent.Log(LogData.CreateStudyBeginLogData(_studyEnumerator.Current.studyName, _studyEnumerator.CurrentStudyIndex, TransformCurrentConditionToLetter(startingCondition, _enumerator.PermutationCount).ToString()));
 
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
                 OnTrialCompleted, NetworkExtensions.DefaultPort, GetInstanceID());
@@ -144,6 +146,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 var studyCondition = _enumerator.Current;
                 OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
                 OnStudyLog.Invoke(LogCategoryOld.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
+                
+                
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 Debug.Log($"Awaiting response with sender id {GetInstanceID()} and message id {_enumerator.CurrentPermutationIndex}");
                 await NetworkManager.Instance
@@ -164,13 +168,15 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 
             }
             Debug.Log("Study Phase Ended");
+            LoggingComponent.Log(LogData.CreateStudyEndLogData());
             OnStudyPhaseEnd.Invoke(StudyPhaseName);
             unregisterCallback.Invoke();
         }
 
-        private static char TransformCurrentConditionToLetter(int currentCondition)
+        private static char TransformCurrentConditionToLetter(int currentCondition, int permutationCount)
         {
             //assumes that the conditions start with 0 instead of 1
+            currentCondition %= permutationCount;
             return (char)(currentCondition + 65);
         }
 

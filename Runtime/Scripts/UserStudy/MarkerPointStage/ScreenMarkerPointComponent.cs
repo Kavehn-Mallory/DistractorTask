@@ -1,4 +1,5 @@
 ﻿using System;
+using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using UnityEngine;
@@ -9,8 +10,6 @@ namespace DistractorTask.UserStudy.MarkerPointStage
     public class ScreenMarkerPointComponent : MonoBehaviour
     {
         
-        
-       
         [SerializeField] private Canvas markerPointCanvas;
         [SerializeField] private Vector2Int zones;
         [SerializeField] private Image marker;
@@ -78,6 +77,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
                 _markerPoints[_currentlyActiveMarker].enabled = false;
             }
             _currentlyActiveMarker = _currentMarker;
+            LoggingComponent.Log(LogData.CreateMarkerPointActivatedLogData(_currentMarker));
             _markerPoints[_currentMarker].enabled = true;
         }
         

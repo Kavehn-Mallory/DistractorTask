@@ -100,7 +100,6 @@ namespace DistractorTask.Logging
             {
                 case LogCategory.LogFileStart:
                     csvData[nameof(_userId)] = logData._userId;
-                    csvData[nameof(_participantType)] = logData._participantType;
                     break;
                 case LogCategory.MarkerPointBegin:
                     csvData[nameof(_markerPointCount)] = logData._markerPointCount.ToString();
@@ -118,6 +117,7 @@ namespace DistractorTask.Logging
                 case LogCategory.StudyBegin:
                     csvData[nameof(_studyName)] = logData._studyName;
                     csvData[nameof(_studyIndex)] = logData._studyIndex.ToString();
+                    csvData[nameof(_participantType)] = logData._participantType;
                     break;
                 case LogCategory.TrialBegin:
                     csvData[nameof(_noiseLevel)] = logData._noiseLevel.ToString();
@@ -168,14 +168,14 @@ namespace DistractorTask.Logging
         
         
 
-        public static LogData CreateLogFileStartLogData(string userId, string participantType)
+        public static LogData CreateLogFileStartLogData(string userId)
         {
             var result = new LogData
             {
                 _timeStamp = DateTime.Now.TimeOfDay,
                 _logCategory = LogCategory.LogFileStart,
                 _userId = userId,
-                _participantType = participantType,
+                
             };
             return result;
 
@@ -220,20 +220,27 @@ namespace DistractorTask.Logging
             };
         }
 
-        public static LogData CreateStudyBeginLogData(string studyName, int studyIndex)
+        public static LogData CreateStudyBeginLogData(string studyName, int studyIndex, string participantType)
         {
             return new LogData
             {
                 _timeStamp = DateTime.Now.TimeOfDay,
                 _logCategory = LogCategory.StudyBegin,
                 _studyName = studyName,
-                _studyIndex = studyIndex
+                _studyIndex = studyIndex,
+                _participantType = participantType
             };
         }
 
-        public static LogData CreateMarkerPointActivatedLogData()
+        public static LogData CreateMarkerPointActivatedLogData(int activeMarkerPointIndex)
         {
-            throw new NotImplementedException();
+            var result = new LogData()
+            {
+                _timeStamp = DateTime.Now.TimeOfDay,
+                _logCategory = LogCategory.MarkerPointBegin,
+                _markerPointCount = activeMarkerPointIndex
+            };
+            return result;
         }
 
         public static LogData CreateTrialBeginLogData(NoiseLevel noiseLevel, LoadLevel loadLevel, int trialCount,
