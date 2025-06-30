@@ -1,4 +1,5 @@
 ﻿using DistractorTask.Debugging;
+using DistractorTask.Logging;
 using DistractorTask.RoomAnalysis;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
@@ -66,6 +67,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             if (anchorPoints.SetPosition(_activeMarkerPointData.MarkerPointIndex, position))
             {
                 debugText.AddDebugText("Anchor Point was set");
+                var logData = LogData.CreateMarkerPointConfirmedLogData(_mainCameraTransform.position,
+                    _mainCameraTransform.rotation, Vector3.Distance(_mainCameraTransform.position, position.position),
+                    position.distanceFromWall, new Vector3(), new Vector3(), position.position,
+                    _activeMarkerPointData.MarkerPointIndex);
+                LoggingComponent.Log(logData);
                 NetworkManager.Instance.MulticastRespond(_activeMarkerPointData, NetworkExtensions.DefaultPort, GetInstanceID());
                 //reset data 
                 _activeMarkerPointData = new OnMarkerPointActivatedData

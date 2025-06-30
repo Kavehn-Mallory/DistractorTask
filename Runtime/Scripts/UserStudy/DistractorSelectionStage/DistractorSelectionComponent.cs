@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using DistractorTask.Debugging;
+using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.AudioTask;
 using DistractorTask.UserStudy.Core;
@@ -81,6 +82,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             
             //start new study 
             _conditionEnumerator = new ConditionEnumerator(condition.studyCondition);
+            
+            //todo replace this with the actual time 
+            LoggingComponent.Log(LogData.CreateTrialBeginLogData(condition.studyCondition.noiseLevel, condition.studyCondition.loadLevel, condition.studyCondition.trialCount, condition.studyCondition.repetitionsPerTrial, condition.studyCondition.hasAudioTask ? 2 : -1));
 
             var loadLevel = condition.studyCondition.loadLevel == LoadLevel.Low ? 0 : 1;
 
@@ -93,11 +97,13 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             
             while (_conditionEnumerator.MoveNext())
             {
+                
                 //should never be null, but the squiggly lines annoyed me and better be safe than sorry 
                 var repetitionEnumerator = _conditionEnumerator.Current ?? new TrialsEnumerator(1);
                 var placementPosition =
                     distractorAnchorPointAsset.GetPosition(_conditionEnumerator.CurrentTrialIndex %
                                                            distractorAnchorPointAsset.Length);
+                
                 distractorTaskComponent.RepositionCanvas(placementPosition.position);
                 _acceptingInput = true;
                 while (repetitionEnumerator.MoveNext())
@@ -128,6 +134,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 audioTaskComponent.EndAudioTask();
             }
 
+            LoggingComponent.Log(LogData.CreateTrialEndLogData());
             NetworkManager.Instance.MulticastMessage(new OnConditionCompleted(), NetworkExtensions.DefaultPort,
                 GetInstanceID());
 

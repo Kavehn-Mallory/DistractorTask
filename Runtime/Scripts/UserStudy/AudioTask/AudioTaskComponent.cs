@@ -1,6 +1,8 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using DistractorTask.Debugging;
+using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using UnityEngine;
@@ -31,6 +33,7 @@ namespace DistractorTask.UserStudy.AudioTask
         private bool _taskIsActive;
 
         private float _timestampLastAudioTask = -1;
+        private TimeSpan _audioTaskStart;
         
 
 
@@ -63,9 +66,16 @@ namespace DistractorTask.UserStudy.AudioTask
 
                 _taskIsActive = true;
                 _timestampLastAudioTask = Time.time;
+                _audioTaskStart = DateTime.Now.TimeOfDay;
                 PlayAudioTask();
-                var audioTask = Task.Delay((int)(maxReactionTime * 1000), _cancellationTokenSource.Token);
+                //we wait a bit longer than the acceptable time frame to make sure that the result without button press is invalid
+                var audioTask = Task.Delay((int)(maxReactionTime * 1000 + 20), _cancellationTokenSource.Token);
                 await audioTask;
+                if (_taskIsActive)
+                {
+                    //we did not get it
+                    LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_audioTaskStart, DateTime.Now.TimeOfDay));
+                }
                 _taskIsActive = false;
             }
             
@@ -78,6 +88,7 @@ namespace DistractorTask.UserStudy.AudioTask
                 return;
             }
 
+            LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_audioTaskStart, DateTime.Now.TimeOfDay));
             if (Time.time - _timestampLastAudioTask <= maxReactionTime)
             {
                 //success 

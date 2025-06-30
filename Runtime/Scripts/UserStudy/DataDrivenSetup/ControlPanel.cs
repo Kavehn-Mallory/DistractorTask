@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.Transport.DataContainer.GenericClasses;
@@ -64,7 +65,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             }, NetworkExtensions.DefaultPort, GetInstanceID());
             await markerPointController.InitializeMarkerPointSetup(markerPointCount);
             
-            
+            LoggingComponent.Log(LogData.CreateMarkerPointBeginLogData(markerPointCount));
 
             while (_markerPointEnumerator.MoveNext())
             {
@@ -88,6 +89,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             //but end is probably still necessary if we want to adjust the process to a specific marker / set the desired index
 
             await markerPointController.EndMarkerPointSetup();
+            LoggingComponent.Log(LogData.CreateMarkerPointEndLogData());
             Debug.Log("Marker points are over");
             OnStudyPhaseEnd.Invoke(MarkerPointPhaseName);
             _markerPointEnumerator.Dispose();

@@ -28,8 +28,9 @@ namespace DistractorTask.UI
         }
 
 
-        private void SetStudyStageText(string studyStageName)
+        private void SetStudyStageText(string studyStageName, int studyIndex)
         {
+            //Todo I think I broke this. Maybe I should replace this call for the logging system with a direct call to the logging system
             studyStageText.text = studyStageName;
         }
 

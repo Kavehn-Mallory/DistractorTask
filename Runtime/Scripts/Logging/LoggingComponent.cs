@@ -223,6 +223,10 @@ namespace DistractorTask.Logging
 
             NetworkManager.Instance.MulticastMessage(logFileData, NetworkExtensions.LoggingPort, Instance.GetInstanceID());
         }
-        
+
+        public static void Log(LogData logData)
+        {
+            WriteLogData(logData);
+        }
     }
 }

@@ -231,6 +231,11 @@ namespace DistractorTask.Logging
             };
         }
 
+        public static LogData CreateMarkerPointActivatedLogData()
+        {
+            throw new NotImplementedException();
+        }
+
         public static LogData CreateTrialBeginLogData(NoiseLevel noiseLevel, LoadLevel loadLevel, int trialCount,
             int repetitionsPerTrial, int audioTaskReactionTime)
         {
