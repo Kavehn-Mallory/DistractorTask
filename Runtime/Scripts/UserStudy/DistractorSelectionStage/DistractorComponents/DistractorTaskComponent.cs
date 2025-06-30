@@ -41,6 +41,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         private int _targetElementIndex;
         private Camera _mainCamera;
         private DistractorComponent _selectedDistractor;
+
+        private TimeSpan _trialStartTime;
         
 
 
@@ -153,6 +155,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
         public void StartTrial(int loadLevel)
         {
+            _trialStartTime = DateTime.Now.TimeOfDay;
             foreach (var distractor in _distractors)
             {
 
@@ -208,14 +211,30 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             return -1;
         }
 
-        public DistractorSelectionResult CheckInput()
+        public DistractorSelectionResult CheckInput(int trialCount, int repetitionsPerTrial, int currentTrial, int currentRepetition, TimeSpan reactionTime, int anchorPointIndex)
         {
+            var endTime = DateTime.Now.TimeOfDay;
+            var symbolOrder = GenerateSymbolOrder();
             if (!_selectedDistractor)
             {
-                return new DistractorSelectionResult(-1, _targetElementIndex);
+                return new DistractorSelectionResult(-1, _targetElementIndex, symbolOrder, _trialStartTime, reactionTime, trialCount, repetitionsPerTrial, currentTrial, currentRepetition, anchorPointIndex);
             }
 
-            return new DistractorSelectionResult(_selectedDistractor.distractorIndex, _targetElementIndex);
+            return new DistractorSelectionResult(_selectedDistractor.distractorIndex, _targetElementIndex, symbolOrder, _trialStartTime, reactionTime, trialCount, repetitionsPerTrial, currentTrial, currentRepetition, anchorPointIndex);
+        }
+
+        private string GenerateSymbolOrder()
+        {
+            var result = "";
+
+            foreach (var distractor in _distractors)
+            {
+                result += distractor.Text.text;
+                result += ",";
+            }
+
+            result += _peripheralDistractor.Text.text;
+            return result;
         }
 
         [Serializable]
@@ -223,11 +242,28 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         {
             public int selectedDistractor;
             public int targetDistractor;
+            public string symbolOrder;
+            public TimeSpan startTime;
+            public TimeSpan reactionTime;
+            public int trialCount;
+            public int repetitionsPerTrial;
+            public int currentTrial;
+            public int currentRepetition;
+            public int anchorPointIndex;
+            
 
-            public DistractorSelectionResult(int selectedDistractor, int targetDistractor)
+            public DistractorSelectionResult(int selectedDistractor, int targetDistractor, string symbolOrder, TimeSpan startTime, TimeSpan reactionTime, int trialCount, int repetitionsPerTrial, int currentTrial, int currentRepetition, int anchorPointIndex)
             {
                 this.selectedDistractor = selectedDistractor;
                 this.targetDistractor = targetDistractor;
+                this.symbolOrder = symbolOrder;
+                this.startTime = startTime;
+                this.reactionTime = reactionTime;
+                this.trialCount = trialCount;
+                this.repetitionsPerTrial = repetitionsPerTrial;
+                this.currentTrial = currentTrial;
+                this.currentRepetition = currentRepetition;
+                this.anchorPointIndex = anchorPointIndex;
             }
 
             public bool WasSuccessful()

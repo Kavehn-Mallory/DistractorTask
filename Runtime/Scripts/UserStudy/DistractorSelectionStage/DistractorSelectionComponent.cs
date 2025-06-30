@@ -56,8 +56,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             {
                 return;
             }
-
-            var result = distractorTaskComponent.CheckInput();
+            var currentRepetition = _conditionEnumerator.Current?.CurrentRepetition ?? -1;
+            var result = distractorTaskComponent.CheckInput(_conditionEnumerator.TrialCount, _conditionEnumerator.RepetitionsPerTrial, _conditionEnumerator.CurrentTrialIndex, currentRepetition, DateTime.Now.TimeOfDay, _conditionEnumerator.CurrentTrialIndex %
+                distractorAnchorPointAsset.Length);
             OnDistractorSelection.Invoke(result);
             _inputTask?.SetResult(1);
         }

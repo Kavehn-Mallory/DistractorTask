@@ -48,20 +48,6 @@ namespace DistractorTask.Transport
                 noiseLevel, trialCount, repetitionsPerTrial, hasAudioTask);
         }
 
-        public static Vector3 ReadVector3FromCSV(this string vectorRepresentation, char delimiter = ',')
-        {
-            var parts = vectorRepresentation.Split(delimiter);
-            return new Vector3(float.Parse(parts[0], CultureInfo.InvariantCulture),
-                float.Parse(parts[1], CultureInfo.InvariantCulture),
-                float.Parse(parts[2], CultureInfo.InvariantCulture));
-        }
 
-        public static Quaternion ReadQuaternionFromCSV(this string quaternionRepresentation, char delimiter = ',')
-        {
-            var parts = quaternionRepresentation.Split(delimiter);
-            return new Quaternion(float.Parse(parts[0], CultureInfo.InvariantCulture),
-                float.Parse(parts[1], CultureInfo.InvariantCulture),
-                float.Parse(parts[2], CultureInfo.InvariantCulture), float.Parse(parts[3], CultureInfo.InvariantCulture));
-        }
     }
 }

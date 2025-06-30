@@ -40,5 +40,8 @@ namespace DistractorTask.UserStudy
         public TrialsEnumerator Current => _trialsEnumerator;
 
         object IEnumerator.Current => Current;
+
+        public int TrialCount => _condition.trialCount;
+        public int RepetitionsPerTrial => _condition.repetitionsPerTrial;
     }
 }

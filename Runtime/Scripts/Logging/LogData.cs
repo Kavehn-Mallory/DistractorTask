@@ -40,6 +40,8 @@ namespace DistractorTask.Logging
         private Vector3 _rightEyePosition;
         private Quaternion _rightEyeRotation;
         private float _pupilDiameter;
+        private string _videoPath;
+        private string _audioPath;
         
         
         private static Dictionary<string, string> InitializeDictionary()
@@ -76,6 +78,8 @@ namespace DistractorTask.Logging
             csvData.Add(nameof(_rightEyePosition), "");
             csvData.Add(nameof(_rightEyeRotation), "");
             csvData.Add(nameof(_pupilDiameter), "");
+            csvData.Add(nameof(_videoPath), "");
+            csvData.Add(nameof(_audioPath), "");
             
             
             return csvData;
@@ -152,10 +156,14 @@ namespace DistractorTask.Logging
                     csvData[nameof(_cameraPosition)] = logData._cameraPosition.WriteVector3ToCSVString();
                     csvData[nameof(_cameraRotation)] = logData._cameraRotation.WriteQuaternionToCSVString();
                     break;
+                case LogCategory.VideoPlayerChange:
+                    csvData[nameof(_videoPath)] = logData._videoPath;
+                    csvData[nameof(_audioPath)] = logData._audioPath;
+                    break;
             }
             
             
-            return $"{csvData[nameof(_timeStamp)]};{csvData[nameof(_logCategory)]};{csvData[nameof(_userId)]};{csvData[nameof(_participantType)]};{csvData[nameof(_cameraPosition)]};{csvData[nameof(_cameraRotation)]};{csvData[nameof(_markerPointCount)]};{csvData[nameof(_distanceFromCamera)]};{csvData[nameof(_distanceToWall)]};{csvData[nameof(_hitPointWallPosition)]};{csvData[nameof(_hitPointWallNormal)]};{csvData[nameof(_anchorPointPosition)]};{csvData[nameof(_studyName)]};{csvData[nameof(_studyIndex)]};{csvData[nameof(_noiseLevel)]};{csvData[nameof(_loadLevel)]};{csvData[nameof(_trialCount)]};{csvData[nameof(_repetitionsPerTrial)]};{csvData[nameof(_audioTaskReactionTime)]};{csvData[nameof(_trialTargetIndex)]};{csvData[nameof(_trialSelectedIndex)]};{csvData[nameof(_trialSymbolOrder)]};{csvData[nameof(_anchorPointIndex)]};{csvData[nameof(_startTime)]};{csvData[nameof(_reactionTime)]};{csvData[nameof(_leftEyePosition)]};{csvData[nameof(_leftEyeRotation)]};{csvData[nameof(_rightEyePosition)]};{csvData[nameof(_rightEyeRotation)]};{csvData[nameof(_pupilDiameter)]}";
+            return $"{csvData[nameof(_timeStamp)]};{csvData[nameof(_logCategory)]};{csvData[nameof(_userId)]};{csvData[nameof(_participantType)]};{csvData[nameof(_cameraPosition)]};{csvData[nameof(_cameraRotation)]};{csvData[nameof(_markerPointCount)]};{csvData[nameof(_distanceFromCamera)]};{csvData[nameof(_distanceToWall)]};{csvData[nameof(_hitPointWallPosition)]};{csvData[nameof(_hitPointWallNormal)]};{csvData[nameof(_anchorPointPosition)]};{csvData[nameof(_studyName)]};{csvData[nameof(_studyIndex)]};{csvData[nameof(_noiseLevel)]};{csvData[nameof(_loadLevel)]};{csvData[nameof(_trialCount)]};{csvData[nameof(_repetitionsPerTrial)]};{csvData[nameof(_audioTaskReactionTime)]};{csvData[nameof(_trialTargetIndex)]};{csvData[nameof(_trialSelectedIndex)]};{csvData[nameof(_trialSymbolOrder)]};{csvData[nameof(_anchorPointIndex)]};{csvData[nameof(_startTime)]};{csvData[nameof(_reactionTime)]};{csvData[nameof(_leftEyePosition)]};{csvData[nameof(_leftEyeRotation)]};{csvData[nameof(_rightEyePosition)]};{csvData[nameof(_rightEyeRotation)]};{csvData[nameof(_pupilDiameter)]};{csvData[nameof(_videoPath)]};{csvData[nameof(_audioPath)]}";
         }
         
         
@@ -323,11 +331,23 @@ namespace DistractorTask.Logging
                 _cameraRotation = cameraRotation
             };
         }
+
+        public static LogData CreateVideoPlayerChangeLogData(string videoPath, string audioPath)
+        {
+            return new LogData
+            {
+                _timeStamp = DateTime.Now.TimeOfDay,
+                _logCategory = LogCategory.VideoPlayerChange,
+                _videoPath = videoPath,
+                _audioPath = audioPath
+            };
+        }
         
     }
     
     public enum LogCategory
     {
+        DefaultLogData,
         LogFileStart,
         MarkerPointBegin,
         MarkerPointConfirmed,
@@ -340,7 +360,8 @@ namespace DistractorTask.Logging
         AudioTaskConfirmation,
         EyeTracking,
         PupilData,
-        FrameCapture
+        FrameCapture,
+        VideoPlayerChange
 
     }
 }

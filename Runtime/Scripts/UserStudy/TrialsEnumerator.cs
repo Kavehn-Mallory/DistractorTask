@@ -26,6 +26,8 @@ namespace DistractorTask.UserStudy
             _currentTrial = -1;
         }
 
+        public int CurrentRepetition => _currentTrial;
+
         public object Current => _currentTrial;
     }
 

@@ -90,17 +90,7 @@ namespace DistractorTask.Transport
         }
         
         
-        public static string WriteVector3ToCSVString(this Vector3 vector, char delimiter = ',')
-        {
-            return
-                $"{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.x.ToString(CultureInfo.InvariantCulture)}";
-        }
 
-        public static string WriteQuaternionToCSVString(this Quaternion quaternion, char delimiter = ',')
-        {
-            return
-                $"{quaternion.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{quaternion.y.ToString(CultureInfo.InvariantCulture)}{delimiter}{quaternion.z.ToString(CultureInfo.InvariantCulture)}{delimiter}{quaternion.w.ToString(CultureInfo.InvariantCulture)}";
-        }
         
         
         

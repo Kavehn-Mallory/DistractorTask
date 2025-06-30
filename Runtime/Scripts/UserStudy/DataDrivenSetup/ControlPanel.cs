@@ -28,7 +28,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private MarkerPointEnumerator _markerPointEnumerator;
 
         private StudyConditionsEnumerator _enumerator;
-        public Action<string> OnStudyPhaseStart = delegate { };
+        public Action<string, int> OnStudyPhaseStart = delegate { };
         public Action<string> OnStudyPhaseEnd = delegate { };
         public Action OnStudyCompleted = delegate { };
         public Action<LogCategoryOld, string> OnStudyLog = delegate { };
@@ -55,7 +55,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         public async void StartMarkerPointCreation()
         {
-            OnStudyPhaseStart.Invoke(MarkerPointPhaseName);
+            OnStudyPhaseStart.Invoke(MarkerPointPhaseName, 0);
             _markerPointEnumerator?.Dispose();
             _markerPointEnumerator = new MarkerPointEnumerator(markerPointCount);
             NetworkManager.Instance.MulticastMessage(new MarkerPointCountData
@@ -131,7 +131,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 OnStudyCompleted.Invoke();
                 return;
             }
-            OnStudyPhaseStart.Invoke($"{StudyPhaseName}: {_studyEnumerator.CurrentStudyIndex} Starting Condition: {TransformCurrentConditionToLetter(startingCondition)}");
+            OnStudyPhaseStart.Invoke($"{StudyPhaseName}", _studyEnumerator.CurrentStudyIndex);
             _enumerator = new StudyConditionsEnumerator(_studyEnumerator.Current, startingCondition);
 
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(

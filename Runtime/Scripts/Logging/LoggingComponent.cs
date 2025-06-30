@@ -1,4 +1,5 @@
-﻿using DistractorTask.Core;
+﻿using System;
+using DistractorTask.Core;
 using DistractorTask.Logging.Components;
 using DistractorTask.Settings;
 using DistractorTask.Transport;
@@ -12,7 +13,7 @@ using Random = UnityEngine.Random;
 
 namespace DistractorTask.Logging
 {
-    public class LoggingComponent : MonoBehaviour
+    public class LoggingComponent : Singleton<LoggingComponent>
     {
 
         [SerializeField]
@@ -27,6 +28,8 @@ namespace DistractorTask.Logging
         private string userId;
 
         private const int IdLength = 8;
+
+        private StudyLog _studyLog;
 
 
         [ContextMenu("Generate new UserId")]
@@ -53,16 +56,16 @@ namespace DistractorTask.Logging
         }
 
 
-        private void Start()
+        public void StartLogging()
         {
-            if (DistractorTaskSettingsAsset.Instance && DistractorTaskSettingsAsset.Instance.generateUserId && userId == string.Empty)
+            if (isServer && userId == string.Empty)
             {
                 GenerateNewId();
             }
             
             if (isServer)
             {
-                StudyLog.UserId = userId;
+                _studyLog = new StudyLog(userId);
                 NetworkManager.Instance.StartListening(NetworkExtensions.LoggingPort, OnConnectionStateChanged);
                 NetworkManager.Instance.RegisterCallback<LogFileData>(OnLogFileDataReceived, NetworkExtensions.LoggingPort);
 
@@ -76,11 +79,6 @@ namespace DistractorTask.Logging
                     portListener.OnDataReceived += OnIpDataReceived;
                 }
             }
-            StudyLog.RegisterLog<MarkerPointCountData>();
-            StudyLog.RegisterLog<StudyConditionVideoInfoData>();
-            StudyLog.RegisterLog<LogfileDataOld>();
-            
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.Default, "LogFile Start");
             
             RegisterStudyComponentEvents();
         }
@@ -102,7 +100,7 @@ namespace DistractorTask.Logging
 
         private void OnDisable()
         {
-            StudyLog.DisposeLogSystem();
+            _studyLog?.Dispose();
         }
 
 
@@ -137,17 +135,19 @@ namespace DistractorTask.Logging
 
         private static void OnVideoClipReset()
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.VideoPlayer, $"Video Clip Reset");
+            throw new NotImplementedException();
         }
 
-        private static void OnVideoClipSelected(string videoClipName, string audioClipName)
+        private void OnVideoClipSelected(string videoClipName, string audioClipName)
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.VideoPlayer, $"New Video Clip selected: {videoClipName} with audio {audioClipName}");
+            WriteLogData(LogData.CreateVideoPlayerChangeLogData(videoClipName, audioClipName));
         }
 
         private static void OnDistractorSelected(DistractorTaskComponent.DistractorSelectionResult result)
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.UserStudy, GenerateDistractorSelectionResponse(result));
+            WriteLogData(LogData.CreateTrialConfirmationLogData(result.targetDistractor, result.selectedDistractor,
+                result.symbolOrder, result.startTime, result.reactionTime, result.currentTrial,
+                result.currentRepetition, result.anchorPointIndex));
         }
 
         private static string GenerateDistractorSelectionResponse(DistractorTaskComponent.DistractorSelectionResult result)
@@ -166,27 +166,28 @@ namespace DistractorTask.Logging
 
         private void OnStudyCompleted()
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.UserStudy, $"Study was completed for user {userId}");
+            throw new NotImplementedException();
         }
 
         private void OnStudyLog(Transport.DataContainer.LogCategoryOld studyCategoryOld, string message)
         {
-            StudyLog.LogCustomKeyframe(studyCategoryOld, message);
+            throw new NotImplementedException();
         }
 
         private void OnStudyPhaseEnd(string studyPhaseName)
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.UserStudy, $"Ending {studyPhaseName}");
+            WriteLogData(LogData.CreateStudyEndLogData());
         }
 
         private static void OnNextIteration(string studyStage, int markerPointIndex, int markerPointCount)
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.UserStudy, $"Starting {studyStage} {markerPointIndex} of {markerPointCount}");
+            throw new NotImplementedException();
         }
 
-        private static void OnStudyPhaseStart(string studyPhaseName)
+        private static void OnStudyPhaseStart(string studyPhaseName, int studyIndex)
         {
-            StudyLog.LogCustomKeyframe(Transport.DataContainer.LogCategoryOld.UserStudy, $"Starting {studyPhaseName}");
+            var logData = LogData.CreateStudyBeginLogData(studyPhaseName, studyIndex);
+            throw new NotImplementedException();
         }
 
         private void OnIpDataReceived(IpAddressData ipAddressData)
@@ -208,6 +209,19 @@ namespace DistractorTask.Logging
                 return;
             }
             Debug.Log("Something went wrong");
+        }
+
+        private static void WriteLogData(LogData logData)
+        {
+            if (Instance.isServer)
+            {
+                Instance._studyLog.WriteLogData(logData);
+                return;
+            }
+
+            var logFileData = new LogFileData(logData);
+
+            NetworkManager.Instance.MulticastMessage(logFileData, NetworkExtensions.LoggingPort, Instance.GetInstanceID());
         }
         
     }
