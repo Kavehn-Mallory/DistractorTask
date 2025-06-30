@@ -6,6 +6,7 @@ using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.Transport.DataContainer.GenericClasses;
 using DistractorTask.UserStudy.MarkerPointStage;
+using TMPro;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -23,8 +24,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         [SerializeField]
         private int markerPointCount = 6;
         
-        [SerializeField, Tooltip("Determines the type of participant / order of conditions for the given study")]
-        private int startingCondition;
+        [SerializeField]
+        private TMP_Dropdown participantDropdown;
 
         private MarkerPointEnumerator _markerPointEnumerator;
 
@@ -133,6 +134,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 OnStudyCompleted.Invoke();
                 return;
             }
+
+            var startingCondition = participantDropdown.value;
             OnStudyPhaseStart.Invoke($"{StudyPhaseName}", _studyEnumerator.CurrentStudyIndex);
             _enumerator = new StudyConditionsEnumerator(_studyEnumerator.Current, startingCondition);
             
