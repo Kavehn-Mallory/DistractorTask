@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using DistractorTask.Transport;
 using DistractorTask.UserStudy.Core;
-using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using UnityEngine;
 
 namespace DistractorTask.Logging
 {
     public class LogData
     {
-        private TimeSpan _timeStamp;
+        private long _timeStamp;
         private LogCategory _logCategory;
         private string _userId;
         private string _participantType;
@@ -33,16 +31,27 @@ namespace DistractorTask.Logging
         private int _trialSelectedIndex;
         private string _trialSymbolOrder;
         private int _anchorPointIndex;
-        private TimeSpan _startTime;
-        private TimeSpan _reactionTime;
+        private long _startTime;
+        private long _reactionTime;
         private Vector3 _leftEyePosition;
-        private Quaternion _leftEyeRotation;
         private Vector3 _rightEyePosition;
-        private Quaternion _rightEyeRotation;
-        private float _pupilDiameter;
+        private Vector2 _eyeDimensions;
+        private Vector2 _pupilDiameter;
         private string _videoPath;
         private string _audioPath;
+        private Vector3 _acceleration;
+        private Vector3 _angularVelocity;
+        private Vector3 _linearAcceleration;
+        private Quaternion _attitude;
+        private float _lux;
         
+        //Acceleration,AngularVelocity,LinearAcceleration,Attitude,Lux
+
+
+        public static long GetCurrentTimestamp()
+        {
+            return DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc).Ticks;
+        }
         
         private static Dictionary<string, string> InitializeDictionary()
         {
@@ -74,12 +83,16 @@ namespace DistractorTask.Logging
             csvData.Add(nameof(_startTime), "");
             csvData.Add(nameof(_reactionTime), "");
             csvData.Add(nameof(_leftEyePosition), "");
-            csvData.Add(nameof(_leftEyeRotation), "");
             csvData.Add(nameof(_rightEyePosition), "");
-            csvData.Add(nameof(_rightEyeRotation), "");
+            csvData.Add(nameof(_eyeDimensions), "");
             csvData.Add(nameof(_pupilDiameter), "");
             csvData.Add(nameof(_videoPath), "");
             csvData.Add(nameof(_audioPath), "");
+            csvData.Add(nameof(_acceleration), "");
+            csvData.Add(nameof(_angularVelocity), "");
+            csvData.Add(nameof(_linearAcceleration), "");
+            csvData.Add(nameof(_attitude), "");
+            csvData.Add(nameof(_lux), "");
             
             
             return csvData;
@@ -92,7 +105,7 @@ namespace DistractorTask.Logging
         {
             var csvData = InitializeDictionary();
 
-            csvData[nameof(_timeStamp)] = $"{logData._timeStamp:c}";
+            csvData[nameof(_timeStamp)] = $"{logData._timeStamp.ToString()}";
             csvData[nameof(_logCategory)] = logData._logCategory.ToString();
             
             
@@ -130,8 +143,8 @@ namespace DistractorTask.Logging
                     csvData[nameof(_trialTargetIndex)] = logData._trialTargetIndex.ToString();
                     csvData[nameof(_trialSelectedIndex)] = logData._trialSelectedIndex.ToString();
                     csvData[nameof(_trialSymbolOrder)] = logData._trialSymbolOrder.ToString();
-                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString("c");
-                    csvData[nameof(_reactionTime)] = logData._reactionTime.ToString("c");
+                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString(CultureInfo.InvariantCulture);
+                    csvData[nameof(_reactionTime)] = logData._reactionTime.ToString(CultureInfo.InvariantCulture);
                     csvData[nameof(_trialCount)] = logData._trialCount.ToString();
                     csvData[nameof(_repetitionsPerTrial)] = logData._repetitionsPerTrial.ToString();
                     csvData[nameof(_anchorPointIndex)] = logData._anchorPointIndex.ToString();
@@ -144,12 +157,9 @@ namespace DistractorTask.Logging
                     csvData[nameof(_cameraPosition)] = logData._cameraPosition.WriteVector3ToCSVString();
                     csvData[nameof(_cameraRotation)] = logData._cameraRotation.WriteQuaternionToCSVString();
                     csvData[nameof(_leftEyePosition)] = logData._leftEyePosition.WriteVector3ToCSVString();
-                    csvData[nameof(_leftEyeRotation)] = logData._leftEyeRotation.WriteQuaternionToCSVString();
                     csvData[nameof(_rightEyePosition)] = logData._rightEyePosition.WriteVector3ToCSVString();
-                    csvData[nameof(_rightEyeRotation)] = logData._rightEyeRotation.WriteQuaternionToCSVString();
-                    break;
-                case LogCategory.PupilData:
-                    csvData[nameof(_pupilDiameter)] = logData._pupilDiameter.ToString(CultureInfo.InvariantCulture);
+                    csvData[nameof(_eyeDimensions)] = logData._eyeDimensions.WriteVector2ToCSVString();
+                    csvData[nameof(_pupilDiameter)] = logData._pupilDiameter.WriteVector2ToCSVString();
                     break;
                 case LogCategory.FrameCapture:
                     csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString("c");
@@ -160,10 +170,19 @@ namespace DistractorTask.Logging
                     csvData[nameof(_videoPath)] = logData._videoPath;
                     csvData[nameof(_audioPath)] = logData._audioPath;
                     break;
+                case LogCategory.GyroValues:
+                    csvData[nameof(_acceleration)] = logData._acceleration.WriteVector3ToCSVString();
+                    csvData[nameof(_angularVelocity)] = logData._angularVelocity.WriteVector3ToCSVString();
+                    csvData[nameof(_linearAcceleration)] = logData._linearAcceleration.WriteVector3ToCSVString();
+                    csvData[nameof(_attitude)] = logData._attitude.WriteQuaternionToCSVString();
+                    break;
+                case LogCategory.Lux:
+                    csvData[nameof(_lux)] = logData._lux.ToString(CultureInfo.InvariantCulture);
+                    break;
             }
             
             
-            return $"{csvData[nameof(_timeStamp)]};{csvData[nameof(_logCategory)]};{csvData[nameof(_userId)]};{csvData[nameof(_participantType)]};{csvData[nameof(_cameraPosition)]};{csvData[nameof(_cameraRotation)]};{csvData[nameof(_markerPointCount)]};{csvData[nameof(_distanceFromCamera)]};{csvData[nameof(_distanceToWall)]};{csvData[nameof(_hitPointWallPosition)]};{csvData[nameof(_hitPointWallNormal)]};{csvData[nameof(_anchorPointPosition)]};{csvData[nameof(_studyName)]};{csvData[nameof(_studyIndex)]};{csvData[nameof(_noiseLevel)]};{csvData[nameof(_loadLevel)]};{csvData[nameof(_trialCount)]};{csvData[nameof(_repetitionsPerTrial)]};{csvData[nameof(_audioTaskReactionTime)]};{csvData[nameof(_trialTargetIndex)]};{csvData[nameof(_trialSelectedIndex)]};{csvData[nameof(_trialSymbolOrder)]};{csvData[nameof(_anchorPointIndex)]};{csvData[nameof(_startTime)]};{csvData[nameof(_reactionTime)]};{csvData[nameof(_leftEyePosition)]};{csvData[nameof(_leftEyeRotation)]};{csvData[nameof(_rightEyePosition)]};{csvData[nameof(_rightEyeRotation)]};{csvData[nameof(_pupilDiameter)]};{csvData[nameof(_videoPath)]};{csvData[nameof(_audioPath)]}";
+            return $"{csvData[nameof(_timeStamp)]};{csvData[nameof(_logCategory)]};{csvData[nameof(_userId)]};{csvData[nameof(_participantType)]};{csvData[nameof(_cameraPosition)]};{csvData[nameof(_cameraRotation)]};{csvData[nameof(_markerPointCount)]};{csvData[nameof(_distanceFromCamera)]};{csvData[nameof(_distanceToWall)]};{csvData[nameof(_hitPointWallPosition)]};{csvData[nameof(_hitPointWallNormal)]};{csvData[nameof(_anchorPointPosition)]};{csvData[nameof(_studyName)]};{csvData[nameof(_studyIndex)]};{csvData[nameof(_noiseLevel)]};{csvData[nameof(_loadLevel)]};{csvData[nameof(_trialCount)]};{csvData[nameof(_repetitionsPerTrial)]};{csvData[nameof(_audioTaskReactionTime)]};{csvData[nameof(_trialTargetIndex)]};{csvData[nameof(_trialSelectedIndex)]};{csvData[nameof(_trialSymbolOrder)]};{csvData[nameof(_anchorPointIndex)]};{csvData[nameof(_startTime)]};{csvData[nameof(_reactionTime)]};{csvData[nameof(_leftEyePosition)]};{csvData[nameof(_rightEyePosition)]};{csvData[nameof(_eyeDimensions)]};{csvData[nameof(_pupilDiameter)]};{csvData[nameof(_videoPath)]};{csvData[nameof(_audioPath)]};{csvData[nameof(_acceleration)]};{csvData[nameof(_angularVelocity)]};{csvData[nameof(_linearAcceleration)]};{csvData[nameof(_attitude)]};{csvData[nameof(_lux)]}";
         }
         
         
@@ -172,7 +191,7 @@ namespace DistractorTask.Logging
         {
             var result = new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.LogFileStart,
                 _userId = userId,
                 
@@ -185,7 +204,7 @@ namespace DistractorTask.Logging
         {
             var result = new LogData()
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.MarkerPointBegin,
                 _markerPointCount = markerPointCount
             };
@@ -198,7 +217,7 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.MarkerPointConfirmed,
                 _cameraPosition = cameraPosition,
                 _cameraRotation = cameraRotation,
@@ -215,7 +234,7 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.MarkerPointEnd
             };
         }
@@ -224,7 +243,7 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.StudyBegin,
                 _studyName = studyName,
                 _studyIndex = studyIndex,
@@ -236,7 +255,7 @@ namespace DistractorTask.Logging
         {
             var result = new LogData()
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.MarkerPointBegin,
                 _markerPointCount = activeMarkerPointIndex
             };
@@ -248,7 +267,7 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.TrialBegin,
                 _noiseLevel = noiseLevel,
                 _loadLevel = loadLevel,
@@ -259,12 +278,12 @@ namespace DistractorTask.Logging
         }
 
         public static LogData CreateTrialConfirmationLogData(int trialTargetIndex, int trialSelectedIndex,
-            string trialSymbolOrder, TimeSpan startTime, TimeSpan reactionTime, int currentTrial, int currentRepetition,
+            string trialSymbolOrder, long startTime, long reactionTime, int currentTrial, int currentRepetition,
             int anchorPointIndex)
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.TrialConfirmation,
                 _trialTargetIndex = trialTargetIndex,
                 _trialSelectedIndex = trialSelectedIndex,
@@ -281,7 +300,7 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.TrialEnd
             };
         }
@@ -290,53 +309,44 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.StudyEnd
             };
         }
 
-        public static LogData CreateAudioTaskConfirmationLogData(TimeSpan startTime, TimeSpan reactionTime)
+        public static LogData CreateAudioTaskConfirmationLogData(long startTime, long reactionTime)
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.AudioTaskConfirmation,
                 _startTime = startTime,
                 _reactionTime = reactionTime
             };
         }
-
-        public static LogData CreateEyeTrackingLogData(Vector3 cameraPosition, Quaternion cameraRotation,
-            Vector3 leftEyePosition, Quaternion leftEyeRotation, Vector3 rightEyePosition, Quaternion rightEyeRotation)
+        
+        
+        public static LogData CreateEyeTrackingLogData(Vector3 cameraPosition, Quaternion cameraRotation, Vector3 leftEyePosition, Vector3 rightEyePosition, Vector2 eyeDimensions, Vector2 pupilDiameter)
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.EyeTracking,
                 _cameraPosition = cameraPosition,
                 _cameraRotation = cameraRotation,
                 _leftEyePosition = leftEyePosition,
-                _leftEyeRotation = leftEyeRotation,
                 _rightEyePosition = rightEyePosition,
-                _rightEyeRotation = rightEyeRotation
-            };
-        }
-
-        public static LogData CreatePupilDataLogData(float pupilDiameter)
-        {
-            return new LogData
-            {
-                _timeStamp = DateTime.Now.TimeOfDay,
-                _logCategory = LogCategory.PupilData,
+                _eyeDimensions = eyeDimensions,
                 _pupilDiameter = pupilDiameter
             };
         }
+        
 
-        public static LogData CreateFrameCaptureLogData(TimeSpan startTime, Vector3 cameraPosition, Quaternion cameraRotation)
+        public static LogData CreateFrameCaptureLogData(long startTime, Vector3 cameraPosition, Quaternion cameraRotation)
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.FrameCapture,
                 _startTime = startTime,
                 _cameraPosition = cameraPosition,
@@ -348,12 +358,37 @@ namespace DistractorTask.Logging
         {
             return new LogData
             {
-                _timeStamp = DateTime.Now.TimeOfDay,
+                _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.VideoPlayerChange,
                 _videoPath = videoPath,
                 _audioPath = audioPath
             };
         }
+
+        public static LogData CreateGyroValuesLogData(Vector3 acceleration, Vector3 angularVelocity,
+            Vector3 linearAcceleration, Quaternion attitude)
+        {
+            return new LogData
+            {
+                _timeStamp = GetCurrentTimestamp(),
+                _logCategory = LogCategory.GyroValues,
+                _acceleration = acceleration,
+                _angularVelocity = angularVelocity,
+                _linearAcceleration = linearAcceleration,
+                _attitude = attitude
+            };
+        }
+
+        public static LogData CreateLuxLogData(float luxValue)
+        {
+            return new LogData
+            {
+                _timeStamp = GetCurrentTimestamp(),
+                _logCategory = LogCategory.Lux,
+                _lux = luxValue
+            };
+        }
+
         
     }
     
@@ -371,9 +406,9 @@ namespace DistractorTask.Logging
         StudyEnd,
         AudioTaskConfirmation,
         EyeTracking,
-        PupilData,
         FrameCapture,
-        VideoPlayerChange
-
+        VideoPlayerChange,
+        GyroValues,
+        Lux
     }
 }

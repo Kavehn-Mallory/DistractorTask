@@ -50,7 +50,11 @@ namespace DistractorTask.Transport
             {
                 Dispose();
             }
-            Driver = NetworkDriver.Create();
+
+            var networkSettings = new NetworkSettings();
+            //this enables heartbeat messages -> sent when nothing is received from a peer for some time -> has to be smaller than the reconnection timeout
+            networkSettings.WithNetworkConfigParameters(1000, 60, 30000, 10000, 20000);
+            Driver = NetworkDriver.Create(networkSettings);
             Pipeline = PipelineCreation.CreatePipeline(ref Driver);
             Connections = new NativeList<NetworkConnection>(numberOfConnections, Allocator.Persistent);
             OnConnectionStateChanged = onConnectionStateChanged;

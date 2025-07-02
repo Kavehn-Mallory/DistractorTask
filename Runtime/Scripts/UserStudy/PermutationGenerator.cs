@@ -26,6 +26,7 @@ namespace DistractorTask.UserStudy
             {
                 for (int noiseLevel = 0; noiseLevel < noiseLevelCount; noiseLevel++)
                 {
+                    //todo check that this actually works 
                     var index = (loadLevel * noiseLevelCount + noiseLevel + (permutations - startCondition)) % permutations;
                     result[index] = new ConditionPermutation
                     {

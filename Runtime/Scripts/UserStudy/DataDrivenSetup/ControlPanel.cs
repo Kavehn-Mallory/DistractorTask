@@ -33,7 +33,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         public Action<string, int> OnStudyPhaseStart = delegate { };
         public Action<string> OnStudyPhaseEnd = delegate { };
         public Action OnStudyCompleted = delegate { };
-        public Action<LogCategoryOld, string> OnStudyLog = delegate { };
         
         /// <summary>
         /// Triggers on each iteration. String represents the name of the study stage, first int is the current index, second int is the iteration count
@@ -104,7 +103,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.LogError("Marker Point Setup hasn't been started yet.");
                 return;
             }
-            OnStudyLog.Invoke(LogCategoryOld.UserStudy, "Regenerating Marker Points");
             _markerPointEnumerator.Reset();
         }
 
@@ -115,7 +113,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 Debug.LogError("Marker Point Setup hasn't been started yet.");
                 return;
             }
-            OnStudyLog.Invoke(LogCategoryOld.UserStudy, $"Repeating Marker Point {_markerPointEnumerator.Current}");
             _markerPointEnumerator.MovePrevious();
             
         }
@@ -147,8 +144,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             while (_enumerator.MoveNext())
             {
                 var studyCondition = _enumerator.Current;
+                Debug.Log($"Study condition {_enumerator.CurrentPermutationIndex} out of {_enumerator.PermutationCount}");
                 OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
-                OnStudyLog.Invoke(LogCategoryOld.UserStudy, $"Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 
                 
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
@@ -160,7 +157,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                             studyCondition = studyCondition
                         }, NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
                         _enumerator.CurrentPermutationIndex);
-                
+                Debug.Log("Video clip was selected. Sending data to HMD");
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<ConditionData, OnConditionCompleted>(
                         new ConditionData

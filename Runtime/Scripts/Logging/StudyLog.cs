@@ -2,10 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using DistractorTask.Core;
-using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
-using Unity.Networking.Transport;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,13 +10,9 @@ namespace DistractorTask.Logging
 {
     public class StudyLog : IDisposable, IAsyncDisposable
     {
-        private const string LogFileHeadings = "Time,Timestamp,Category,UserId,ParticipantType,CameraPosition,CameraRotation,MarkerPointCount,DistanceFromCamera,DistanceToWall,HitPointWallPosition,HitPointWallNormal,AnchorPointPosition,StudyName,StudyIndex,NoiseLevel,LoadLevel,TrialCount,RepetitionsPerTrial,AudioTaskReactionTime,TrialTargetIndex,TrialSymbolOrder,AnchorPointIndex,StartTime,ReactionTime,LeftEyePosition,LeftEyeRotation,RightEyePosition,RightEyeRotation,PupilDiameter,VideoPath,AudioPath";
+        private const string LogFileHeadings = "Time,Timestamp,Category,UserId,ParticipantType,CameraPosition,CameraRotation,MarkerPointCount,DistanceFromCamera,DistanceToWall,HitPointWallPosition,HitPointWallNormal,AnchorPointPosition,StudyName,StudyIndex,NoiseLevel,LoadLevel,TrialCount,RepetitionsPerTrial,AudioTaskReactionTime,TrialTargetIndex,TrialSelectedIndex,TrialSymbolOrder,AnchorPointIndex,StartTime,ReactionTime,LeftEyePosition,RightEyePosition,EyeDimensions,PupilDiameter,VideoPath,AudioPath,Acceleration,AngularVelocity,LinearAcceleration,Attitude,Lux";
         
         private readonly string _startTime;
-
-        
-
-        
 
         private string _userId;
         
@@ -77,7 +70,7 @@ namespace DistractorTask.Logging
         public void WriteReceivedLogData(LogFileData logFileData)
         {
             _streamWriter.WriteLine(
-                $"{DateTime.Now.TimeOfDay:c}{logFileData.Value}");
+                $"{DateTime.Now.TimeOfDay:c}{LoggingExtensions.Delimiter}{logFileData.Value}");
         }
     }
 }

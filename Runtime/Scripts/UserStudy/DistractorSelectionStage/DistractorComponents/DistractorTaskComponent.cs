@@ -1,5 +1,6 @@
 using System;
 using DistractorTask.Core;
+using DistractorTask.Logging;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -30,8 +31,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         [SerializeField] private DistractorShapeGroup[] distractorShapes;
         [Tooltip("Set to true if the target should never be the same target in two consecutiveTrials")]
         [SerializeField] private bool changeTargetAfterEveryTrial;
-        
-    
+
+        [SerializeField]
+        private float maxDistanceOffsetBeforeResizing = 0.2f;
         
 
         private string[][] _distractorShapes;
@@ -42,7 +44,10 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         private Camera _mainCamera;
         private DistractorComponent _selectedDistractor;
 
-        private TimeSpan _trialStartTime;
+        private long _trialStartTime;
+
+        private float _lastSquaredDistance;
+        
         
 
 
@@ -88,6 +93,27 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             //StartNextTrial();
         }
 
+        private void Update()
+        {
+            if (canvas.enabled && ResizeRequired())
+            {
+                RepositionCanvas(canvas.transform.position);
+            }
+        }
+
+        private bool ResizeRequired()
+        {
+            var squaredDistance = math.distancesq(_mainCamera.transform.position, canvas.transform.position);
+
+            if (math.distance(squaredDistance, _lastSquaredDistance) > maxDistanceOffsetBeforeResizing)
+            {
+                _lastSquaredDistance = squaredDistance;
+                return true;
+            }
+
+            return false;
+        }
+
         public void IncreaseDistance()
         {
             var currentPosition = canvas.transform.position;
@@ -109,6 +135,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
             //todo normalize the vector and place along the ray 
             var distanceFromCamera = math.distance(position, _mainCamera.transform.position);
+            _lastSquaredDistance = distanceFromCamera * distanceFromCamera;
             var targetOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorAngleFromCenter);
             var targetSize = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorViewAngle);
             var peripheralOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, peripheralDistractorAngleFromCenter);
@@ -155,7 +182,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
         public void StartTrial(int loadLevel)
         {
-            _trialStartTime = DateTime.Now.TimeOfDay;
+            _trialStartTime = LogData.GetCurrentTimestamp();
             foreach (var distractor in _distractors)
             {
 
@@ -186,6 +213,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             _selectedDistractor = args.uiObject?.GetComponent<DistractorComponent>();
         }
 
+        public void OnHoverEnter(DistractorComponent distractorComponent)
+        {
+            _selectedDistractor = distractorComponent;
+        }
+        
+
         public void OnHoverExit()
         {
             _selectedDistractor = null;
@@ -213,7 +246,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
         public DistractorSelectionResult CheckInput()
         {
-            var endTime = DateTime.Now.TimeOfDay;
             var symbolOrder = GenerateSymbolOrder();
             if (!_selectedDistractor)
             {
@@ -243,9 +275,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             public int selectedDistractor;
             public int targetDistractor;
             public string symbolOrder;
-            public TimeSpan startTime;
+            public long startTime;
 
-            public DistractorSelectionResult(int selectedDistractor, int targetDistractor, string symbolOrder, TimeSpan startTime)
+            public DistractorSelectionResult(int selectedDistractor, int targetDistractor, string symbolOrder, long startTime)
             {
                 this.selectedDistractor = selectedDistractor;
                 this.targetDistractor = targetDistractor;

@@ -30,7 +30,13 @@ namespace DistractorTask.Logging
         public static string WriteVector3ToCSVString(this Vector3 vector, char delimiter = ',')
         {
             return
-                $"{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.x.ToString(CultureInfo.InvariantCulture)}";
+                $"{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.y.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.z.ToString(CultureInfo.InvariantCulture)}";
+        }
+        
+        public static string WriteVector2ToCSVString(this Vector2 vector, char delimiter = ',')
+        {
+            return
+                $"{vector.x.ToString(CultureInfo.InvariantCulture)}{delimiter}{vector.y.ToString(CultureInfo.InvariantCulture)}";
         }
 
         public static string WriteQuaternionToCSVString(this Quaternion quaternion, char delimiter = ',')

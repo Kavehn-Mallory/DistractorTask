@@ -31,9 +31,8 @@ namespace DistractorTask.UserStudy.AudioTask
         private CancellationTokenSource _cancellationTokenSource;
 
         private bool _taskIsActive;
-
-        private float _timestampLastAudioTask = -1;
-        private TimeSpan _audioTaskStart;
+        
+        private long _timestampLastAudioTask = -1;
         
 
 
@@ -65,8 +64,7 @@ namespace DistractorTask.UserStudy.AudioTask
                 }
 
                 _taskIsActive = true;
-                _timestampLastAudioTask = Time.time;
-                _audioTaskStart = DateTime.Now.TimeOfDay;
+                _timestampLastAudioTask = LogData.GetCurrentTimestamp();
                 PlayAudioTask();
                 //we wait a bit longer than the acceptable time frame to make sure that the result without button press is invalid
                 var audioTask = Task.Delay((int)(maxReactionTime * 1000 + 20), _cancellationTokenSource.Token);
@@ -74,7 +72,7 @@ namespace DistractorTask.UserStudy.AudioTask
                 if (_taskIsActive)
                 {
                     //we did not get it
-                    LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_audioTaskStart, DateTime.Now.TimeOfDay));
+                    LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_timestampLastAudioTask, LogData.GetCurrentTimestamp()));
                 }
                 _taskIsActive = false;
             }
@@ -88,8 +86,10 @@ namespace DistractorTask.UserStudy.AudioTask
                 return;
             }
 
-            LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_audioTaskStart, DateTime.Now.TimeOfDay));
-            if (Time.time - _timestampLastAudioTask <= maxReactionTime)
+            var dif = (new TimeSpan(LogData.GetCurrentTimestamp()) - new TimeSpan(_timestampLastAudioTask)).TotalSeconds;
+            LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_timestampLastAudioTask, LogData.GetCurrentTimestamp()));
+            
+            if (dif <= maxReactionTime)
             {
                 //success 
                 debugObject.AddDebugText("Audio Task Success");
@@ -113,6 +113,7 @@ namespace DistractorTask.UserStudy.AudioTask
         
         private void PlayAudioTask()
         {
+            audioClipTarget.enabled = true;
             var positionOffset = Random.onUnitSphere * Random.Range(distanceOfAudioSource.x, distanceOfAudioSource.y);
             
             audioClipTarget.transform.SetPositionAndRotation(_mainCameraTransform.position + positionOffset, Quaternion.identity);

@@ -1,12 +1,8 @@
-﻿using System;
-using DistractorTask.Core;
-using DistractorTask.Logging.Components;
-using DistractorTask.Settings;
+﻿using DistractorTask.Core;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.DataDrivenSetup;
 using DistractorTask.UserStudy.DistractorSelectionStage;
-using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using DistractorTask.VideoPlayer;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -31,20 +27,22 @@ namespace DistractorTask.Logging
 
         private StudyLog _studyLog;
         
-
-        [ContextMenu("Generate new UserId")]
-        private void GenerateNewId()
+        
+        public void GenerateNewId()
         {
             userId = GenerateUserId();
         }
         
         [ContextMenu("Clear UserId")]
-        private void ClearUserId()
+        public void ClearUserId()
         {
             userId = "";
         }
 
-        private string GenerateUserId()
+        public string UserId => userId;
+
+
+        private static string GenerateUserId()
         {
             string characters = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
             string generatedString = "";
@@ -54,6 +52,7 @@ namespace DistractorTask.Logging
 
             return generatedString;
         }
+        
 
 
         private void Start()

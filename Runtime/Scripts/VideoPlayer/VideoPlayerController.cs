@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using DistractorTask.Core;
 using DistractorTask.Logging;
@@ -48,10 +49,10 @@ namespace DistractorTask.VideoPlayer
 
         }
 
-        private static async Task<AudioClip> LoadClip(string path)
+        private static async Task<AudioClip> LoadClip(string path, AudioType audioType)
         {
             AudioClip clip = null;
-            using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV))
+            using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, audioType))
             {
                 uwr.SendWebRequest();
 
@@ -87,7 +88,10 @@ namespace DistractorTask.VideoPlayer
                 var path = Application.streamingAssetsPath + "/" + videoClipGroup.relativePath;
                 if(!Directory.Exists(path))
                 {
-                    Debug.LogWarning($"Path {path} does not exist. Video clip group {i} will be ignored.");
+                    videoClipGroup.videoClips = Array.Empty<string>();
+                    videoClipGroup.audioClips = Array.Empty<AudioClip>();
+                    videoClipGroups[i] = videoClipGroup;
+                    Debug.LogWarning($"Path {path} does not exist. Video clip group {i} will be empty.");
                     continue;
                 }
 
@@ -104,7 +108,13 @@ namespace DistractorTask.VideoPlayer
                     }
                     if (file.EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        audioClips.Add(await LoadClip(file));
+                        audioClips.Add(await LoadClip(file, AudioType.WAV));
+                        continue;
+                    }
+
+                    if (file.EndsWith(".mp3", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        audioClips.Add(await LoadClip(file, AudioType.MPEG));
                         continue;
                     }
                     videoClips.Add(file);
@@ -160,28 +170,42 @@ namespace DistractorTask.VideoPlayer
             }
             var noiseLevel = studyConditionVideoInfo.studyCondition.noiseLevel;
             
-
+            
             foreach (var videoClipGroup in videoClipGroups)
             {
                 if ((videoClipGroup.noiseLevel & noiseLevel) == noiseLevel)
                 {
+                    var videoLink = "";
+                    AudioClip audioClip = null;
+                    if (videoClipGroup.videoClips.Length != 0)
+                    {
+                        videoClipGroup.videoClips.RandomElement();
+                    }
+
+                    if (videoClipGroup.audioClips.Length != 0)
+                    {
+                        audioClip = videoClipGroup.audioClips.RandomElement();
+                    }
                     //choose clip 
-                    SwitchVideoClip(videoClipGroup.videoClips.RandomElement(), videoClipGroup.audioClips.RandomElement());
+                    SwitchVideoClip(videoLink, audioClip, videoClipGroup.volume);
                     return;
                 }
             }
             
             Debug.LogWarning("Did not find a fitting clip. Playing first group as fallback", this);
-            SwitchVideoClip(videoClipGroups[0].videoClips.RandomElement(), videoClipGroups[0].audioClips.RandomElement());
+            var element = videoClipGroups.First(v => v.audioClips.Length > 0);
+            SwitchVideoClip(videoClipGroups.First(v => v.videoClips.Length > 0).videoClips.RandomElement(), element.audioClips.RandomElement(), element.volume);
             
         }
 
-        private void SwitchVideoClip(string videoUrl, AudioClip audioClip)
+        private void SwitchVideoClip(string videoUrl, AudioClip audioClip, float volume)
         {
-            LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoUrl, audioClip.name));
-            OnVideoClipSelected.Invoke(videoUrl, audioClip.name);
+            var audioClipName = audioClip ? audioClip.name : "";
+            LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoUrl, audioClipName));
+            OnVideoClipSelected.Invoke(videoUrl, audioClipName);
             videoPlayer.url = videoUrl;
             audioSource.clip = audioClip;
+            audioSource.volume = volume;
             audioSource.Play();
             videoPlayer.Play();
         }
@@ -192,6 +216,8 @@ namespace DistractorTask.VideoPlayer
             
             public string relativePath;
             public NoiseLevel noiseLevel;
+            [Range(0, 1)]
+            public float volume;
             
             [HideInInspector]
             public string[] videoClips;

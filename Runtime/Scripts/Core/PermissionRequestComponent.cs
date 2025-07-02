@@ -1,11 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using MagicLeap.Android;
+using UnityEngine;
 using UnityEngine.XR.MagicLeap;
 
 namespace DistractorTask.Core
 {
-    public class PermissionRequestComponent : MonoBehaviour
+    public class PermissionRequestComponent : Singleton<PermissionRequestComponent>
     {
-        void Start()
+        
+        public Action OnEyeTrackingAndPupilSizePermissionGranted = delegate { };
+        
+        private void Start()
         {
             // The permissions to request
             string[] permissions = new string[]
@@ -14,12 +19,20 @@ namespace DistractorTask.Core
             MagicLeap.Android.Permissions.RequestPermissions(
                 permissions,
                 OnPermissionGranted, OnPermissionDenied, OnPermissionDeniedDontAskAgain);
+            
+            
         }
         private void OnPermissionGranted(string permission)
         {
             Debug.Log($"{permission} was granted.");
+            if (Permissions.CheckPermission(Permissions.EyeTracking) &&
+                Permissions.CheckPermission(Permissions.PupilSize))
+            {
+                OnEyeTrackingAndPupilSizePermissionGranted.Invoke();
+            }
         }
-
+        
+        
         private void OnPermissionDenied(string permission)
         {
             Debug.Log($"{permission} was denied.");
@@ -29,5 +42,7 @@ namespace DistractorTask.Core
         {
             Debug.Log($"{permission} was denied and cannot be request again.");
         }
+        
+       
     }
 }

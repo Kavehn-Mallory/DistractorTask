@@ -60,7 +60,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             var result = distractorTaskComponent.CheckInput();
             
             LoggingComponent.Log(LogData.CreateTrialConfirmationLogData(result.targetDistractor, result.selectedDistractor,
-                result.symbolOrder, result.startTime, DateTime.Now.TimeOfDay, _conditionEnumerator.CurrentTrialIndex,
+                result.symbolOrder, result.startTime, LogData.GetCurrentTimestamp(), _conditionEnumerator.CurrentTrialIndex,
                 currentRepetition, _conditionEnumerator.CurrentTrialIndex %
                                    distractorAnchorPointAsset.Length));
             OnDistractorSelection.Invoke(result);
