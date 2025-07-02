@@ -3,6 +3,7 @@ using DistractorTask.Transport.DataContainer;
 using TMPro;
 using Unity.Networking.Transport;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace DistractorTask.UI
 {
@@ -13,6 +14,14 @@ namespace DistractorTask.UI
         public TMP_InputField inputFieldP2;
         public TMP_InputField inputFieldP3;
         public TMP_InputField inputFieldPort;
+        
+        
+        public TMP_InputField inputFieldLocalEndpointP0;
+        public TMP_InputField inputFieldLocalEndpointP1;
+        public TMP_InputField inputFieldLocalEndpointP2;
+        public TMP_InputField inputFieldLocalEndpointP3;
+
+        public Toggle useLocalEndpoint;
 
 
         public ushort targetPort = NetworkExtensions.DefaultPort;
@@ -66,9 +75,15 @@ namespace DistractorTask.UI
         private void OnConnectionStateReceived(ConnectionState obj)
         {
             Debug.Log("Sending Ip-Address");
+            var endpoint = NetworkExtensions.GetLocalEndpoint(targetPort, false);
+            if (useLocalEndpoint.isOn && int.TryParse(inputFieldLocalEndpointP0.text, out var p0) && int.TryParse(inputFieldLocalEndpointP1.text, out var p1) &&
+                int.TryParse(inputFieldLocalEndpointP2.text, out var p2) && int.TryParse(inputFieldLocalEndpointP3.text, out var p3))
+            {
+                endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", targetPort);
+            }
             NetworkManager.Instance.UnicastMessage(new IpAddressData
             {
-                Endpoint = NetworkExtensions.GetLocalEndpoint(targetPort,false),
+                Endpoint = endpoint,
             }, _endpoint, this.GetInstanceID());
         }
     }
