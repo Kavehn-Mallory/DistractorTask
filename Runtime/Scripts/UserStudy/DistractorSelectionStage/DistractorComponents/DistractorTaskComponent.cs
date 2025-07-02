@@ -268,8 +268,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             result += _peripheralDistractor.Text.text;
             return result;
         }
-
-        [Serializable]
+        
         public struct DistractorSelectionResult
         {
             public int selectedDistractor;

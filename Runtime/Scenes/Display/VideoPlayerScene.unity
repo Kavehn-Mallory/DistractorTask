@@ -381,7 +381,7 @@ MonoBehaviour:
     audioClips: []
   - relativePath: Visual
     noiseLevel: 8
-    volume: 0.5
+    volume: 0.25
     videoClips: []
     audioClips: []
   - relativePath: AudioVisual

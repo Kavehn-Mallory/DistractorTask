@@ -25,6 +25,8 @@ namespace DistractorTask.Logging
 
         private const int IdLength = 8;
 
+        private bool _isLoggingPaused;
+
         private StudyLog _studyLog;
         
         
@@ -40,6 +42,7 @@ namespace DistractorTask.Logging
         }
 
         public string UserId => userId;
+        public bool IsPaused => _isLoggingPaused;
 
 
         private static string GenerateUserId()
@@ -89,8 +92,18 @@ namespace DistractorTask.Logging
 
         }
 
+        public void TogglePauseLogging()
+        {
+            Debug.Log("Is pausing");
+            _isLoggingPaused = !_isLoggingPaused;
+        }
+
         private void OnLogFileDataReceived(LogFileData logFileData, int arg2)
         {
+            if (Instance._isLoggingPaused)
+            {
+                return;
+            }
             if (_studyLog == null)
             {
                 Debug.LogError("We received log data before starting the logging process", this);
@@ -129,6 +142,10 @@ namespace DistractorTask.Logging
 
         private static void WriteLogData(LogData logData)
         {
+            if (Instance._isLoggingPaused)
+            {
+                return;
+            }
             if (Instance.isServer)
             {
                 Instance._studyLog.WriteLogData(logData);
