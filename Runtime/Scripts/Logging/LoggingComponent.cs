@@ -1,4 +1,5 @@
-﻿using DistractorTask.Core;
+﻿using System;
+using DistractorTask.Core;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
 using DistractorTask.UserStudy.DataDrivenSetup;
@@ -98,6 +99,11 @@ namespace DistractorTask.Logging
             _isLoggingPaused = !_isLoggingPaused;
         }
 
+        public void EndLogging()
+        {
+            _studyLog?.Dispose();
+        }
+
         private void OnLogFileDataReceived(LogFileData logFileData, int arg2)
         {
             if (Instance._isLoggingPaused)
@@ -117,8 +123,13 @@ namespace DistractorTask.Logging
         {
             _studyLog?.Dispose();
         }
-        
-        
+
+        private void OnDestroy()
+        {
+            _studyLog?.Dispose();
+        }
+
+
         private void OnIpDataReceived(IpAddressData ipAddressData)
         {
             var loggingEndpoint = ipAddressData.Endpoint.WithPort(NetworkExtensions.LoggingPort);

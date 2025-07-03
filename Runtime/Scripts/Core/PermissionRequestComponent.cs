@@ -9,6 +9,8 @@ namespace DistractorTask.Core
     {
         
         public Action OnEyeTrackingAndPupilSizePermissionGranted = delegate { };
+
+        public Action OnCameraPermissionGranted = delegate { };
         
         private void Start()
         {
@@ -29,6 +31,11 @@ namespace DistractorTask.Core
                 Permissions.CheckPermission(Permissions.PupilSize))
             {
                 OnEyeTrackingAndPupilSizePermissionGranted.Invoke();
+            }
+
+            if (Permissions.CheckPermission(MLPermission.Camera))
+            {
+                OnCameraPermissionGranted.Invoke();
             }
         }
         

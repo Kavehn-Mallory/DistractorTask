@@ -137,6 +137,7 @@ namespace DistractorTask.Logging
         
         private void InitializeEyeTracker()
         {
+            PermissionRequestComponent.Instance.OnEyeTrackingAndPupilSizePermissionGranted -= InitializeEyeTracker;
             try
             {
                 Debug.Log("Initializing eye tracker...");

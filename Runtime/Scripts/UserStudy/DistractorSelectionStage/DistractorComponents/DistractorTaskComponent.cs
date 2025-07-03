@@ -1,12 +1,9 @@
 using System;
 using DistractorTask.Core;
 using DistractorTask.Logging;
-using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using Random = UnityEngine.Random;
@@ -134,19 +131,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             var multiplier = math.max(0.5f, distance - 0.5f);
             RepositionCanvas(_mainCamera.transform.position +  multiplier * _mainCamera.transform.forward);
         }
-
-
-        [ContextMenu("Test")]
-        public void Test()
-        {
-            rayInteractor.enabled = false;
-
-            canvas.transform.SetPositionAndRotation(canvas.transform.position, Quaternion.identity);
-            rayInteractor.enabled = true;
-        }
-
         
-
         public void RepositionCanvas(Vector3 position)
         {
             EventSystem.current.SetSelectedGameObject(null);

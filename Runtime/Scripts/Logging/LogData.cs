@@ -356,7 +356,7 @@ namespace DistractorTask.Logging
         }
         
 
-        public static LogData CreateFrameCaptureLogData(long startTime, Vector3 cameraPosition, Quaternion cameraRotation)
+        public static LogData CreateFrameCaptureLogData(long startTime, Vector3 cameraPosition, Quaternion cameraRotation, string filePath)
         {
             return new LogData
             {
@@ -364,7 +364,8 @@ namespace DistractorTask.Logging
                 _logCategory = LogCategory.FrameCapture,
                 _startTime = startTime,
                 _cameraPosition = cameraPosition,
-                _cameraRotation = cameraRotation
+                _cameraRotation = cameraRotation,
+                _videoPath = filePath
             };
         }
 
