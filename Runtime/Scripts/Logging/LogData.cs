@@ -154,7 +154,7 @@ namespace DistractorTask.Logging
                     csvData[nameof(_anchorPointIndex)] = logData._anchorPointIndex.ToString();
                     break;
                 case LogCategory.AudioTaskConfirmation:
-                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString();
+                    csvData[nameof(_startTime)] = logData._startTime.ToString();
                     csvData[nameof(_reactionTime)] = logData._reactionTime.ToString();
                     break;
                 case LogCategory.EyeTracking:
@@ -174,6 +174,7 @@ namespace DistractorTask.Logging
                     csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString();
                     csvData[nameof(_cameraPosition)] = logData._cameraPosition.WriteVector3ToCSVString();
                     csvData[nameof(_cameraRotation)] = logData._cameraRotation.WriteQuaternionToCSVString();
+                    csvData[nameof(_videoPath)] = logData._videoPath;
                     break;
                 case LogCategory.VideoPlayerChange:
                     csvData[nameof(_videoPath)] = logData._videoPath;
