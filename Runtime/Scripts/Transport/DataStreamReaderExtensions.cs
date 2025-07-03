@@ -43,9 +43,10 @@ namespace DistractorTask.Transport
             var repetitionsPerTrial = reader.ReadInt();
             var trialCount = reader.ReadInt();
             var hasAudioTask = reader.ReadBoolean();
+            var insideWall = reader.ReadBoolean();
             
             return new StudyCondition(loadLevel,
-                noiseLevel, trialCount, repetitionsPerTrial, hasAudioTask);
+                noiseLevel, trialCount, repetitionsPerTrial, hasAudioTask, insideWall);
         }
 
 

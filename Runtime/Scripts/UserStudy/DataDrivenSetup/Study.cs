@@ -12,6 +12,6 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         public int selectionsPerTrial;
         public int trialsPerCondition;
         public Condition conditions;
-
+        public bool isInsideWall;
     }
 }

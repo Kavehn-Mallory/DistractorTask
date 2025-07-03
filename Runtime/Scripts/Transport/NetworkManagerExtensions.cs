@@ -118,9 +118,7 @@ namespace DistractorTask.Transport
         {
             var responseMessage =
                 networkManager.GetResponseMethod<T, TResponse>(responseMessageType, responseEndpoint, callerId, suppressLocalBroadcast);
-
-            //Todo this is not restartable yet? 
-
+            
             var awaitableResponse = new AwaitMessageWrapper<T>(networkManager, actionToPerformBeforeResponse,
                 responseMessage, receivingMessageType, receivingPort, persistent);
             return awaitableResponse.AwaitMessage();

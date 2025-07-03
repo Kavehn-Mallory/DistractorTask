@@ -24,6 +24,7 @@ namespace DistractorTask.UserStudy.Core
         Low = 1 << 1,
         Audio = 1 << 2,
         Visual = 1 << 3,
-        High = 1 << 4
+        High = 1 << 4,
+        Max = 1 << 5
     }
 }

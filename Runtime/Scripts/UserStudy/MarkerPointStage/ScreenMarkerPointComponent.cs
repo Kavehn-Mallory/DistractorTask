@@ -25,15 +25,20 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         public NetworkManager Manager => NetworkManager.Instance;
 
         private Action _activateMarkerPointsRegisterCallback;
+        private Action _unregisterMarkerCountDataResponse;
         
         private void Awake()
         {
             markerPointCanvas.gameObject.SetActive(false);
             _markerPoints = CreateMarkerPoints(marker, markerPointCanvas, zones);
-            //todo make persistent
-            Manager.RegisterMulticastResponse<MarkerCountData, MarkerPointResponseData>(OnStartConfirmed, _port, GetInstanceID());
+            _unregisterMarkerCountDataResponse = Manager.RegisterPersistentMulticastResponse<MarkerCountData, MarkerPointResponseData>(OnStartConfirmed, _port, GetInstanceID());
         }
-        
+
+        private void OnDisable()
+        {
+            _unregisterMarkerCountDataResponse?.Invoke();
+        }
+
         private static Image[] CreateMarkerPoints(Image image, Canvas markerPointCanvas, Vector2Int markerZones)
         {
             var result = new Image[markerZones.x * markerZones.y];

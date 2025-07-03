@@ -14,6 +14,7 @@ namespace DistractorTask.UserStudy
         private int _trialCount;
         private int _repetitionsPerTrial;
         private int _currentCondition;
+        private bool isInsideWall;
 
         public int CurrentPermutationIndex => _currentCondition;
         public int PermutationCount => _permutations.Length;
@@ -22,7 +23,8 @@ namespace DistractorTask.UserStudy
         {
             _trialCount = studyCondition.trialsPerCondition;
             _repetitionsPerTrial = studyCondition.selectionsPerTrial;
-            
+
+            isInsideWall = studyCondition.isInsideWall;
             _permutations = PermutationGenerator.GeneratePermutations(studyCondition.conditions, startCondition);
         }
 
@@ -40,7 +42,7 @@ namespace DistractorTask.UserStudy
         }
 
         public StudyCondition Current =>
-            new StudyCondition(_permutations[_currentCondition], _trialCount, _repetitionsPerTrial);
+            new StudyCondition(_permutations[_currentCondition], _trialCount, _repetitionsPerTrial, isInsideWall);
 
         object IEnumerator.Current => Current;
 
@@ -75,23 +77,26 @@ namespace DistractorTask.UserStudy
         public int repetitionsPerTrial;
         public int trialCount;
         public bool hasAudioTask;
+        public bool isInsideWall;
 
-        internal StudyCondition(ConditionPermutation permutation, int trialCount, int repetitionsPerTrial)
+        internal StudyCondition(ConditionPermutation permutation, int trialCount, int repetitionsPerTrial, bool isInsideWall)
         {
             this.trialCount = trialCount;
             this.repetitionsPerTrial = repetitionsPerTrial;
             loadLevel = permutation.LoadLevel;
             noiseLevel = permutation.NoiseLevel;
             this.hasAudioTask = permutation.HasAudioTask;
+            this.isInsideWall = isInsideWall;
         }
         
-        public StudyCondition(LoadLevel loadLevel, NoiseLevel noiseLevel, int trialCount, int repetitionsPerTrial, bool hasAudioTask)
+        public StudyCondition(LoadLevel loadLevel, NoiseLevel noiseLevel, int trialCount, int repetitionsPerTrial, bool hasAudioTask, bool isInsideWall)
         {
             this.trialCount = trialCount;
             this.repetitionsPerTrial = repetitionsPerTrial;
             this.loadLevel = loadLevel;
             this.noiseLevel = noiseLevel;
             this.hasAudioTask = hasAudioTask;
+            this.isInsideWall = isInsideWall;
         }
 
         public override string ToString()

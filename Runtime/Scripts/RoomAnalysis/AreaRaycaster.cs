@@ -135,7 +135,8 @@ namespace DistractorTask.RoomAnalysis
                 return new AnchorPoint
                 {
                     position = _mainCameraTransform.position + _mainCameraTransform.forward * targetDistance,
-                    distanceFromWall = minDistanceFromWall
+                    distanceFromWall = minDistanceFromWall,
+                    directionTowardsWall = _mainCameraTransform.forward
                 };
             }
             var minDistance = targetDistance + minDistanceFromWall;
@@ -169,7 +170,8 @@ namespace DistractorTask.RoomAnalysis
             return new AnchorPoint
             {
                 position = raycastPosition,
-                distanceFromWall = centerDistance - minDistance
+                distanceFromWall = centerDistance - minDistance,
+                directionTowardsWall = _mainCameraTransform.forward
             };
         }
         
@@ -183,5 +185,16 @@ namespace DistractorTask.RoomAnalysis
     {
         public Vector3 position;
         public float distanceFromWall;
+        public Vector3 directionTowardsWall;
+
+        public Vector3 GetPosition()
+        {
+            return position;
+        }
+
+        public Vector3 GetPositionInsideWall(float additionalOffset = 0.05f)
+        {
+            return position + directionTowardsWall * (additionalOffset + distanceFromWall);
+        }
     }
 }

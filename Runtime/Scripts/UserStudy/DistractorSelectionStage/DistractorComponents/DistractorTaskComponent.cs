@@ -132,8 +132,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
         public void RepositionCanvas(Vector3 position)
         {
-        
-            //todo normalize the vector and place along the ray 
             var distanceFromCamera = math.distance(position, _mainCamera.transform.position);
             _lastSquaredDistance = distanceFromCamera * distanceFromCamera;
             var targetOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorAngleFromCenter);

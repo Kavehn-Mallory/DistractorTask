@@ -15,7 +15,6 @@ namespace DistractorTask.InputHandler
         public event Action OnTriggerButtonPressed = delegate { };
         
         private MagicLeapOpenXRInput.ControllerActions _controllerActions;
-        private MagicLeapOpenXRInput.EyesActions _eyesActions;
         
         private void Start()
         {
@@ -26,7 +25,6 @@ namespace DistractorTask.InputHandler
 
             _controllerActions.Bumper.performed += OnBumperPressed;
             _controllerActions.Trigger.performed += OnTriggerPressed;
-            _eyesActions = new MagicLeapOpenXRInput.EyesActions(_magicLeapInputs);
 
         }
 
@@ -39,16 +37,7 @@ namespace DistractorTask.InputHandler
         {
             OnSelectionButtonPressed.Invoke();
         }
-
-        void Update()
-        {
-            if (_eyesActions.enabled)
-            {
-                //Debug.Log(_eyesActions.GazePosition.ReadValue<Vector3>());
-            }
-            //Todo track everything that we need 
-
-        }
+        
 
 
         

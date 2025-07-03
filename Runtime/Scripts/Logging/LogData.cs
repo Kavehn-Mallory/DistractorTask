@@ -37,6 +37,8 @@ namespace DistractorTask.Logging
         private Vector3 _rightEyePosition;
         private Vector2 _eyeDimensions;
         private Vector2 _pupilDiameter;
+        private string _gazeBehaviour;
+        private ulong _gazeBehaviourDuration;
         private string _videoPath;
         private string _audioPath;
         private Vector3 _acceleration;
@@ -86,6 +88,8 @@ namespace DistractorTask.Logging
             csvData.Add(nameof(_rightEyePosition), "");
             csvData.Add(nameof(_eyeDimensions), "");
             csvData.Add(nameof(_pupilDiameter), "");
+            csvData.Add(nameof(_gazeBehaviour), "");
+            csvData.Add(nameof(_gazeBehaviourDuration), "");
             csvData.Add(nameof(_videoPath), "");
             csvData.Add(nameof(_audioPath), "");
             csvData.Add(nameof(_acceleration), "");
@@ -150,8 +154,8 @@ namespace DistractorTask.Logging
                     csvData[nameof(_anchorPointIndex)] = logData._anchorPointIndex.ToString();
                     break;
                 case LogCategory.AudioTaskConfirmation:
-                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString("c");
-                    csvData[nameof(_reactionTime)] = logData._reactionTime.ToString("c");
+                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString();
+                    csvData[nameof(_reactionTime)] = logData._reactionTime.ToString();
                     break;
                 case LogCategory.EyeTracking:
                     csvData[nameof(_cameraPosition)] = logData._cameraPosition.WriteVector3ToCSVString();
@@ -160,9 +164,14 @@ namespace DistractorTask.Logging
                     csvData[nameof(_rightEyePosition)] = logData._rightEyePosition.WriteVector3ToCSVString();
                     csvData[nameof(_eyeDimensions)] = logData._eyeDimensions.WriteVector2ToCSVString();
                     csvData[nameof(_pupilDiameter)] = logData._pupilDiameter.WriteVector2ToCSVString();
+                    csvData[nameof(_reactionTime)] = logData._reactionTime.ToString();
+                    csvData[nameof(_startTime)] = logData._startTime.ToString();
+                    csvData[nameof(_gazeBehaviour)] = logData._gazeBehaviour;
+                    csvData[nameof(_gazeBehaviourDuration)] = logData._gazeBehaviourDuration.ToString();
+                    
                     break;
                 case LogCategory.FrameCapture:
-                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString("c");
+                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString();
                     csvData[nameof(_cameraPosition)] = logData._cameraPosition.WriteVector3ToCSVString();
                     csvData[nameof(_cameraRotation)] = logData._cameraRotation.WriteQuaternionToCSVString();
                     break;
@@ -182,7 +191,7 @@ namespace DistractorTask.Logging
             }
             
             
-            return $"{csvData[nameof(_timeStamp)]};{csvData[nameof(_logCategory)]};{csvData[nameof(_userId)]};{csvData[nameof(_participantType)]};{csvData[nameof(_cameraPosition)]};{csvData[nameof(_cameraRotation)]};{csvData[nameof(_markerPointCount)]};{csvData[nameof(_distanceFromCamera)]};{csvData[nameof(_distanceToWall)]};{csvData[nameof(_hitPointWallPosition)]};{csvData[nameof(_hitPointWallNormal)]};{csvData[nameof(_anchorPointPosition)]};{csvData[nameof(_studyName)]};{csvData[nameof(_studyIndex)]};{csvData[nameof(_noiseLevel)]};{csvData[nameof(_loadLevel)]};{csvData[nameof(_trialCount)]};{csvData[nameof(_repetitionsPerTrial)]};{csvData[nameof(_audioTaskReactionTime)]};{csvData[nameof(_trialTargetIndex)]};{csvData[nameof(_trialSelectedIndex)]};{csvData[nameof(_trialSymbolOrder)]};{csvData[nameof(_anchorPointIndex)]};{csvData[nameof(_startTime)]};{csvData[nameof(_reactionTime)]};{csvData[nameof(_leftEyePosition)]};{csvData[nameof(_rightEyePosition)]};{csvData[nameof(_eyeDimensions)]};{csvData[nameof(_pupilDiameter)]};{csvData[nameof(_videoPath)]};{csvData[nameof(_audioPath)]};{csvData[nameof(_acceleration)]};{csvData[nameof(_angularVelocity)]};{csvData[nameof(_linearAcceleration)]};{csvData[nameof(_attitude)]};{csvData[nameof(_lux)]}";
+            return $"{csvData[nameof(_timeStamp)]};{csvData[nameof(_logCategory)]};{csvData[nameof(_userId)]};{csvData[nameof(_participantType)]};{csvData[nameof(_cameraPosition)]};{csvData[nameof(_cameraRotation)]};{csvData[nameof(_markerPointCount)]};{csvData[nameof(_distanceFromCamera)]};{csvData[nameof(_distanceToWall)]};{csvData[nameof(_hitPointWallPosition)]};{csvData[nameof(_hitPointWallNormal)]};{csvData[nameof(_anchorPointPosition)]};{csvData[nameof(_studyName)]};{csvData[nameof(_studyIndex)]};{csvData[nameof(_noiseLevel)]};{csvData[nameof(_loadLevel)]};{csvData[nameof(_trialCount)]};{csvData[nameof(_repetitionsPerTrial)]};{csvData[nameof(_audioTaskReactionTime)]};{csvData[nameof(_trialTargetIndex)]};{csvData[nameof(_trialSelectedIndex)]};{csvData[nameof(_trialSymbolOrder)]};{csvData[nameof(_anchorPointIndex)]};{csvData[nameof(_startTime)]};{csvData[nameof(_reactionTime)]};{csvData[nameof(_leftEyePosition)]};{csvData[nameof(_rightEyePosition)]};{csvData[nameof(_eyeDimensions)]};{csvData[nameof(_pupilDiameter)]};{csvData[nameof(_gazeBehaviour)]};{csvData[nameof(_gazeBehaviourDuration)]};{csvData[nameof(_videoPath)]};{csvData[nameof(_audioPath)]};{csvData[nameof(_acceleration)]};{csvData[nameof(_angularVelocity)]};{csvData[nameof(_linearAcceleration)]};{csvData[nameof(_attitude)]};{csvData[nameof(_lux)]}";
         }
         
         
@@ -326,7 +335,7 @@ namespace DistractorTask.Logging
         }
         
         
-        public static LogData CreateEyeTrackingLogData(Vector3 cameraPosition, Quaternion cameraRotation, Vector3 leftEyePosition, Vector3 rightEyePosition, Vector2 eyeDimensions, Vector2 pupilDiameter)
+        public static LogData CreateEyeTrackingLogData(Vector3 cameraPosition, Quaternion cameraRotation, Vector3 leftEyePosition, Vector3 rightEyePosition, Vector2 eyeDimensions, Vector2 pupilDiameter, long currentTimeStamp, string gazeBehaviour, long gazeBehaviourStartTime, ulong gazeBehaviourDuration)
         {
             return new LogData
             {
@@ -337,7 +346,12 @@ namespace DistractorTask.Logging
                 _leftEyePosition = leftEyePosition,
                 _rightEyePosition = rightEyePosition,
                 _eyeDimensions = eyeDimensions,
-                _pupilDiameter = pupilDiameter
+                _pupilDiameter = pupilDiameter,
+                _startTime = gazeBehaviourStartTime,
+                _reactionTime = currentTimeStamp,
+                _gazeBehaviour = gazeBehaviour,
+                _gazeBehaviourDuration = gazeBehaviourDuration
+                
             };
         }
         

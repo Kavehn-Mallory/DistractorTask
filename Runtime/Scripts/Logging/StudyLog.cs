@@ -10,7 +10,7 @@ namespace DistractorTask.Logging
 {
     public class StudyLog : IDisposable, IAsyncDisposable
     {
-        private const string LogFileHeadings = "Time,Timestamp,Category,UserId,ParticipantType,CameraPosition,CameraRotation,MarkerPointCount,DistanceFromCamera,DistanceToWall,HitPointWallPosition,HitPointWallNormal,AnchorPointPosition,StudyName,StudyIndex,NoiseLevel,LoadLevel,TrialCount,RepetitionsPerTrial,AudioTaskReactionTime,TrialTargetIndex,TrialSelectedIndex,TrialSymbolOrder,AnchorPointIndex,StartTime,ReactionTime,LeftEyePosition,RightEyePosition,EyeDimensions,PupilDiameter,VideoPath,AudioPath,Acceleration,AngularVelocity,LinearAcceleration,Attitude,Lux";
+        private const string LogFileHeadings = "Time,Timestamp,Category,UserId,ParticipantType,CameraPosition,CameraRotation,MarkerPointCount,DistanceFromCamera,DistanceToWall,HitPointWallPosition,HitPointWallNormal,AnchorPointPosition,StudyName,StudyIndex,NoiseLevel,LoadLevel,TrialCount,RepetitionsPerTrial,AudioTaskReactionTime,TrialTargetIndex,TrialSelectedIndex,TrialSymbolOrder,AnchorPointIndex,StartTime,ReactionTime,LeftEyePosition,RightEyePosition,EyeDimensions,PupilDiameter,GazeBehaviour,GazeBehaviourDuration,VideoPath,AudioPath,Acceleration,AngularVelocity,LinearAcceleration,Attitude,Lux";
         
         private readonly string _startTime;
 

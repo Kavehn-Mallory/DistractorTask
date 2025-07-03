@@ -231,10 +231,6 @@ namespace DistractorTask.Logging
             Debug.Log(
                 $"Got eye tracker data - Valid: {!data.Equals(default(EyeTrackerData))}, PupilData null: {data.PupilData == null}");
             
-            
-            
-            
-
             Vector3 leftEyePosition = new Vector3(-1, -1, -1);
             Vector3 rightEyePosition = new Vector3(-1, -1, -1);
             Vector2 pupilDiameter = new Vector2(-1, -1);
@@ -279,12 +275,27 @@ namespace DistractorTask.Logging
             StaticData staticData = data.StaticData;
             
             GazeBehavior gazeBehavior = data.GazeBehaviorData;
-            if (!gazeBehavior.Valid || !gazeBehavior.MetaData.Valid)
+
+            var gazeBehaviourType = "";
+            long gazeStartTimeStamp = -1;
+            ulong gazeDuration = 0;
+
+            long currentTimeStamp = -1;
+            
+            if (gazeBehavior.Valid || gazeBehavior.MetaData.Valid)
             {
+                gazeBehaviourType = gazeBehavior.GazeBehaviorType.ToString();
+                gazeStartTimeStamp = gazeBehavior.OnsetTime;
                 
-                return;
+                MLTime.ConvertMLTimeToSystemTime(gazeStartTimeStamp, out var startTime);
+                
+                gazeDuration = gazeBehavior.Duration;
+                currentTimeStamp = gazeBehavior.Time;
             }
-            LoggingComponent.Log(LogData.CreateEyeTrackingLogData(_mainCamera.transform.position, _mainCamera.transform.rotation, leftEyePosition, rightEyePosition, new Vector2(staticData.EyeWidthMax, staticData.EyeHeightMax), pupilDiameter));
+            
+            
+            
+            LoggingComponent.Log(LogData.CreateEyeTrackingLogData(_mainCamera.transform.position, _mainCamera.transform.rotation, leftEyePosition, rightEyePosition, new Vector2(staticData.EyeWidthMax, staticData.EyeHeightMax), pupilDiameter, currentTimeStamp, gazeBehaviourType, gazeStartTimeStamp, gazeDuration));
         }
         
         

@@ -86,7 +86,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             //start new study 
             _conditionEnumerator = new ConditionEnumerator(condition.studyCondition);
             
-            //todo replace this with the actual time 
             LoggingComponent.Log(LogData.CreateTrialBeginLogData(condition.studyCondition.noiseLevel, condition.studyCondition.loadLevel, condition.studyCondition.trialCount, condition.studyCondition.repetitionsPerTrial, condition.studyCondition.hasAudioTask ? 2 : -1));
 
             var loadLevel = condition.studyCondition.loadLevel == LoadLevel.Low ? 0 : 1;
@@ -103,11 +102,17 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 
                 //should never be null, but the squiggly lines annoyed me and better be safe than sorry 
                 var repetitionEnumerator = _conditionEnumerator.Current ?? new TrialsEnumerator(1);
-                var placementPosition =
-                    distractorAnchorPointAsset.GetPosition(_conditionEnumerator.CurrentTrialIndex %
-                                                           distractorAnchorPointAsset.Length);
+                var anchor = distractorAnchorPointAsset.GetAnchorPoint(_conditionEnumerator.CurrentTrialIndex %
+                                                                    distractorAnchorPointAsset.Length);
+
+                var placementPosition = anchor.GetPosition();
+
+                if (condition.studyCondition.isInsideWall)
+                {
+                    placementPosition = anchor.GetPositionInsideWall();
+                }
                 
-                distractorTaskComponent.RepositionCanvas(placementPosition.position);
+                distractorTaskComponent.RepositionCanvas(placementPosition);
                 _acceptingInput = true;
                 while (repetitionEnumerator.MoveNext())
                 {

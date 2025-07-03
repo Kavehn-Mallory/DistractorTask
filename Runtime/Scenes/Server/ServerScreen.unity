@@ -12950,6 +12950,7 @@ MonoBehaviour:
       loadLevels: -1
       noiseLevels: 1
       hasAudioTask: 0
+    isInsideWall: 0
   - studyName: Study 1
     selectionsPerTrial: 6
     trialsPerCondition: 5
@@ -12957,6 +12958,7 @@ MonoBehaviour:
       loadLevels: -1
       noiseLevels: 19
       hasAudioTask: 0
+    isInsideWall: 0
   - studyName: Study 1.3
     selectionsPerTrial: 6
     trialsPerCondition: 5
@@ -12964,6 +12966,7 @@ MonoBehaviour:
       loadLevels: -1
       noiseLevels: 19
       hasAudioTask: 0
+    isInsideWall: 1
   - studyName: Study 2
     selectionsPerTrial: 6
     trialsPerCondition: 10
@@ -12971,6 +12974,7 @@ MonoBehaviour:
       loadLevels: -1
       noiseLevels: -1
       hasAudioTask: 0
+    isInsideWall: 0
   - studyName: Tutorial Study 3
     selectionsPerTrial: 2
     trialsPerCondition: 5
@@ -12978,13 +12982,15 @@ MonoBehaviour:
       loadLevels: -1
       noiseLevels: 1
       hasAudioTask: 1
+    isInsideWall: 0
   - studyName: Study 3
     selectionsPerTrial: 6
     trialsPerCondition: 10
     conditions:
       loadLevels: -1
-      noiseLevels: 16
+      noiseLevels: 32
       hasAudioTask: 1
+    isInsideWall: 0
   markerPointCount: 6
   participantDropdown: {fileID: 1728698572}
 --- !u!1 &1722344015

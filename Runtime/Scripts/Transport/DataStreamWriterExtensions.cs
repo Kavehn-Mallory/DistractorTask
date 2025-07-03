@@ -86,6 +86,7 @@ namespace DistractorTask.Transport
             writer.WriteInt(studyCondition.repetitionsPerTrial);
             writer.WriteInt(studyCondition.trialCount);
             writer.WriteBoolean(studyCondition.hasAudioTask);
+            writer.WriteBoolean(studyCondition.isInsideWall);
 
         }
         

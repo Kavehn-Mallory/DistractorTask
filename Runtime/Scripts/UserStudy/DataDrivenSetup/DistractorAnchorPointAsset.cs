@@ -40,7 +40,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             return distractorPlacementPositions.RandomElement();
         }
 
-        public AnchorPoint GetPosition(int index)
+        public AnchorPoint GetAnchorPoint(int index)
         {
             if (index < 0 || index >= distractorPlacementPositions.Length)
             {
