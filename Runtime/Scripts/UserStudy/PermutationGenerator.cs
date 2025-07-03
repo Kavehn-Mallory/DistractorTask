@@ -16,7 +16,7 @@ namespace DistractorTask.UserStudy
 
 
             var permutations = (int)(noiseLevelCount * loadLevelCount);
-            var result = new ConditionPermutation[noiseLevelCount * loadLevelCount];
+            var result = new ConditionPermutation[permutations];
 
 
             var noiseLevels = GenerateNoiseLevels(condition.noiseLevels);
@@ -71,6 +71,7 @@ namespace DistractorTask.UserStudy
             AddNoiseLevel(noiseLevel, NoiseLevel.Audio, ref result);
             AddNoiseLevel(noiseLevel, NoiseLevel.Visual, ref result);
             AddNoiseLevel(noiseLevel, NoiseLevel.High, ref result);
+            AddNoiseLevel(noiseLevel, NoiseLevel.Max, ref result);
             return result;
         }
 

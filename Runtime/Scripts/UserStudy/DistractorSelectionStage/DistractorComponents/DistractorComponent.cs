@@ -1,5 +1,6 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 {
@@ -26,9 +27,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             _rectTransform.sizeDelta = new Vector2(distractorSize, distractorSize);
             _text.fontSize = distractorSize;
         }
-        
 
         
-    
     }
 }

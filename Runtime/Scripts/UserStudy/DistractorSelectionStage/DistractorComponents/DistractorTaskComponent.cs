@@ -4,6 +4,10 @@ using DistractorTask.Logging;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using Random = UnityEngine.Random;
 
@@ -34,8 +38,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
         [SerializeField]
         private float maxDistanceOffsetBeforeResizing = 0.2f;
-        
 
+        [SerializeField] private XRRayInteractor rayInteractor;
+        
         private string[][] _distractorShapes;
         private string[][] _targetShapes;
         private DistractorComponent[] _distractors;
@@ -99,6 +104,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             {
                 RepositionCanvas(canvas.transform.position);
             }
+
         }
 
         private bool ResizeRequired()
@@ -128,10 +134,23 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             var multiplier = math.max(0.5f, distance - 0.5f);
             RepositionCanvas(_mainCamera.transform.position +  multiplier * _mainCamera.transform.forward);
         }
-    
+
+
+        [ContextMenu("Test")]
+        public void Test()
+        {
+            rayInteractor.enabled = false;
+
+            canvas.transform.SetPositionAndRotation(canvas.transform.position, Quaternion.identity);
+            rayInteractor.enabled = true;
+        }
+
+        
 
         public void RepositionCanvas(Vector3 position)
         {
+            EventSystem.current.SetSelectedGameObject(null);
+            rayInteractor.enabled = false;
             var distanceFromCamera = math.distance(position, _mainCamera.transform.position);
             _lastSquaredDistance = distanceFromCamera * distanceFromCamera;
             var targetOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorAngleFromCenter);
@@ -162,6 +181,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
             _peripheralDistractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel * 2f);
             _peripheralDistractor.RectTransform.anchoredPosition = peripheralDistractorPosition;
+            _selectedDistractor = null;
+            rayInteractor.enabled = true;
         }
 
 
@@ -174,16 +195,14 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             var verticalDistance = DistractorPlacementExtension.CalculateActualSize(0.1f, targetDistractorViewAngle / 2f + targetDistractorAngleFromCenter);
             return new Vector2(horizontalDistance, verticalDistance);
         }
-
-
-
+        
         
         public void StartTrial(int loadLevel)
         {
             _trialStartTime = LogData.GetCurrentTimestamp();
+            
             foreach (var distractor in _distractors)
             {
-
                 distractor.Text.text = _distractorShapes[loadLevel].RandomElement();
             }
 
@@ -199,8 +218,14 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         
             _distractors[_targetElementIndex].Text.text =
                 _targetShapes[loadLevel].RandomElement();
+
+            var peripheralDistractorShape = _targetShapes[loadLevel].RandomElement();
+            if (Random.value >= 0.5f)
+            {
+                peripheralDistractorShape = _distractorShapes[loadLevel].RandomElement();
+            }
         
-            _peripheralDistractor.Text.text = _targetShapes[loadLevel].RandomElement();
+            _peripheralDistractor.Text.text = peripheralDistractorShape;
         }
         
         
@@ -230,16 +255,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         public void DisableCanvas()
         {
             canvas.enabled = false;
-        }
-
-        public int OnInputReceived()
-        {
-            if (_selectedDistractor)
-            {
-                return _selectedDistractor.distractorIndex;
-            }
-
-            return -1;
         }
 
         public DistractorSelectionResult CheckInput()

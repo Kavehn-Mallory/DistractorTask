@@ -554,6 +554,7 @@ MonoBehaviour:
     targetLetters: X,N
   changeTargetAfterEveryTrial: 0
   maxDistanceOffsetBeforeResizing: 0.2
+  rayInteractor: {fileID: 1835952996}
 --- !u!1 &602356172
 GameObject:
   m_ObjectHideFlags: 0
@@ -1496,6 +1497,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvas: {fileID: 1726612049}
   mainCamera: {fileID: 2086622114}
+--- !u!114 &1835952996 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2587420837012734618, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
+  m_PrefabInstance: {fileID: 2086622111}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6803edce0201f574f923fd9d10e5b30a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2086622111
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1569,6 +1581,10 @@ PrefabInstance:
     - target: {fileID: 2587420837012734618, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
       propertyPath: m_UIHoverEntered.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 3827237793396565780, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4197972536516240459, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
       propertyPath: m_PositionInput.m_Reference
