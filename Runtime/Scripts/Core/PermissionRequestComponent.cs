@@ -16,7 +16,7 @@ namespace DistractorTask.Core
         {
             // The permissions to request
             string[] permissions = new string[]
-                { MLPermission.Camera, MLPermission.EyeTracking, MLPermission.PupilSize, MLPermission.SpatialMapping, MLPermission.DepthCamera, MLPermission.EyeCamera, MagicLeap.Android.Permissions.WebView };
+                { MLPermission.Camera, MLPermission.EyeTracking, MLPermission.PupilSize, MLPermission.SpatialMapping, MLPermission.DepthCamera, MLPermission.EyeCamera, MagicLeap.Android.Permissions.WebView, MagicLeap.Android.Permissions.SpatialAnchors };
 
             MagicLeap.Android.Permissions.RequestPermissions(
                 permissions,

@@ -56,6 +56,7 @@ namespace DistractorTask.FrameCapture
 
         private void InitializeCamera()
         {
+            PermissionRequestComponent.Instance.OnCameraPermissionGranted -= InitializeCamera;
             StartCoroutine(EnableMLCamera());
         }
         

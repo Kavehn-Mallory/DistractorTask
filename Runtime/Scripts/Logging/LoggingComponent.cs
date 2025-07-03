@@ -93,6 +93,11 @@ namespace DistractorTask.Logging
 
         }
 
+        public void SetUserId(string id)
+        {
+            userId = id;
+        }
+
         public void TogglePauseLogging()
         {
             Debug.Log("Is pausing");
