@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace DistractorTask.UserStudy
@@ -14,7 +15,7 @@ namespace DistractorTask.UserStudy
         private int _trialCount;
         private int _repetitionsPerTrial;
         private int _currentCondition;
-        private bool isInsideWall;
+        private bool _isInsideWall;
 
         public int CurrentPermutationIndex => _currentCondition;
         public int PermutationCount => _permutations.Length;
@@ -24,8 +25,9 @@ namespace DistractorTask.UserStudy
             _trialCount = studyCondition.trialsPerCondition;
             _repetitionsPerTrial = studyCondition.selectionsPerTrial;
 
-            isInsideWall = studyCondition.isInsideWall;
+            _isInsideWall = studyCondition.isInsideWall;
             _permutations = PermutationGenerator.GeneratePermutations(studyCondition.conditions, startCondition);
+            _currentCondition = -1;
         }
 
 
@@ -42,7 +44,7 @@ namespace DistractorTask.UserStudy
         }
 
         public StudyCondition Current =>
-            new StudyCondition(_permutations[_currentCondition], _trialCount, _repetitionsPerTrial, isInsideWall);
+            new StudyCondition(_permutations[_currentCondition], _trialCount, _repetitionsPerTrial, _isInsideWall);
 
         object IEnumerator.Current => Current;
 
@@ -52,6 +54,10 @@ namespace DistractorTask.UserStudy
         }
 
 
+        public void MovePrevious()
+        {
+            _currentCondition = math.max(_currentCondition--, -1);
+        }
     }
     
     internal struct ConditionPermutation

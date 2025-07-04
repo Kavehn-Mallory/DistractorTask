@@ -18,7 +18,7 @@ namespace DistractorTask.UI
         private void Start()
         {
             controlPanel.OnStudyPhaseStart += SetStudyStageText;
-            controlPanel.OnNextIteration += SetIterationText;
+            controlPanel.OnIterationCompleted += SetIterationText;
             controlPanel.OnStudyPhaseEnd += SetStudyStageEndText;
         }
 
@@ -37,7 +37,7 @@ namespace DistractorTask.UI
 
         private void SetIterationText(string _, int iteration, int iterationCount)
         {
-            iterationCountText.text = $"{iteration + 1} / {iterationCount}";
+            iterationCountText.text = $"Completed {iteration + 1} / {iterationCount}";
         }
     }
 }

@@ -38,7 +38,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         /// <summary>
         /// Triggers on each iteration. String represents the name of the study stage, first int is the current index, second int is the iteration count
         /// </summary>
-        public Action<string, int, int> OnNextIteration = delegate { };
+        public Action<string, int, int> OnIterationCompleted = delegate { };
         private StudyEnumerator _studyEnumerator;
 
         private const string MarkerPointPhaseName = "Marker Point Creation Phase";
@@ -52,6 +52,18 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             _studyEnumerator = new StudyEnumerator(studies);
             NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DisplayWallControlPort, OnDisplayWallConnectionStateChanged);
             NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DefaultPort, OnHmdConnectionStateChanged);
+
+            foreach (var study in studies)
+            {
+                var permutationCount = PermutationGenerator.GeneratePermutations(study.conditions, 0).Length;
+                Debug.Log($"Study {study.studyName} has {permutationCount} permutations");
+                
+                _enumerator = new StudyConditionsEnumerator(study);
+            
+                Debug.Log($"Study Condition {_enumerator.CurrentPermutationIndex} out of {_enumerator.PermutationCount}");
+            }
+
+            _enumerator = null;
         }
 
         private void OnHmdConnectionStateChanged(ConnectionState obj)
@@ -91,7 +103,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             {
                 
                 var markerPointIndex = _markerPointEnumerator.Current;
-                OnNextIteration.Invoke("Marker Point", markerPointIndex, markerPointCount);
+                OnIterationCompleted.Invoke("Marker Point", markerPointIndex, markerPointCount);
                 await markerPointController.TriggerNextPoint(markerPointIndex);
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<OnMarkerPointActivatedData, OnAnchorPointSelectionData>(
@@ -143,20 +155,49 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         //todo look if we have to cancel tasks somehow
 
 
-        public async void StartStudy()
+        public void AdvanceStudy()
         {
-
             if (!_studyEnumerator.MoveNext())
             {
                 OnStudyCompleted.Invoke();
                 return;
             }
-
+            
             var startingCondition = participantDropdown.value;
             OnStudyPhaseStart.Invoke($"{StudyPhaseName}", _studyEnumerator.CurrentStudyIndex);
             _enumerator = new StudyConditionsEnumerator(_studyEnumerator.Current, startingCondition);
             
             LoggingComponent.Log(LogData.CreateStudyBeginLogData(_studyEnumerator.Current.studyName, _studyEnumerator.CurrentStudyIndex, TransformCurrentConditionToLetter(startingCondition, _enumerator.PermutationCount).ToString()));
+
+        }
+
+
+        public void ResetCurrentStudy()
+        {
+            _enumerator?.Reset();
+        }
+
+        public void RestartCurrentCondition()
+        {
+            if (_enumerator != null)
+            {
+                _hmdCommunicationTask = null;
+                _videoWallCommunicationTask = null;
+                _enumerator.MovePrevious();
+                StartStudy();
+            }
+        }
+        
+
+        public async void StartStudy()
+        {
+
+            if (_enumerator == null)
+            {
+                Debug.LogWarning($"Study has not been initialized. Call {nameof(AdvanceStudy)} before calling {nameof(StartStudy)}");
+                return;
+            }
+
 
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
                 OnTrialCompleted, NetworkExtensions.DefaultPort, GetInstanceID());
@@ -165,7 +206,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             {
                 var studyCondition = _enumerator.Current;
                 Debug.Log($"Study condition {_enumerator.CurrentPermutationIndex} out of {_enumerator.PermutationCount}");
-                OnNextIteration.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
+                
                 
                 
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
@@ -184,9 +225,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 {
                     //todo do we just restart the enumerator at the specified index?
                     Debug.LogError("Error while trying to switch video clip");
+                    _enumerator.MovePrevious();
                     return;
                 }
-                
+
+                _videoWallCommunicationTask = null;
                 Debug.Log("Video clip was selected. Sending data to HMD");
                 _hmdCommunicationTask =  NetworkManager.Instance
                     .MulticastMessageAndAwaitResponseWithInterrupt<ConditionData, OnConditionCompleted>(
@@ -195,19 +238,25 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                             studyCondition = studyCondition
                         }, NetworkExtensions.DefaultPort, GetInstanceID(),
                         _enumerator.CurrentPermutationIndex);
-
+                
                 await _hmdCommunicationTask.AwaitMessage();
 
                 if (!_hmdCommunicationTask.IsCompletedSuccessfully)
                 {
                     //todo do we just restart the enumerator at the specified index?
-                    Debug.LogError("Error while trying to switch video clip");
+                    _enumerator.MovePrevious();
+                    Debug.LogError("Error while trying to perform trial");
                     return;
                 }
+                _hmdCommunicationTask = null;
+                
+                OnIterationCompleted.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
 
             }
             Debug.Log("Study Phase Ended");
             LoggingComponent.Log(LogData.CreateStudyEndLogData());
+            _enumerator = null;
+            
             OnStudyPhaseEnd.Invoke(StudyPhaseName);
             unregisterCallback.Invoke();
         }
@@ -304,11 +353,12 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
     {
 
         private readonly int _markerCount;
-        private int _currentMarker = -1;
+        private int _currentMarker;
 
         internal MarkerPointEnumerator(int markerCount)
         {
             _markerCount = markerCount;
+            _currentMarker = -1;
         }
         
         public void Dispose()
@@ -327,10 +377,9 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             _currentMarker = -1;
         }
 
-        public bool MovePrevious()
+        public void MovePrevious()
         {
             _currentMarker = math.max(_currentMarker--, -1);
-            return _currentMarker < _markerCount && _currentMarker >= 0;
         }
 
         public void SetMarker(int nextMarkerPosition)

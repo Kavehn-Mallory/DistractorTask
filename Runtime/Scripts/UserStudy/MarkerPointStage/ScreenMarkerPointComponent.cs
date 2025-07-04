@@ -70,16 +70,25 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             //Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port);
             _activateMarkerPointsRegisterCallback = Manager.RegisterPersistentMulticastResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(
                 OnPointSelectionConfirmed, _port, GetInstanceID());
+            Manager.RegisterMulticastResponse<MarkerPointEndData, MarkerPointResponseData>(EndMarkerPointSetup, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
             markerPointCanvas.gameObject.SetActive(true);
             _currentlyActiveMarker = -1;
         }
-        
+
+
+
         private void ActivateMarker()
         {
             Debug.Log("Switching to next marker point");
             if (_currentlyActiveMarker >= 0)
             {
                 _markerPoints[_currentlyActiveMarker].enabled = false;
+            }
+
+            if (_currentMarker < 0 || _currentMarker >= _markerPoints.Length)
+            {
+                _currentlyActiveMarker = -1;
+                return;
             }
             _currentlyActiveMarker = _currentMarker;
             LoggingComponent.Log(LogData.CreateMarkerPointActivatedLogData(_currentMarker));
@@ -95,18 +104,13 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             }
             
             _currentMarker = data.currentMarkerIndex;
-
-            if (_currentMarker >= _markerPoints.Length - 1)
-            {
-                EndMarkerPointSetup();
-                return;
-            }
             ActivateMarker();
         }
         
-        public void EndMarkerPointSetup()
+        private void EndMarkerPointSetup(MarkerPointEndData arg1, int callerId)
         {
-            _markerPoints[^1].enabled = false;
+            if(_currentlyActiveMarker >= 0)
+                _markerPoints[_currentlyActiveMarker].enabled = false;
             markerPointCanvas.gameObject.SetActive(false);
             _activateMarkerPointsRegisterCallback?.Invoke();
             _activateMarkerPointsRegisterCallback = null;
