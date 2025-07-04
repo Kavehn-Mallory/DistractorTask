@@ -3,6 +3,7 @@ using DistractorTask.Transport.DataContainer;
 using TMPro;
 using Unity.Networking.Transport;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace DistractorTask.UI
@@ -22,6 +23,10 @@ namespace DistractorTask.UI
         public TMP_InputField inputFieldLocalEndpointP3;
 
         public Toggle useLocalEndpoint;
+        
+        
+        [SerializeField]
+        private UnityEvent<NetworkEndpoint, ConnectionState> onConnectionStateChanged;
 
 
         public ushort targetPort = NetworkExtensions.DefaultPort;
@@ -62,29 +67,34 @@ namespace DistractorTask.UI
             
         }
 
-        private void OnConnectionEstablished(ConnectionState obj)
+        private void OnConnectionEstablished(ConnectionState connectionState)
         {
-            if (obj == ConnectionState.Connected)
+            onConnectionStateChanged?.Invoke(_endpoint, connectionState);
+            if (connectionState == ConnectionState.Connected)
             {
-                Debug.Log("Connection established!");
+                Debug.Log($"Connection established with {_endpoint.ToString()}!");
                 return;
             }
-            Debug.Log("Something went wrong");
+            Debug.Log($"{_endpoint.ToString()} connection state changed to {connectionState.ToString()}");
         }
 
         private void OnConnectionStateReceived(ConnectionState obj)
         {
-            Debug.Log("Sending Ip-Address");
-            var endpoint = NetworkExtensions.GetLocalEndpoint(targetPort, false);
-            if (useLocalEndpoint.isOn && int.TryParse(inputFieldLocalEndpointP0.text, out var p0) && int.TryParse(inputFieldLocalEndpointP1.text, out var p1) &&
-                int.TryParse(inputFieldLocalEndpointP2.text, out var p2) && int.TryParse(inputFieldLocalEndpointP3.text, out var p3))
+            if (obj == ConnectionState.Connected)
             {
-                endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", targetPort);
+                Debug.Log("Sending Ip-Address");
+                var endpoint = NetworkExtensions.GetLocalEndpoint(targetPort, false);
+                if (useLocalEndpoint.isOn && int.TryParse(inputFieldLocalEndpointP0.text, out var p0) && int.TryParse(inputFieldLocalEndpointP1.text, out var p1) &&
+                    int.TryParse(inputFieldLocalEndpointP2.text, out var p2) && int.TryParse(inputFieldLocalEndpointP3.text, out var p3))
+                {
+                    endpoint = NetworkEndpoint.Parse($"{p0}.{p1}.{p2}.{p3}", targetPort);
+                }
+                NetworkManager.Instance.UnicastMessage(new IpAddressData
+                {
+                    Endpoint = endpoint,
+                }, _endpoint, this.GetInstanceID());
             }
-            NetworkManager.Instance.UnicastMessage(new IpAddressData
-            {
-                Endpoint = endpoint,
-            }, _endpoint, this.GetInstanceID());
+
         }
     }
 }

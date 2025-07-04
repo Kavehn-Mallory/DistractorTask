@@ -551,18 +551,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 733371995}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!114 &40635598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -769,7 +757,7 @@ GameObject:
   - component: {fileID: 65484526}
   - component: {fileID: 65484527}
   m_Layer: 5
-  m_Name: ServerIpSettings
+  m_Name: DisplayIpSettings
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10344,18 +10332,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 977413182}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!114 &1351318061
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12405,7 +12381,7 @@ GameObject:
   - component: {fileID: 1576262809}
   - component: {fileID: 1576262810}
   m_Layer: 5
-  m_Name: ServerIP
+  m_Name: DisplayIP
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12972,6 +12948,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1668655562}
   - component: {fileID: 1668655561}
+  - component: {fileID: 1668655563}
   m_Layer: 0
   m_Name: VideoWall-IpHandler
   m_TagString: Untagged
@@ -13001,6 +12978,21 @@ MonoBehaviour:
   inputFieldLocalEndpointP2: {fileID: 2108214228}
   inputFieldLocalEndpointP3: {fileID: 1765287038}
   useLocalEndpoint: {fileID: 337614755}
+  onConnectionStateChanged:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1668655563}
+        m_TargetAssemblyTypeName: DistractorTask.UI.IpAddressFieldToggle, DistractorTask.Runtime
+        m_MethodName: OnConnectionStateChanged
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   targetPort: 7600
 --- !u!4 &1668655562
 Transform:
@@ -13017,6 +13009,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1668655563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668655560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c8b9dcf1f2d4990bd630f7181338a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 65484525}
 --- !u!1 &1684138601
 GameObject:
   m_ObjectHideFlags: 0
@@ -16268,6 +16273,9 @@ MonoBehaviour:
   inputFieldLocalEndpointP2: {fileID: 1985867568}
   inputFieldLocalEndpointP3: {fileID: 1170410885}
   useLocalEndpoint: {fileID: 1879117725}
+  onConnectionStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
   targetPort: 7777
 --- !u!4 &2076082817
 Transform:
