@@ -11,6 +11,7 @@ using DistractorTask.UserStudy.DataDrivenSetup;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 using UnityEngine.Video;
 
 namespace DistractorTask.VideoPlayer
@@ -32,7 +33,6 @@ namespace DistractorTask.VideoPlayer
 
 
         public Action OnVideoClipReset = delegate { };
-        public readonly Action<string, string> OnVideoClipSelected = delegate { };
         
         
         
@@ -41,96 +41,13 @@ namespace DistractorTask.VideoPlayer
         {
             Assert.IsNotNull(videoPlayer, "The video player was not set.");
             //NetworkManager.Instance.RegisterCallback<VideoClipChangeData>(SwitchVideoClip, NetworkExtensions.DisplayWallControlPort);
-            PreprocessFilePaths();
 
-            videoPlayer.source = VideoSource.Url;
+            videoPlayer.source = VideoSource.VideoClip;
             videoPlayer.isLooping = true;
             audioSource.loop = true;
 
         }
-
-        private static async Task<AudioClip> LoadClip(string path, AudioType audioType)
-        {
-            AudioClip clip = null;
-            using (UnityWebRequest uwr = UnityWebRequestMultimedia.GetAudioClip(path, audioType))
-            {
-                uwr.SendWebRequest();
-
-                // wrap tasks in try/catch, otherwise it'll fail silently
-                try
-                {
-                    while (!uwr.isDone) await Task.Delay(5);
-
-                    if (uwr.result == UnityWebRequest.Result.ConnectionError)
-                    {
-                        Debug.Log($"{uwr.error}");
-                    }
-                    else
-                    {
-                        clip = DownloadHandlerAudioClip.GetContent(uwr);
-                    }
-                }
-                catch (Exception err)
-                {
-                    Debug.Log($"{err.Message}, {err.StackTrace}");
-                }
-            }
-
-            return clip;
-        }
         
-
-        private async void PreprocessFilePaths()
-        {
-            for (var i = 0; i < videoClipGroups.Length; i++)
-            {
-                var videoClipGroup = videoClipGroups[i];
-                var path = Application.streamingAssetsPath + "/" + videoClipGroup.relativePath;
-                if(!Directory.Exists(path))
-                {
-                    videoClipGroup.videoClips = Array.Empty<string>();
-                    videoClipGroup.audioClips = Array.Empty<AudioClip>();
-                    videoClipGroups[i] = videoClipGroup;
-                    Debug.LogWarning($"Path {path} does not exist. Video clip group {i} will be empty.");
-                    continue;
-                }
-
-                var files = Directory.GetFiles(path);
-                var videoClips = new List<string>();
-                var audioClips = new List<AudioClip>();
-
-                foreach (var file in files)
-                {
-                    //todo maybe implement a list of acceptable file types 
-                    if (file.EndsWith(".meta", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-                    if (file.EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        audioClips.Add(await LoadClip(file, AudioType.WAV));
-                        continue;
-                    }
-
-                    if (file.EndsWith(".mp3", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        audioClips.Add(await LoadClip(file, AudioType.MPEG));
-                        continue;
-                    }
-                    videoClips.Add(file);
-                }
-
-                videoClipGroup.videoClips = videoClips.ToArray();
-                videoClipGroup.audioClips = audioClips.ToArray();
-                videoClipGroups[i] = videoClipGroup;
-                
-                Debug.Log($"Video Clip Count: {videoClipGroup.videoClips.Length}");
-                Debug.Log($"Audio Clip Count: {videoClipGroup.audioClips.Length}");
-            }
-            
-            
-        }
-
         private void OnEnable()
         {
             _unregisterVideoClipChangeEvent?.Invoke();
@@ -185,11 +102,11 @@ namespace DistractorTask.VideoPlayer
             {
                 if ((videoClipGroup.noiseLevel & noiseLevel) == noiseLevel)
                 {
-                    var videoLink = "";
+                    VideoClip videoLink = null;
                     AudioClip audioClip = null;
                     if (videoClipGroup.videoClips.Length != 0)
                     {
-                        videoClipGroup.videoClips.RandomElement();
+                        videoLink = videoClipGroup.videoClips.RandomElement();
                     }
 
                     if (videoClipGroup.audioClips.Length != 0)
@@ -203,17 +120,16 @@ namespace DistractorTask.VideoPlayer
             }
             
             Debug.LogWarning("Did not find a fitting clip. Playing first group as fallback", this);
-            var element = videoClipGroups.First(v => v.audioClips.Length > 0);
-            SwitchVideoClip(videoClipGroups.First(v => v.videoClips.Length > 0).videoClips.RandomElement(), element.audioClips.RandomElement(), element.volume);
+            SwitchVideoClip(videoClipGroups[0].videoClips.RandomElement(), videoClipGroups[0].audioClips.RandomElement(), videoClipGroups[0].volume);
             
         }
 
-        private void SwitchVideoClip(string videoUrl, AudioClip audioClip, float volume)
+        private void SwitchVideoClip(VideoClip videoClip, AudioClip audioClip, float volume)
         {
             var audioClipName = audioClip ? audioClip.name : "No Audio Clip Found";
-            LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoUrl, audioClipName));
-            OnVideoClipSelected.Invoke(videoUrl, audioClipName);
-            videoPlayer.url = videoUrl;
+            var videoClipName = videoClip ? videoClip.name : "No Video Clip Found";
+            LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoClipName, audioClipName));
+            videoPlayer.clip = videoClip;
             audioSource.clip = audioClip;
             audioSource.volume = volume;
             audioSource.Play();
@@ -224,15 +140,12 @@ namespace DistractorTask.VideoPlayer
         public struct VideoClipGroup
         {
             
-            public string relativePath;
+            [FormerlySerializedAs("relativePath")] public string groupName;
             public NoiseLevel noiseLevel;
             [Range(0, 1)]
             public float volume;
             
-            [HideInInspector]
-            public string[] videoClips;
-            
-            [HideInInspector]
+            public VideoClip[] videoClips;
             public AudioClip[] audioClips;
         }
         

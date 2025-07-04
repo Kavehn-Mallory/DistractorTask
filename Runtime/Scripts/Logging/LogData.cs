@@ -370,14 +370,14 @@ namespace DistractorTask.Logging
             };
         }
 
-        public static LogData CreateVideoPlayerChangeLogData(string videoPath, string audioPath)
+        public static LogData CreateVideoPlayerChangeLogData(string videoClipName, string audioClipName)
         {
             return new LogData
             {
                 _timeStamp = GetCurrentTimestamp(),
                 _logCategory = LogCategory.VideoPlayerChange,
-                _videoPath = videoPath,
-                _audioPath = audioPath
+                _videoPath = videoClipName,
+                _audioPath = audioClipName
             };
         }
 
