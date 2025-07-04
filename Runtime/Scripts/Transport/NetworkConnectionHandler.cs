@@ -19,7 +19,6 @@ namespace DistractorTask.Transport
         
         private event Action<ushort, ConnectionState> OnConnectionStateChanged;
         private readonly ActionRef<DataStreamReader, ushort> _onDataReceived;
-        public bool Internal;
         private NativeList<ushort> _endpointPorts;
         public ConnectionState ConnectionState;
         private ushort _assignedPort;
@@ -36,8 +35,6 @@ namespace DistractorTask.Transport
             {
                 _endpointPorts.Dispose();
             }
-
-            Internal = false;
         }
 
         public bool IsCreated => Driver.IsCreated || Connections.IsCreated;
@@ -62,9 +59,7 @@ namespace DistractorTask.Transport
             _endpointPorts = new NativeList<ushort>(numberOfConnections, Allocator.Persistent);
             _assignedPort = assignedPort;
         }
-
-
-
+        
 
         public void UpdateConnectionHandler()
         {
@@ -137,9 +132,6 @@ namespace DistractorTask.Transport
             {
                 OnConnectionStateChanged?.Invoke(endpoint, state);
             }
-            
-            
-            
         }
         
         
@@ -171,29 +163,6 @@ namespace DistractorTask.Transport
             
             Driver.Listen();
             return true;
-        }
-
-
-        public void EstablishInternalConnection()
-        {
-            Internal = true;
-            if (ConnectionState != ConnectionState.Connected)
-            {
-                ChangeConnectionState(ConnectionState.Connected);
-            }
-        }
-
-        public bool ContainsEndpoint(ushort endpointPort)
-        {
-            foreach (var networkEndpoint in _endpointPorts)
-            {
-                if (networkEndpoint.Equals(endpointPort))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public bool IsConnectedTo(NetworkEndpoint endpoint)
