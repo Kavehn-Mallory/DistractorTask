@@ -89,6 +89,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         public async void StartMarkerPointCreation()
         {
             OnStudyPhaseStart.Invoke(MarkerPointPhaseName, 0);
+            OnIterationCompleted.Invoke("Marker Point Phase", -1, markerPointCount);
             _markerPointEnumerator?.Dispose();
             _markerPointEnumerator = new MarkerPointEnumerator(markerPointCount);
             NetworkManager.Instance.MulticastMessage(new MarkerPointCountData
@@ -103,7 +104,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             {
                 
                 var markerPointIndex = _markerPointEnumerator.Current;
-                OnIterationCompleted.Invoke("Marker Point", markerPointIndex, markerPointCount);
+                
                 await markerPointController.TriggerNextPoint(markerPointIndex);
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<OnMarkerPointActivatedData, OnAnchorPointSelectionData>(
@@ -112,6 +113,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                             MarkerPointIndex = markerPointIndex
                         }, NetworkExtensions.DefaultPort, GetInstanceID(), markerPointIndex);
                 Debug.Log("Marker point done");
+                OnIterationCompleted.Invoke("Marker Point", markerPointIndex, markerPointCount);
                 
                 
             }

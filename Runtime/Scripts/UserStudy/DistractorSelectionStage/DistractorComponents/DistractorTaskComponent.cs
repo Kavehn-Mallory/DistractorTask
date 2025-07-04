@@ -4,6 +4,7 @@ using DistractorTask.Logging;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using Random = UnityEngine.Random;
@@ -36,7 +37,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         [SerializeField]
         private float maxDistanceOffsetBeforeResizing = 0.2f;
 
-        [SerializeField] private XRRayInteractor rayInteractor;
+        [SerializeField] private XRGazeInteractor gazeInteractor;
         
         private string[][] _distractorShapes;
         private string[][] _targetShapes;
@@ -135,7 +136,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         public void RepositionCanvas(Vector3 position)
         {
             EventSystem.current.SetSelectedGameObject(null);
-            rayInteractor.enabled = false;
+            gazeInteractor.enabled = false;
             var distanceFromCamera = math.distance(position, _mainCamera.transform.position);
             _lastSquaredDistance = distanceFromCamera * distanceFromCamera;
             var targetOffset = DistractorPlacementExtension.CalculateActualSize(distanceFromCamera, targetDistractorAngleFromCenter);
@@ -167,7 +168,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             _peripheralDistractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel * 2f);
             _peripheralDistractor.RectTransform.anchoredPosition = peripheralDistractorPosition;
             _selectedDistractor = null;
-            rayInteractor.enabled = true;
+            gazeInteractor.enabled = true;
         }
 
 
