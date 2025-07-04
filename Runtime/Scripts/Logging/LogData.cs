@@ -147,7 +147,7 @@ namespace DistractorTask.Logging
                     csvData[nameof(_trialTargetIndex)] = logData._trialTargetIndex.ToString();
                     csvData[nameof(_trialSelectedIndex)] = logData._trialSelectedIndex.ToString();
                     csvData[nameof(_trialSymbolOrder)] = logData._trialSymbolOrder.ToString();
-                    csvData[nameof(_startTime)] = logData._audioTaskReactionTime.ToString(CultureInfo.InvariantCulture);
+                    csvData[nameof(_startTime)] = logData._startTime.ToString(CultureInfo.InvariantCulture);
                     csvData[nameof(_reactionTime)] = logData._reactionTime.ToString(CultureInfo.InvariantCulture);
                     csvData[nameof(_trialCount)] = logData._trialCount.ToString();
                     csvData[nameof(_repetitionsPerTrial)] = logData._repetitionsPerTrial.ToString();

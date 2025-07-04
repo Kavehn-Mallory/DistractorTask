@@ -142,6 +142,14 @@ namespace DistractorTask.VideoPlayer
             _unregisterVideoClipResetEvent = NetworkManager.Instance
                 .RegisterPersistentMulticastResponse<UpdateVideoClipData, OnVideoClipChangedData>(
                     ResetVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
+            
+            NetworkManager.Instance.RegisterCallbackAllPorts<StudyEndData>(OnStudyEndDataReceived);
+        }
+
+        private void OnStudyEndDataReceived(StudyEndData arg1, int arg2)
+        {
+            videoPlayer.Stop();
+            audioSource.Stop();
         }
 
         private void OnDisable()
@@ -150,6 +158,8 @@ namespace DistractorTask.VideoPlayer
             _unregisterVideoClipResetEvent?.Invoke();
             _unregisterVideoClipChangeEvent = null;
             _unregisterVideoClipResetEvent = null;
+            videoPlayer.Stop();
+            audioSource.Stop();
         }
 
         private void ResetVideoClip(UpdateVideoClipData videoClipData, int instanceId)
@@ -200,7 +210,7 @@ namespace DistractorTask.VideoPlayer
 
         private void SwitchVideoClip(string videoUrl, AudioClip audioClip, float volume)
         {
-            var audioClipName = audioClip ? audioClip.name : "";
+            var audioClipName = audioClip ? audioClip.name : "No Audio Clip Found";
             LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoUrl, audioClipName));
             OnVideoClipSelected.Invoke(videoUrl, audioClipName);
             videoPlayer.url = videoUrl;

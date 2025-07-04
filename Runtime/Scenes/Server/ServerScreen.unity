@@ -13331,7 +13331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c8b9dcf1f2d4990bd630f7181338a1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 65484525}
+  targetObject: {fileID: 733371995}
 --- !u!1 &1684138601
 GameObject:
   m_ObjectHideFlags: 0
@@ -16554,6 +16554,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2076082817}
   - component: {fileID: 2076082816}
+  - component: {fileID: 2076082818}
   m_Layer: 0
   m_Name: IpHandler
   m_TagString: Untagged
@@ -16585,7 +16586,19 @@ MonoBehaviour:
   useLocalEndpoint: {fileID: 1879117725}
   onConnectionStateChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2076082818}
+        m_TargetAssemblyTypeName: DistractorTask.UI.IpAddressFieldToggle, DistractorTask.Runtime
+        m_MethodName: OnConnectionStateChanged
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   targetPort: 7777
 --- !u!4 &2076082817
 Transform:
@@ -16602,6 +16615,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2076082818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2076082815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c8b9dcf1f2d4990bd630f7181338a1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 977413182}
 --- !u!1 &2078197665
 GameObject:
   m_ObjectHideFlags: 0

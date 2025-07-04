@@ -105,10 +105,10 @@ namespace DistractorTask.UserStudy.AudioTask
 
         public void EndAudioTask()
         {
-            _cancellationTokenSource.Cancel();
+            _taskIsActive = false;
             audioClipTarget.Stop();
             audioClipTarget.enabled = false;
-            _taskIsActive = false;
+            _cancellationTokenSource.Cancel();
         }
         
         private void PlayAudioTask()

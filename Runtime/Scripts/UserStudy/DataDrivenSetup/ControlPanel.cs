@@ -150,13 +150,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         }
      
 #endregion
-        
-
-        //todo look if we have to cancel tasks somehow
-
 
         public void AdvanceStudy()
         {
+            //end any study that is still ongoing 
+            NetworkManager.Instance.BroadcastMessage(new StudyEndData(), GetInstanceID());
             if (!_studyEnumerator.MoveNext())
             {
                 OnStudyCompleted.Invoke();
@@ -256,7 +254,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             Debug.Log("Study Phase Ended");
             LoggingComponent.Log(LogData.CreateStudyEndLogData());
             _enumerator = null;
-            
+            NetworkManager.Instance.BroadcastMessage(new StudyEndData(), GetInstanceID());
             OnStudyPhaseEnd.Invoke(StudyPhaseName);
             unregisterCallback.Invoke();
         }
@@ -283,7 +281,11 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         
         
     }
-    
+
+    public class StudyEndData : GenericNoValueData
+    {
+    }
+
 
     public class OnConditionCompleted : BaseResponseData
     {
