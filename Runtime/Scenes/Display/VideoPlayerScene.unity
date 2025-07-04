@@ -359,36 +359,65 @@ MonoBehaviour:
   videoPlayer: {fileID: 1608970027}
   audioSource: {fileID: 306300153}
   videoClipGroups:
-  - relativePath: None
+  - groupName: None
     noiseLevel: 1
     volume: 0
     videoClips: []
     audioClips: []
-  - relativePath: Low
+  - groupName: Low
     noiseLevel: 2
     volume: 1
-    videoClips: []
-    audioClips: []
-  - relativePath: High
+    videoClips:
+    - {fileID: 32900000, guid: 8a6a02a0d13bc4d4293f5fb7443fd18d, type: 3}
+    - {fileID: 32900000, guid: f894ee280dbe64246a0a5b12c7198554, type: 3}
+    - {fileID: 32900000, guid: 95c6ab239b5e9ff4b908b9e298d5c60f, type: 3}
+    - {fileID: 32900000, guid: 1df87fe87a703b240984c4a1e337d15a, type: 3}
+    - {fileID: 32900000, guid: 17bbbdab237561046af2d73201160312, type: 3}
+    - {fileID: 32900000, guid: 0d8b47292eeb25a438eb5091068570f6, type: 3}
+    audioClips:
+    - {fileID: 8300000, guid: 22f0416c9365e6e43a84db9089e398f8, type: 3}
+  - groupName: High
     noiseLevel: 16
     volume: 1
-    videoClips: []
-    audioClips: []
-  - relativePath: Audio
+    videoClips:
+    - {fileID: 32900000, guid: f76e13babc58d9144b4dbf68ffcacc87, type: 3}
+    - {fileID: 32900000, guid: 4ea27d14d4f91e04c96755975ab2f3a2, type: 3}
+    - {fileID: 32900000, guid: 212a4ee51489cbc45b6cffee0ef524b0, type: 3}
+    - {fileID: 32900000, guid: 8ca1d1a02e4bb5b4c9b06cb132fe10e1, type: 3}
+    - {fileID: 32900000, guid: 26d976df5f9cd9c4b99e1fb4b7fba2ef, type: 3}
+    - {fileID: 32900000, guid: 8ae0cc4b3c2803347a75db2dece33e49, type: 3}
+    audioClips:
+    - {fileID: 8300000, guid: efaf35c934d5d2e4ca0c454461e72906, type: 3}
+  - groupName: Audio
     noiseLevel: 4
     volume: 1
     videoClips: []
-    audioClips: []
-  - relativePath: Visual
+    audioClips:
+    - {fileID: 8300000, guid: 197fbe1beffdd7443aeb9ef8a76997a6, type: 3}
+  - groupName: Visual
     noiseLevel: 8
     volume: 0.25
-    videoClips: []
-    audioClips: []
-  - relativePath: Max
+    videoClips:
+    - {fileID: 32900000, guid: f76e13babc58d9144b4dbf68ffcacc87, type: 3}
+    - {fileID: 32900000, guid: 4ea27d14d4f91e04c96755975ab2f3a2, type: 3}
+    - {fileID: 32900000, guid: 212a4ee51489cbc45b6cffee0ef524b0, type: 3}
+    - {fileID: 32900000, guid: 8ca1d1a02e4bb5b4c9b06cb132fe10e1, type: 3}
+    - {fileID: 32900000, guid: 26d976df5f9cd9c4b99e1fb4b7fba2ef, type: 3}
+    - {fileID: 32900000, guid: 8ae0cc4b3c2803347a75db2dece33e49, type: 3}
+    audioClips:
+    - {fileID: 8300000, guid: 197fbe1beffdd7443aeb9ef8a76997a6, type: 3}
+  - groupName: Max
     noiseLevel: 32
     volume: 1
-    videoClips: []
-    audioClips: []
+    videoClips:
+    - {fileID: 32900000, guid: f76e13babc58d9144b4dbf68ffcacc87, type: 3}
+    - {fileID: 32900000, guid: 4ea27d14d4f91e04c96755975ab2f3a2, type: 3}
+    - {fileID: 32900000, guid: 212a4ee51489cbc45b6cffee0ef524b0, type: 3}
+    - {fileID: 32900000, guid: 8ca1d1a02e4bb5b4c9b06cb132fe10e1, type: 3}
+    - {fileID: 32900000, guid: 26d976df5f9cd9c4b99e1fb4b7fba2ef, type: 3}
+    - {fileID: 32900000, guid: 8ae0cc4b3c2803347a75db2dece33e49, type: 3}
+    audioClips:
+    - {fileID: 8300000, guid: 197fbe1beffdd7443aeb9ef8a76997a6, type: 3}
 --- !u!4 &440515708
 Transform:
   m_ObjectHideFlags: 0

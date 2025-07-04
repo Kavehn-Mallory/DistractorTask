@@ -21,8 +21,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         public DistractorTaskComponent distractorTaskComponent;
         public AudioTaskComponent audioTaskComponent;
         
-        private Action _unregisterStudyStartData;
-        private ConditionEnumerator _conditionEnumerator;
+        private TrialEnumerator _trialEnumerator;
 
         private TaskCompletionSource<int> _inputTask;
 
@@ -31,11 +30,14 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
         private bool _acceptingInput;
 
         public Action<DistractorTaskComponent.DistractorSelectionResult> OnDistractorSelection = delegate { };
-        
+
+        private Action _unregisterPersistentConditionDataResponse;
 
         private void OnEnable()
         {
-            NetworkManager.Instance.RegisterCallback<ConditionData>(StartStudyCondition);
+            //NetworkManager.Instance.RegisterCallback<ConditionData>(StartStudyCondition);
+            _unregisterPersistentConditionDataResponse = NetworkManager.Instance.RegisterPersistentMulticastResponse<ConditionData, OnConditionCompleted>(
+                StartStudyCondition, NetworkExtensions.DefaultPort, GetInstanceID());
             
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += OnReceiveInput;
             
@@ -45,7 +47,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
 
         private void OnDisable()
         {
-            NetworkManager.Instance.UnregisterCallback<ConditionData>(StartStudyCondition);
+            _unregisterPersistentConditionDataResponse.Invoke();
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed -= OnReceiveInput;
         }
         
@@ -56,12 +58,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             {
                 return;
             }
-            var currentRepetition = _conditionEnumerator.Current?.CurrentRepetition ?? -1;
+            var currentRepetition = _trialEnumerator.Current?.CurrentRepetition ?? -1;
             var result = distractorTaskComponent.CheckInput();
             
             LoggingComponent.Log(LogData.CreateTrialConfirmationLogData(result.targetDistractor, result.selectedDistractor,
-                result.symbolOrder, result.startTime, LogData.GetCurrentTimestamp(), _conditionEnumerator.CurrentTrialIndex,
-                currentRepetition, _conditionEnumerator.CurrentTrialIndex %
+                result.symbolOrder, result.startTime, LogData.GetCurrentTimestamp(), _trialEnumerator.CurrentTrialIndex,
+                currentRepetition, _trialEnumerator.CurrentTrialIndex %
                                    distractorAnchorPointAsset.Length));
             OnDistractorSelection.Invoke(result);
             _inputTask?.SetResult(1);
@@ -76,7 +78,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             
             
             //Todo get the points from the anchor point thing, I think 
-            _conditionEnumerator?.Dispose();
+            _trialEnumerator?.Dispose();
             distractorTaskComponent.EnableCanvas();
             //todo implement this 
             _cancellationTokenForStudy?.Cancel();
@@ -84,7 +86,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             _inputTask = new TaskCompletionSource<int>();
             
             //start new study 
-            _conditionEnumerator = new ConditionEnumerator(condition.studyCondition);
+            _trialEnumerator = new TrialEnumerator(condition.studyCondition);
             
             LoggingComponent.Log(LogData.CreateTrialBeginLogData(condition.studyCondition.noiseLevel, condition.studyCondition.loadLevel, condition.studyCondition.trialCount, condition.studyCondition.repetitionsPerTrial, condition.studyCondition.hasAudioTask ? 2 : -1));
 
@@ -97,12 +99,12 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             
             debugText.AddDebugText("Starting study condition");
             
-            while (_conditionEnumerator.MoveNext())
+            while (_trialEnumerator.MoveNext())
             {
                 
                 //should never be null, but the squiggly lines annoyed me and better be safe than sorry 
-                var repetitionEnumerator = _conditionEnumerator.Current ?? new TrialsEnumerator(1);
-                var anchor = distractorAnchorPointAsset.GetAnchorPoint(_conditionEnumerator.CurrentTrialIndex %
+                var repetitionEnumerator = _trialEnumerator.Current ?? new TrialRepetitionEnumerator(1);
+                var anchor = distractorAnchorPointAsset.GetAnchorPoint(_trialEnumerator.CurrentTrialIndex %
                                                                     distractorAnchorPointAsset.Length);
 
                 var placementPosition = anchor.GetPosition();
@@ -133,7 +135,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
                 await NetworkManager.Instance
                     .MulticastMessageAndAwaitResponse<TrialCompletedData, TrialCompletedResponseData>(
                         new TrialCompletedData(), NetworkExtensions.DefaultPort, GetInstanceID(),
-                        _conditionEnumerator.CurrentTrialIndex);
+                        _trialEnumerator.CurrentTrialIndex);
                 
             }
             
@@ -143,11 +145,9 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage
             }
 
             LoggingComponent.Log(LogData.CreateTrialEndLogData());
-            NetworkManager.Instance.MulticastMessage(new OnConditionCompleted(), NetworkExtensions.DefaultPort,
-                GetInstanceID());
 
 
-            _conditionEnumerator = null;
+            _trialEnumerator = null;
             _inputTask = null;
             _acceptingInput = false;
             distractorTaskComponent.DisableCanvas();

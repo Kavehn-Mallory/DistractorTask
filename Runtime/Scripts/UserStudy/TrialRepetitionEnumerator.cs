@@ -2,13 +2,13 @@
 
 namespace DistractorTask.UserStudy
 {
-    public class TrialsEnumerator : IEnumerator
+    public class TrialRepetitionEnumerator : IEnumerator
     {
         private int _currentTrial;
         private int _trialCount;
 
 
-        public TrialsEnumerator(int trialCount)
+        public TrialRepetitionEnumerator(int trialCount)
         {
             _trialCount = trialCount;
             _currentTrial = -1;

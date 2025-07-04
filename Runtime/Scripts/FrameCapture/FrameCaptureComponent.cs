@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using DistractorTask.Core;
 using DistractorTask.Logging;
+using TMPro;
 using UnityEngine;
 using UnityEngine.XR.MagicLeap;
 
@@ -21,7 +22,9 @@ namespace DistractorTask.FrameCapture
 
         // Indicates if an image is currently being captured
         private bool isCapturingImage;
-        
+
+        [SerializeField]
+        private TMP_Text debugText;
         
         private string KeyFrameLogPath
         {
@@ -47,6 +50,11 @@ namespace DistractorTask.FrameCapture
         private void Start()
         {
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += CaptureImage;
+        }
+
+        private void Update()
+        {
+            debugText.text = KeyFrameLogPath;
         }
 
         private void OnDisable()

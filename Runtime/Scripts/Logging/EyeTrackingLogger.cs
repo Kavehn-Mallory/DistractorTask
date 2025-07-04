@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
 using DistractorTask.Core;
 using MagicLeap.OpenXR.Features.EyeTracker;
-using MagicLeap.OpenXR.Features.FacialExpressions;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.MagicLeap;
@@ -33,6 +32,9 @@ namespace DistractorTask.Logging
         private bool _gyroAvailable = false;
         private bool _attitudeAvailable = false;
         private bool _linearAccelAvailable = false;
+
+        [SerializeField]
+        private TMP_Text debugText;
         
         
         private void Awake()
@@ -57,6 +59,10 @@ namespace DistractorTask.Logging
             if (_eyeTrackerInitialized)
             {
                 CollectEyeTrackingData();
+            }
+            else if(_initializationAttempts == 0)
+            {
+                StartCoroutine(RetryInitialization(0));
             }
             GatherGyroValues();
             GatherLuxValue();
@@ -275,6 +281,7 @@ namespace DistractorTask.Logging
 
             StaticData staticData = data.StaticData;
             
+            
             GazeBehavior gazeBehavior = data.GazeBehaviorData;
 
             var gazeBehaviourType = "";
@@ -283,19 +290,17 @@ namespace DistractorTask.Logging
 
             long currentTimeStamp = -1;
             
-            if (gazeBehavior.Valid || gazeBehavior.MetaData.Valid)
+            if (gazeBehavior is { Valid: true, MetaData: { Valid: true } })
             {
                 gazeBehaviourType = gazeBehavior.GazeBehaviorType.ToString();
                 gazeStartTimeStamp = gazeBehavior.OnsetTime;
                 
-                MLTime.ConvertMLTimeToSystemTime(gazeStartTimeStamp, out var startTime);
-                
                 gazeDuration = gazeBehavior.Duration;
                 currentTimeStamp = gazeBehavior.Time;
             }
-            
-            
-            
+
+
+            debugText.text = "We got here and we are tracking the eyes";
             LoggingComponent.Log(LogData.CreateEyeTrackingLogData(_mainCamera.transform.position, _mainCamera.transform.rotation, leftEyePosition, rightEyePosition, new Vector2(staticData.EyeWidthMax, staticData.EyeHeightMax), pupilDiameter, currentTimeStamp, gazeBehaviourType, gazeStartTimeStamp, gazeDuration));
         }
         

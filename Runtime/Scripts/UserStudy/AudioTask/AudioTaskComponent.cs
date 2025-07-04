@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DistractorTask.Debugging;
 using DistractorTask.Logging;
-using DistractorTask.Transport;
-using DistractorTask.UserStudy.DataDrivenSetup;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -22,17 +19,15 @@ namespace DistractorTask.UserStudy.AudioTask
         [SerializeField, Tooltip("Min and max delay between repetitions in seconds")] private Vector2 taskFrequency = new Vector2(15, 25);
 
         [SerializeField] private float maxReactionTime = 2f;
-
-        [SerializeField]
-        private DebuggingScriptableObject debugObject;
-
+        
         private Transform _mainCameraTransform;
 
         private CancellationTokenSource _cancellationTokenSource;
 
         private bool _taskIsActive;
         
-        private long _timestampLastAudioTask = -1;
+        private long _timestampAudioTaskStart = -1;
+        private long _timestampAudioTaskEnd = -1;
         
 
 
@@ -42,11 +37,18 @@ namespace DistractorTask.UserStudy.AudioTask
             _mainCameraTransform = Camera.main.transform;
             InputHandler.InputHandler.Instance.OnTriggerButtonPressed += OnButtonPressReceived;
         }
-        
+
+        private void OnDisable()
+        {
+            _taskIsActive = false;
+            _cancellationTokenSource.Cancel();
+        }
 
 
+        [ContextMenu("Start Audio Task")]
         public async void BeginAudioTask()
         {
+            Debug.Log("Audio task has started");
             audioClipTarget.enabled = true;
             _taskIsActive = true;
             _cancellationTokenSource = new CancellationTokenSource();
@@ -57,52 +59,45 @@ namespace DistractorTask.UserStudy.AudioTask
                 var delay = (int)(Random.Range(taskFrequency.x, taskFrequency.y) * 1000);
                 var delayTask = Task.Delay(delay, _cancellationTokenSource.Token);
                 await delayTask;
+                Debug.Log("Delay is over");
                 if (delayTask.IsCanceled)
                 {
+                    Debug.Log("Task was canceled");
                     _taskIsActive = false;
                     return;
                 }
-
-                _taskIsActive = true;
-                _timestampLastAudioTask = LogData.GetCurrentTimestamp();
+                
+                _timestampAudioTaskStart = LogData.GetCurrentTimestamp();
+                _timestampAudioTaskEnd = -1;
                 PlayAudioTask();
                 //we wait a bit longer than the acceptable time frame to make sure that the result without button press is invalid
                 var audioTask = Task.Delay((int)(maxReactionTime * 1000 + 20), _cancellationTokenSource.Token);
                 await audioTask;
-                if (_taskIsActive)
+
+                if (_timestampAudioTaskEnd == -1)
                 {
-                    //we did not get it
-                    LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_timestampLastAudioTask, LogData.GetCurrentTimestamp()));
+                    Debug.Log("Did not hit the correct timing");
+                    _timestampAudioTaskEnd = LogData.GetCurrentTimestamp();
                 }
-                _taskIsActive = false;
+                LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_timestampAudioTaskStart, _timestampAudioTaskEnd));
+                _timestampAudioTaskStart = -1;
+                audioClipTarget.Stop();
             }
             
         }
 
+        [ContextMenu("Simulate button press")]
         private void OnButtonPressReceived()
         {
-            if (_timestampLastAudioTask < 0 || !_taskIsActive)
+            if (_timestampAudioTaskStart < 0 || !_taskIsActive || _timestampAudioTaskEnd >= 0)
             {
                 return;
             }
-
-            var dif = (new TimeSpan(LogData.GetCurrentTimestamp()) - new TimeSpan(_timestampLastAudioTask)).TotalSeconds;
-            LoggingComponent.Log(LogData.CreateAudioTaskConfirmationLogData(_timestampLastAudioTask, LogData.GetCurrentTimestamp()));
-            
-            if (dif <= maxReactionTime)
-            {
-                //success 
-                debugObject.AddDebugText("Audio Task Success");
-            }
-            else
-            {
-                debugObject.AddDebugText("Audio Task Failure");
-                //too late
-            }
-
-            _taskIsActive = false;
+            Debug.Log("Hit the correct timing");
+            _timestampAudioTaskEnd = LogData.GetCurrentTimestamp();
         }
 
+        [ContextMenu("End Audio Task")]
         public void EndAudioTask()
         {
             _taskIsActive = false;
@@ -115,8 +110,9 @@ namespace DistractorTask.UserStudy.AudioTask
         {
             audioClipTarget.enabled = true;
             var positionOffset = Random.onUnitSphere * Random.Range(distanceOfAudioSource.x, distanceOfAudioSource.y);
-            
+            Debug.Log("Pling");
             audioClipTarget.transform.SetPositionAndRotation(_mainCameraTransform.position + positionOffset, Quaternion.identity);
+            audioClipTarget.time = 0;
             audioClipTarget.Play();
 
         }
