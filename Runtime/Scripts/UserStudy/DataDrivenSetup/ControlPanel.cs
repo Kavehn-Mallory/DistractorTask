@@ -164,7 +164,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             }
             
             var startingCondition = participantDropdown.value;
-            OnStudyPhaseStart.Invoke($"{StudyPhaseName}", _studyEnumerator.CurrentStudyIndex);
+            OnStudyPhaseStart.Invoke($"{_studyEnumerator.Current.studyName}", _studyEnumerator.CurrentStudyIndex);
             _enumerator = new StudyConditionsEnumerator(_studyEnumerator.Current, startingCondition);
             
             LoggingComponent.Log(LogData.CreateStudyBeginLogData(_studyEnumerator.Current.studyName, _studyEnumerator.CurrentStudyIndex, TransformCurrentConditionToLetter(startingCondition, _enumerator.PermutationCount).ToString()));
@@ -259,7 +259,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             LoggingComponent.Log(LogData.CreateStudyEndLogData());
             _enumerator = null;
             NetworkManager.Instance.BroadcastMessage(new StudyEndData(), GetInstanceID());
-            OnStudyPhaseEnd.Invoke(StudyPhaseName);
+            OnStudyPhaseEnd.Invoke(_studyEnumerator.Current.studyName);
             unregisterCallback.Invoke();
         }
 
