@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.Transport.DataContainer;
@@ -43,13 +44,32 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         private const string MarkerPointPhaseName = "Marker Point Creation Phase";
         private const string StudyPhaseName = "Study Phase";
 
+        private NetworkManagerExtensions.ResponseCallback<OnVideoClipChangedData> _videoWallCommunicationTask;
+        private NetworkManagerExtensions.ResponseCallback<OnConditionCompleted> _hmdCommunicationTask;
+
         private void Awake()
         {
             _studyEnumerator = new StudyEnumerator(studies);
-
+            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DisplayWallControlPort, OnDisplayWallConnectionStateChanged);
+            NetworkManager.Instance.RegisterToConnectionStateChange(NetworkExtensions.DefaultPort, OnHmdConnectionStateChanged);
         }
 
+        private void OnHmdConnectionStateChanged(ConnectionState obj)
+        {
+            if (obj != ConnectionState.Connected && _hmdCommunicationTask != null)
+            {
+                _hmdCommunicationTask.CancelTask();
+            }
+        }
 
+        private void OnDisplayWallConnectionStateChanged(ConnectionState obj)
+        {
+            if (obj != ConnectionState.Connected && _videoWallCommunicationTask != null)
+            {
+                _videoWallCommunicationTask.CancelTask();
+            }
+            
+        }
 
 
         #region MarkerPointRegion
@@ -150,22 +170,41 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 
                 Debug.Log($"Current Study Load Level: {studyCondition.loadLevel.ToString()}; Study Noise Level: {studyCondition.noiseLevel.ToString()}");
                 Debug.Log($"Awaiting response with sender id {GetInstanceID()} and message id {_enumerator.CurrentPermutationIndex}");
-                await NetworkManager.Instance
-                    .MulticastMessageAndAwaitResponse<StudyConditionVideoInfoData, OnVideoClipChangedData>(
+                _videoWallCommunicationTask = NetworkManager.Instance
+                    .MulticastMessageAndAwaitResponseWithInterrupt<StudyConditionVideoInfoData, OnVideoClipChangedData>(
                         new StudyConditionVideoInfoData
                         {
                             studyCondition = studyCondition
                         }, NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
                         _enumerator.CurrentPermutationIndex);
+
+                await _videoWallCommunicationTask.AwaitMessage();
+
+                if (!_videoWallCommunicationTask.IsCompletedSuccessfully)
+                {
+                    //todo do we just restart the enumerator at the specified index?
+                    Debug.LogError("Error while trying to switch video clip");
+                    return;
+                }
+                
                 Debug.Log("Video clip was selected. Sending data to HMD");
-                await NetworkManager.Instance
-                    .MulticastMessageAndAwaitResponse<ConditionData, OnConditionCompleted>(
+                _hmdCommunicationTask =  NetworkManager.Instance
+                    .MulticastMessageAndAwaitResponseWithInterrupt<ConditionData, OnConditionCompleted>(
                         new ConditionData
                         {
                             studyCondition = studyCondition
                         }, NetworkExtensions.DefaultPort, GetInstanceID(),
                         _enumerator.CurrentPermutationIndex);
-                
+
+                await _hmdCommunicationTask.AwaitMessage();
+
+                if (!_hmdCommunicationTask.IsCompletedSuccessfully)
+                {
+                    //todo do we just restart the enumerator at the specified index?
+                    Debug.LogError("Error while trying to switch video clip");
+                    return;
+                }
+
             }
             Debug.Log("Study Phase Ended");
             LoggingComponent.Log(LogData.CreateStudyEndLogData());

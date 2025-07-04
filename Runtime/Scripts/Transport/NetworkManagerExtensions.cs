@@ -14,6 +14,12 @@ namespace DistractorTask.Transport
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(0), callerId, messageId, ConnectionType.Broadcast, suppressLocalBroadcast);
             return task.AwaitMessage();
         }
+        
+        public static ResponseCallback<TResponse> BroadcastMessageAndAwaitResponseWithInterrupt<T, TResponse>(this INetworkManager networkManager, T data, int callerId, int messageId, bool suppressLocalBroadcast = false) where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(0), callerId, messageId, ConnectionType.Broadcast, suppressLocalBroadcast);
+            return task;
+        }
 
         public static Task MulticastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, ushort targetPort, int callerId, int messageId)
             where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
@@ -23,12 +29,28 @@ namespace DistractorTask.Transport
             return task.AwaitMessage();
         }
         
+        public static ResponseCallback<TResponse> MulticastMessageAndAwaitResponseWithInterrupt<T, TResponse>(this INetworkManager networkManager, T data, ushort targetPort, int callerId, int messageId)
+            where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, NetworkEndpoint.AnyIpv4.WithPort(targetPort),
+                callerId, messageId, ConnectionType.Multicast);
+            return task;
+        }
+        
         public static Task UnicastMessageAndAwaitResponse<T, TResponse>(this INetworkManager networkManager, T data, NetworkEndpoint endpoint, int callerId, int messageId)
             where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
         {
             var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, endpoint,
                 callerId, messageId, ConnectionType.Unicast);
             return task.AwaitMessage();
+        }
+        
+        public static ResponseCallback<TResponse> UnicastMessageAndAwaitResponseWithInterrupt<T, TResponse>(this INetworkManager networkManager, T data, NetworkEndpoint endpoint, int callerId, int messageId)
+            where T : IRespondingSerializer<TResponse>, new() where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            var task = networkManager.ScheduleSendAndReceive<TResponse, T>(data, endpoint,
+                callerId, messageId, ConnectionType.Unicast);
+            return task;
         }
         
         private static ResponseCallback<TResponse> ScheduleSendAndReceive<TResponse, TS>(this INetworkManager networkManager, TS data, NetworkEndpoint endpoint, int callerId,
@@ -386,7 +408,7 @@ namespace DistractorTask.Transport
         
         
         
-        private class ResponseCallback<T> where T : ISerializer, IResponseIdentifier, new()
+        public class ResponseCallback<T> where T : ISerializer, IResponseIdentifier, new()
         {
             private TaskCompletionSource<T> _source;
             private T _expectedReturnValue;
@@ -406,7 +428,9 @@ namespace DistractorTask.Transport
                 _counter = 0;
                 RegisterCallback<T>(networkManager, connectionType, port, Callback);
             }
-            
+
+            public bool IsCompletedSuccessfully => _source.Task.IsCompletedSuccessfully;
+
             public Task AwaitMessage()
             {
                 if (_source.Task.IsCompleted)
@@ -416,6 +440,11 @@ namespace DistractorTask.Transport
 
                 return _source.Task;
             }
+
+            public void CancelTask()
+            {
+                _source.SetCanceled();
+            }
             
             private void CreateTask()
             {
@@ -423,7 +452,7 @@ namespace DistractorTask.Transport
                 _source = new TaskCompletionSource<T>();
             }
 
-            public void Callback(T data, int id)
+            private void Callback(T data, int id)
             {
                 if (data.SenderId == _expectedReturnValue.SenderId && data.MessageId == _expectedReturnValue.MessageId)
                 {

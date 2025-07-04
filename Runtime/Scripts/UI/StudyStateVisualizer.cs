@@ -24,6 +24,7 @@ namespace DistractorTask.UI
 
         private void SetStudyStageEndText(string studyStageName)
         {
+            Debug.Log("Received study stage ended");
             studyStageText.text = $"{studyStageName} is completed";
         }
 

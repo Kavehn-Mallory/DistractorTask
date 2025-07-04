@@ -13,7 +13,7 @@ namespace DistractorTask.Transport
 
         private NetworkMessageEventHandler _globalHandler = new();
         private Dictionary<ushort, ConnectionObject> _activeConnections = new();
-        private Dictionary<ushort, NetworkMessageEventHandler> _inactiveEventHandlers = new();
+        private Dictionary<ushort, InactiveConnectionObject> _inactiveConnections = new();
 
         private void OnDestroy()
         {
@@ -38,8 +38,8 @@ namespace DistractorTask.Transport
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
-                _inactiveEventHandlers.TryAdd(port, new NetworkMessageEventHandler());
-                _inactiveEventHandlers[port].RegisterCallback(callback);
+                _inactiveConnections.TryAdd(port, new InactiveConnectionObject());
+                _inactiveConnections[port].EventHandler.RegisterCallback(callback);
                 return;
             }
             connectionObject.EventHandler.RegisterCallback(callback);
@@ -54,8 +54,8 @@ namespace DistractorTask.Transport
         {
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
-                _inactiveEventHandlers.TryGetValue(port, out var inactiveConnectionObject);
-                inactiveConnectionObject?.UnregisterCallback(callback);
+                _inactiveConnections.TryGetValue(port, out var inactiveConnectionObject);
+                inactiveConnectionObject?.EventHandler.UnregisterCallback(callback);
                 return;
             }
             connectionObject.EventHandler.UnregisterCallback(callback);
@@ -77,17 +77,17 @@ namespace DistractorTask.Transport
                 return connectionObject.ConnectionHandler.StartListening(endpoint);
             }
 
-            if (!_inactiveEventHandlers.Remove(port, out var messageEventHandler))
+            if (!_inactiveConnections.Remove(port, out var inactiveConnectionObject))
             {
-                messageEventHandler = new NetworkMessageEventHandler();
+                inactiveConnectionObject = new InactiveConnectionObject();
             }
 
             connectionObject = new ConnectionObject
             {
                 ConnectionHandler = new NetworkConnectionHandler(port, OnDataReceived, OnConnectionStateChanged),
-                EventHandler = messageEventHandler,
+                EventHandler = inactiveConnectionObject.EventHandler,
                 HasLocalConnection = false,
-                OnConnectionStateChange = delegate { }
+                OnConnectionStateChange = inactiveConnectionObject.OnConnectionStateChange
             };
             _activeConnections.Add(port, connectionObject);
             RegisterToConnectionStateChange(port, onConnectionStateChanged);
@@ -151,17 +151,17 @@ namespace DistractorTask.Transport
             }
             
             
-            if (!_inactiveEventHandlers.Remove(endpoint.Port, out var messageEventHandler))
+            if (!_inactiveConnections.Remove(endpoint.Port, out var inactiveConnectionObject))
             {
-                messageEventHandler = new NetworkMessageEventHandler();
+                inactiveConnectionObject = new InactiveConnectionObject();
             }
 
             connectionObject = new ConnectionObject()
             {
                 ConnectionHandler = new NetworkConnectionHandler(endpoint.Port, OnDataReceived, OnConnectionStateChanged),
-                EventHandler = messageEventHandler,
+                EventHandler = inactiveConnectionObject.EventHandler,
                 HasLocalConnection = isLocal,
-                OnConnectionStateChange = delegate { }
+                OnConnectionStateChange = inactiveConnectionObject.OnConnectionStateChange
             };
             _activeConnections.Add(endpoint.Port, connectionObject);
             RegisterToConnectionStateChange(endpoint.Port, onConnectionStateChanged);
@@ -289,7 +289,19 @@ namespace DistractorTask.Transport
             if (_activeConnections.TryGetValue(endpointPort, out var connectionObject))
             {
                 connectionObject.OnConnectionStateChange += onConnectionStateChanged;
+                return;
             }
+            if (_inactiveConnections.TryGetValue(endpointPort, out var inactiveConnectionObject))
+            {
+                inactiveConnectionObject.OnConnectionStateChange += onConnectionStateChanged;
+                return;
+            }
+            _inactiveConnections.Add(endpointPort, new InactiveConnectionObject
+            {
+                OnConnectionStateChange = onConnectionStateChanged,
+                EventHandler = new NetworkMessageEventHandler()
+            });
+            
         }
 
         public void UnregisterToConnectionStateChange(ushort endpointPort, Action<ConnectionState> onConnectionStateChanged)
@@ -301,6 +313,12 @@ namespace DistractorTask.Transport
             if (_activeConnections.TryGetValue(endpointPort, out var connectionObject))
             {
                 connectionObject.OnConnectionStateChange -= onConnectionStateChanged;
+                return;
+            }
+
+            if (_inactiveConnections.TryGetValue(endpointPort, out var inactiveConnectionObject))
+            {
+                inactiveConnectionObject.OnConnectionStateChange -= onConnectionStateChanged;
             }
         }
     }
@@ -317,4 +335,12 @@ namespace DistractorTask.Transport
             return ConnectionHandler.IsConnectedTo(endpoint);
         }
     }
+
+    internal class InactiveConnectionObject
+    {
+        public NetworkMessageEventHandler EventHandler = new();
+        public Action<ConnectionState> OnConnectionStateChange = delegate { };
+    }
+
+
 }
