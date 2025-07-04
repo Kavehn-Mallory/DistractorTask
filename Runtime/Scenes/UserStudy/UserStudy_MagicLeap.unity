@@ -603,7 +603,7 @@ MonoBehaviour:
   - groupName: High Load
     distractorLetters: H,K,V,Y,Z
     targetLetters: X,N
-  changeTargetAfterEveryTrial: 0
+  changeTargetAfterEveryTrial: 1
   maxDistanceOffsetBeforeResizing: 0.2
   gazeInteractor: {fileID: 870620931}
 --- !u!1 &602356172
