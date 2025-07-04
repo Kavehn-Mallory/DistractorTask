@@ -200,6 +200,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
                 OnTrialCompleted, NetworkExtensions.DefaultPort, GetInstanceID());
             
+            OnIterationCompleted.Invoke("Study Condition", -1, _enumerator.PermutationCount);
+            
             while (_enumerator.MoveNext())
             {
                 var studyCondition = _enumerator.Current;

@@ -12,6 +12,7 @@ namespace DistractorTask.Logging
         public TMP_Text buttonText;
 
         public GameObject controls;
+        public GameObject advancedControls;
 
         private void Start()
         {
@@ -22,6 +23,7 @@ namespace DistractorTask.Logging
         {
             LoggingComponent.Instance.TogglePauseLogging();
             controls.SetActive(!LoggingComponent.Instance.IsPaused);
+            advancedControls.SetActive(!LoggingComponent.Instance.IsPaused);
             if (LoggingComponent.Instance.IsPaused)
             {
                 buttonText.text = "Continue Logging";
