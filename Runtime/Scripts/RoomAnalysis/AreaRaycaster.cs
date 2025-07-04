@@ -1,18 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using DistractorTask.Core;
 using DistractorTask.Debugging;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
-using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.XR.Management;
 
 namespace DistractorTask.RoomAnalysis
 {
     public class AreaRaycaster : MonoBehaviour
     {
         [SerializeField] private ARRaycastManager manager;
+        [SerializeField] private ARPlaneManager planeManager;
         [SerializeField] private Transform target;
         [SerializeField] private Camera mainCamera;
         [Tooltip("Number of raycasts per edge of the specified area. One raycast is placed at each corner by default + one raycast in the center of the area")]
@@ -32,6 +35,8 @@ namespace DistractorTask.RoomAnalysis
 
         private void Awake()
         {
+
+            PermissionRequestComponent.Instance.OnSpatialMappingPermissionGranted += OnSpatialMappingGranted;
             if (!mainCamera)
             {
                 mainCamera = Camera.main;
@@ -42,10 +47,20 @@ namespace DistractorTask.RoomAnalysis
                 Debug.LogError($"No main camera found. Please either add one to {nameof(AreaRaycaster)} or tag an active camera with \"MainCamera\"");
                 enabled = false;
             }
+            
+            
         }
 
-        private void Start()
+        private void OnSpatialMappingGranted()
         {
+            manager.enabled = true;
+            planeManager.enabled = true;
+        }
+
+
+        private IEnumerator  Start()
+        {
+            yield return new WaitUntil(AreSubsystemsLoaded);
             if (LoaderUtility
                     .GetActiveLoader()?
                     .GetLoadedSubsystem<XRRaycastSubsystem>() != null)
@@ -61,6 +76,17 @@ namespace DistractorTask.RoomAnalysis
                 debugText.AddDebugText("Raycasting is not possible");
                 _isRaycastingEnabled = false;
             }
+            
+            
+        }
+        
+        private bool AreSubsystemsLoaded()
+        {
+            if (XRGeneralSettings.Instance == null) return false;
+            if (XRGeneralSettings.Instance.Manager == null) return false;
+            var activeLoader = XRGeneralSettings.Instance.Manager.activeLoader;
+            if (activeLoader == null) return false;
+            return activeLoader.GetLoadedSubsystem<XRPlaneSubsystem>() != null;
         }
 
         private void Update()
