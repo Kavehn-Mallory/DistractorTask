@@ -1,6 +1,7 @@
 using System;
 using DistractorTask.Core;
 using DistractorTask.Logging;
+using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -38,6 +39,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         private float maxDistanceOffsetBeforeResizing = 0.2f;
 
         [SerializeField] private XRGazeInteractor gazeInteractor;
+
+        [SerializeField] private TMP_Text debugText;
         
         private string[][] _distractorShapes;
         private string[][] _targetShapes;
@@ -102,6 +105,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             {
                 RepositionCanvas(canvas.transform.position);
             }
+
+            debugText.text = _selectedDistractor ? _selectedDistractor.distractorIndex.ToString() : "-1";
 
         }
 

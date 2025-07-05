@@ -22,18 +22,15 @@ namespace DistractorTask.FrameCapture
 
         // Indicates if an image is currently being captured
         private bool isCapturingImage;
-
-        [SerializeField]
-        private TMP_Text debugText;
         
         private string KeyFrameLogPath
         {
             get
             {
 #if UNITY_EDITOR
-                return Application.streamingAssetsPath + $"/{DateTime.Now.ToString("u", CultureInfo.InvariantCulture).Replace(':', '-')}_Framecapture.csv";
+                return Application.streamingAssetsPath + $"/{DateTime.Now.ToString("u", CultureInfo.InvariantCulture).Replace(':', '-')}_Framecapture.jpg";
 #else
-                return Application.persistentDataPath + $"/{DateTime.Now.ToString("u", CultureInfo.InvariantCulture).Replace(':', '-')}_Framecapture.csv";
+                return Application.persistentDataPath + $"/{DateTime.Now.ToString("u", CultureInfo.InvariantCulture).Replace(':', '-')}_Framecapture.jpg";
 #endif
 
             }
@@ -51,11 +48,7 @@ namespace DistractorTask.FrameCapture
         {
             InputHandler.InputHandler.Instance.OnSelectionButtonPressed += CaptureImage;
         }
-
-        private void Update()
-        {
-            debugText.text = KeyFrameLogPath;
-        }
+        
 
         private void OnDisable()
         {

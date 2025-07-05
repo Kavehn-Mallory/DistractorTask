@@ -33,9 +33,7 @@ namespace DistractorTask.Logging
         private bool _gyroAvailable = false;
         private bool _attitudeAvailable = false;
         private bool _linearAccelAvailable = false;
-
-        [SerializeField]
-        private TMP_Text debugText;
+        
 
         private bool _hasEyeTrackingPermission;
         private bool _hasPupilTrackingPermission;
@@ -319,9 +317,7 @@ namespace DistractorTask.Logging
                 gazeDuration = gazeBehavior.Duration;
                 currentTimeStamp = gazeBehavior.Time;
             }
-
-
-            debugText.text = "We got here and we are tracking the eyes";
+            
             LoggingComponent.Log(LogData.CreateEyeTrackingLogData(_mainCamera.transform.position, _mainCamera.transform.rotation, leftEyePosition, rightEyePosition, new Vector2(staticData.EyeWidthMax, staticData.EyeHeightMax), pupilDiameter, currentTimeStamp, gazeBehaviourType, gazeStartTimeStamp, gazeDuration));
         }
         
