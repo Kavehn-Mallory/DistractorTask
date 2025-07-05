@@ -69,8 +69,8 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
                 _targetShapes[i] = shapeGroup.targetLetters.Split(',');
             }
 
-            _distractors = new DistractorComponent[numberOfDistractors + 1];
-            for (int i = 0; i < numberOfDistractors + 1; i++)
+            _distractors = new DistractorComponent[numberOfDistractors];
+            for (int i = 0; i < numberOfDistractors; i++)
             {
                 var labelInstance = Instantiate(label, canvas.transform, false);
                 labelInstance.gameObject.name = "Distractor";
@@ -82,6 +82,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
             var peripheralDistractor = Instantiate(label, canvas.transform, false);
             peripheralDistractor.Component = this;
             _peripheralDistractor = peripheralDistractor.GetComponent<DistractorComponent>();
+            _peripheralDistractor.distractorIndex = numberOfDistractors;
             _peripheralDistractor.gameObject.name = "Peripheral Distractor";
 
             
@@ -106,6 +107,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
                 RepositionCanvas(canvas.transform.position);
             }
 
+            Debug.Log(_selectedDistractor ? _selectedDistractor.distractorIndex.ToString() : "N/A");
             debugText.text = _selectedDistractor ? _selectedDistractor.distractorIndex.ToString() : "-1";
 
         }
@@ -172,7 +174,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
             _peripheralDistractor.GetComponent<DistractorComponent>().UpdateDistractorSize(targetSizeInPixel * 2f);
             _peripheralDistractor.RectTransform.anchoredPosition = peripheralDistractorPosition;
-            _selectedDistractor = null;
             gazeInteractor.enabled = true;
         }
 
@@ -224,17 +225,20 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
         public void OnHoverEnter(UIHoverEventArgs args)
         {
             Debug.Log("On hover enter");
-            _selectedDistractor = args.uiObject?.GetComponent<DistractorComponent>();
+            Debug.Log(args.uiObject.GetComponentInParent<DistractorComponent>());
+            _selectedDistractor = args.uiObject?.GetComponentInParent<DistractorComponent>();
         }
 
         public void OnHoverEnter(DistractorComponent distractorComponent)
         {
+            Debug.Log("Old hover enter");
             _selectedDistractor = distractorComponent;
         }
         
 
         public void OnHoverExit()
         {
+            Debug.Log("On hover exit");
             _selectedDistractor = null;
         }
         

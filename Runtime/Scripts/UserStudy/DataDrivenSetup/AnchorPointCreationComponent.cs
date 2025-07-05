@@ -52,6 +52,13 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         }
 
+        [ContextMenu("Debug Init")]
+        public void DebugInit()
+        {
+            areaRaycaster.InitializeRaycasts(distractorTaskComponent.GetBoundsForDistractorArea());
+            anchorPoints.InitializeContainer(6);
+        }
+
         private void Start()
         {
             NetworkManager.Instance.RegisterCallbackAllPorts<MarkerPointCountData>(OnMarkerPointCountReceived);

@@ -31,8 +31,7 @@ namespace DistractorTask.VideoPlayer
 
         private Action _unregisterVideoClipResetEvent;
 
-
-        public Action OnVideoClipReset = delegate { };
+        
         
         
         
@@ -85,7 +84,6 @@ namespace DistractorTask.VideoPlayer
             audioSource.time = 0;
             videoPlayer.Play();
             audioSource.Play();
-            OnVideoClipReset.Invoke();
         }
 
         private void SwitchVideoClip(StudyConditionVideoInfoData studyConditionVideoInfo, int instanceId)

@@ -192,6 +192,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         public async void StartStudy()
         {
 
+            Debug.Log("Trying to start study");
             if (_enumerator == null)
             {
                 Debug.LogWarning($"Study has not been initialized. Call {nameof(AdvanceStudy)} before calling {nameof(StartStudy)}");
@@ -253,7 +254,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 _hmdCommunicationTask = null;
                 
                 OnIterationCompleted.Invoke("Study Condition", _enumerator.CurrentPermutationIndex, _enumerator.PermutationCount);
-
+                Debug.Log($"Finished condition {_enumerator.CurrentPermutationIndex} out of {_enumerator.PermutationCount}");
             }
             Debug.Log("Study Phase Ended");
             LoggingComponent.Log(LogData.CreateStudyEndLogData());
@@ -272,10 +273,10 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private async void OnTrialCompleted(TrialCompletedData arg1, int arg2)
         {
-            await NetworkManager.Instance
+            /*await NetworkManager.Instance
                 .MulticastMessageAndAwaitResponse<UpdateVideoClipData, OnVideoClipChangedData>(
                     new UpdateVideoClipData(), NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
-                    0);
+                    0);*/
             Debug.Log("Received that trial was completed");
             //todo do we even want to do anything in here? 
             //todo try awaitable thing in here and make sure that it delays the response 

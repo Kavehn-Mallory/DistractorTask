@@ -783,7 +783,6 @@ MonoBehaviour:
   mainCamera: {fileID: 2086622114}
   raycastCountPerEdge: 1
   maxRaycastDistance: 5
-  debugText: {fileID: 1042573837}
 --- !u!114 &392145800
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -832,10 +831,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcb8426ea73b4b5bbc8020e3ce2ab83d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugText: {fileID: 11400000, guid: c27238a432bba8b4782094de9abec6c2, type: 2}
   distractorAnchorPointAsset: {fileID: 11400000, guid: 10db64765fef8dc4e9858693003a6e10, type: 2}
   distractorTaskComponent: {fileID: 392145803}
   audioTaskComponent: {fileID: 392145801}
+  debugText: {fileID: 1042573837}
 --- !u!114 &392145803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -850,7 +849,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvas: {fileID: 602356177}
   label: {fileID: 4416203237674572587, guid: dcbf8a267a99c7340a17de74596a8c31, type: 3}
-  numberOfDistractors: 5
+  numberOfDistractors: 6
   defaultDistanceFromCamera: 1
   canvasWidth: 5
   targetDistractorAngleFromCenter: 5
@@ -2046,7 +2045,7 @@ MonoBehaviour:
   m_DrawOnNoHit: 1
   m_RaycastMask:
     serializedVersion: 2
-    m_Bits: 2147483699
+    m_Bits: 32
 --- !u!1 &1012744310
 GameObject:
   m_ObjectHideFlags: 0
@@ -2405,50 +2404,6 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
---- !u!1 &1275009642
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1275009644}
-  - component: {fileID: 1275009643}
-  m_Layer: 0
-  m_Name: NetworkManager Auto-Generated
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1275009643
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1275009642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc5d685dabac4f2d92568e980a701b56, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1275009644
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1275009642}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1307999729
 GameObject:
   m_ObjectHideFlags: 0
@@ -2495,20 +2450,7 @@ MonoBehaviour:
         m_CallState: 2
   onConnectionStateChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 11400000, guid: c27238a432bba8b4782094de9abec6c2, type: 2}
-        m_TargetAssemblyTypeName: DistractorTask.Debugging.DebuggingScriptableObject,
-          DistractorTask.Runtime
-        m_MethodName: AddConnectionState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!4 &1307999731
 Transform:
   m_ObjectHideFlags: 0
@@ -3353,11 +3295,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2587420837012734618, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
       propertyPath: m_UIHoverExited.m_PersistentCalls.m_Calls.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2587420837012734618, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
       propertyPath: m_UIHoverEntered.m_PersistentCalls.m_Calls.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2587420837012734618, guid: 2ad7d02c3ee2a447abc9de300646685d, type: 3}
       propertyPath: m_UIHoverExited.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
@@ -3721,5 +3663,4 @@ SceneRoots:
   - {fileID: 1099564965}
   - {fileID: 642190228}
   - {fileID: 203251740}
-  - {fileID: 1275009644}
   - {fileID: 326781783}
