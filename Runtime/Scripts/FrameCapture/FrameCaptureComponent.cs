@@ -43,7 +43,7 @@ namespace DistractorTask.FrameCapture
 
         private void Awake()
         {
-            PermissionRequestComponent.Instance.OnCameraPermissionGranted += InitializeCamera;
+            PermissionRequestComponent.Instance.RegisterOnPermissionGranted(UnityEngine.Android.Permission.Camera, InitializeCamera);
             
         }
 
@@ -64,7 +64,6 @@ namespace DistractorTask.FrameCapture
 
         private void InitializeCamera()
         {
-            PermissionRequestComponent.Instance.OnCameraPermissionGranted -= InitializeCamera;
             StartCoroutine(EnableMLCamera());
         }
         

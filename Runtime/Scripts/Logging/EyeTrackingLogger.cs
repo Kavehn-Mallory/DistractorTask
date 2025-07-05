@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using DistractorTask.Core;
+using MagicLeap.Android;
 using MagicLeap.OpenXR.Features.EyeTracker;
 using TMPro;
 using UnityEngine;
@@ -35,7 +36,9 @@ namespace DistractorTask.Logging
 
         [SerializeField]
         private TMP_Text debugText;
-        
+
+        private bool _hasEyeTrackingPermission;
+        private bool _hasPupilTrackingPermission;
         
         private void Awake()
         {
@@ -44,7 +47,26 @@ namespace DistractorTask.Logging
             {
                 Debug.LogError("CSVWriter: Main Camera not found! Camera position/rotation will not be logged.");
             }
-            PermissionRequestComponent.Instance.OnEyeTrackingAndPupilSizePermissionGranted += InitializeEyeTracker;
+            PermissionRequestComponent.Instance.RegisterOnPermissionGranted(Permissions.EyeTracking, OnEyeTrackingPermissionGranted);
+            PermissionRequestComponent.Instance.RegisterOnPermissionGranted(Permissions.PupilSize, OnPupilTrackingPermissionGranted);
+        }
+
+        private void OnEyeTrackingPermissionGranted()
+        {
+            _hasEyeTrackingPermission = true;
+            if (_hasPupilTrackingPermission)
+            {
+                InitializeEyeTracker();
+            }
+        }
+        
+        private void OnPupilTrackingPermissionGranted()
+        {
+            _hasPupilTrackingPermission = true;
+            if (_hasEyeTrackingPermission)
+            {
+                InitializeEyeTracker();
+            }
         }
 
 
@@ -143,7 +165,6 @@ namespace DistractorTask.Logging
         
         private void InitializeEyeTracker()
         {
-            PermissionRequestComponent.Instance.OnEyeTrackingAndPupilSizePermissionGranted -= InitializeEyeTracker;
             try
             {
                 Debug.Log("Initializing eye tracker...");

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DistractorTask.Core;
 using DistractorTask.Debugging;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
+using MagicLeap.Android;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -36,7 +37,7 @@ namespace DistractorTask.RoomAnalysis
         private void Awake()
         {
 
-            PermissionRequestComponent.Instance.OnSpatialMappingPermissionGranted += OnSpatialMappingGranted;
+            PermissionRequestComponent.Instance.RegisterOnPermissionGranted(Permissions.SpatialMapping, OnSpatialMappingGranted);
             if (!mainCamera)
             {
                 mainCamera = Camera.main;
