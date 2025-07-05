@@ -41,7 +41,7 @@ namespace DistractorTask.UserStudy.AudioTask
         private void OnDisable()
         {
             _taskIsActive = false;
-            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource?.Cancel();
         }
 
 

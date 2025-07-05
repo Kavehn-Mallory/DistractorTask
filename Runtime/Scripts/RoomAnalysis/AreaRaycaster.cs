@@ -5,6 +5,7 @@ using DistractorTask.Core;
 using DistractorTask.Debugging;
 using DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents;
 using MagicLeap.Android;
+using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -24,7 +25,7 @@ namespace DistractorTask.RoomAnalysis
 
         [SerializeField] private float maxRaycastDistance = 5f;
         
-        public DebuggingScriptableObject debugText;
+        public TMP_Text debugText;
         
         private Transform _mainCameraTransform;
 
@@ -68,13 +69,13 @@ namespace DistractorTask.RoomAnalysis
             {
                 // XRPlaneSubsystem was loaded. The platform supports plane detection.
                 Debug.Log("Raycasting is possible");
-                debugText.AddDebugText("Raycasting is possible");
+                debugText.text = ("Raycasting is possible");
                 _isRaycastingEnabled = true;
             }
             else
             {
                 Debug.Log("Raycasting is not possible");
-                debugText.AddDebugText("Raycasting is not possible");
+                debugText.text = ("Raycasting is not possible");
                 _isRaycastingEnabled = false;
             }
             
@@ -99,6 +100,12 @@ namespace DistractorTask.RoomAnalysis
             target?.SetPositionAndRotation(RequestAnchorPoint(_debugDistance, _debugDistanceFromWall).position, Quaternion.identity);
         }
 
+        [ContextMenu("Run init")]
+        public void InitRaycastsTest()
+        {
+            InitializeRaycasts(new Vector2(1, 1));
+        }
+        
         public void InitializeRaycasts(Vector2 distanceFromCenter)
         {
             var center = _mainCameraTransform.position + _mainCameraTransform.forward * 0.1f;
@@ -157,8 +164,9 @@ namespace DistractorTask.RoomAnalysis
 
         public AnchorPoint RequestAnchorPoint(float targetDistance, float minDistanceFromWall)
         {
-            if (!_isRaycastingEnabled || _raycastStartPositions == null || _raycastStartPositions.Length == 0)
+            if (!_isRaycastingEnabled || _raycastStartPositions == null || _raycastStartPositions.Length == 0 || !manager.enabled || !planeManager.enabled)
             {
+                debugText.text = $"Position without raycast {!_isRaycastingEnabled} {_raycastStartPositions == null || _raycastStartPositions.Length == 0} {!manager.enabled} {!planeManager.enabled}";
                 return new AnchorPoint
                 {
                     position = _mainCameraTransform.position + _mainCameraTransform.forward * targetDistance,
@@ -192,8 +200,9 @@ namespace DistractorTask.RoomAnalysis
 
             minDistance -= minDistanceFromWall;
             var raycastPosition = _mainCameraTransform.position + _mainCameraTransform.forward * minDistance;
-            
 
+
+            debugText.text = "Position with raycast";
             return new AnchorPoint
             {
                 position = raycastPosition,

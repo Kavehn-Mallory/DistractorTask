@@ -39,7 +39,11 @@ namespace DistractorTask.Transport
             if (!_activeConnections.TryGetValue(port, out var connectionObject))
             {
                 _inactiveConnections.TryAdd(port, new InactiveConnectionObject());
-                _inactiveConnections[port].EventHandler.RegisterCallback(callback);
+                
+                //This should not be necessary, but I'm currently getting a bunch of errors and this is my best guess 
+                var eventHandler = _inactiveConnections[port].EventHandler;
+                eventHandler.RegisterCallback(callback);
+                _inactiveConnections[port].EventHandler = eventHandler;
                 return;
             }
             connectionObject.EventHandler.RegisterCallback(callback);
@@ -103,6 +107,7 @@ namespace DistractorTask.Transport
             {
                 connectionObject.OnConnectionStateChange?.Invoke(connectionState);
             }
+            
         }
 
         private void OnDataReceived(ref DataStreamReader stream, ushort port)
