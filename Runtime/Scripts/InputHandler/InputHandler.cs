@@ -1,5 +1,6 @@
 ﻿using System;
 using DistractorTask.Core;
+using DistractorTask.Logging;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -25,6 +26,7 @@ namespace DistractorTask.InputHandler
 
             _controllerActions.Bumper.performed += OnBumperPressed;
             _controllerActions.Trigger.performed += OnTriggerPressed;
+            OnTriggerButtonPressed += LogOnTriggerPressed;
 
         }
 
@@ -36,6 +38,11 @@ namespace DistractorTask.InputHandler
         private void OnBumperPressed(InputAction.CallbackContext obj)
         {
             OnSelectionButtonPressed.Invoke();
+        }
+
+        private void LogOnTriggerPressed()
+        {
+            LoggingComponent.Log(LogData.CreateTriggerPressedData());
         }
         
 

@@ -405,7 +405,15 @@ namespace DistractorTask.Logging
             };
         }
 
-        
+
+        public static LogData CreateTriggerPressedData()
+        {
+            return new LogData
+            {
+                _timeStamp = GetCurrentTimestamp(),
+                _logCategory = LogCategory.TriggerPressed,
+            };
+        }
     }
     
     public enum LogCategory
@@ -425,6 +433,7 @@ namespace DistractorTask.Logging
         FrameCapture,
         VideoPlayerChange,
         GyroValues,
-        Lux
+        Lux,
+        TriggerPressed
     }
 }
