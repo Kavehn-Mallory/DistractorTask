@@ -366,7 +366,7 @@ MonoBehaviour:
     audioClips: []
   - groupName: Low
     noiseLevel: 2
-    volume: 1
+    volume: 0.2
     videoClips:
     - {fileID: 32900000, guid: 8a6a02a0d13bc4d4293f5fb7443fd18d, type: 3}
     - {fileID: 32900000, guid: f894ee280dbe64246a0a5b12c7198554, type: 3}
@@ -387,7 +387,7 @@ MonoBehaviour:
     - {fileID: 32900000, guid: 26d976df5f9cd9c4b99e1fb4b7fba2ef, type: 3}
     - {fileID: 32900000, guid: 8ae0cc4b3c2803347a75db2dece33e49, type: 3}
     audioClips:
-    - {fileID: 8300000, guid: efaf35c934d5d2e4ca0c454461e72906, type: 3}
+    - {fileID: 8300000, guid: 8e50d12c25f9ff34e9ac23d39fbfbe0f, type: 3}
   - groupName: Audio
     noiseLevel: 4
     volume: 1
@@ -418,15 +418,6 @@ MonoBehaviour:
     - {fileID: 32900000, guid: 8ae0cc4b3c2803347a75db2dece33e49, type: 3}
     audioClips:
     - {fileID: 8300000, guid: 197fbe1beffdd7443aeb9ef8a76997a6, type: 3}
-  debugData:
-    studyCondition:
-      loadLevel: 0
-      noiseLevel: 0
-      repetitionsPerTrial: 0
-      trialCount: 0
-      hasAudioTask: 0
-      isInsideWall: 0
-  debugText: {fileID: 499608770}
 --- !u!4 &440515708
 Transform:
   m_ObjectHideFlags: 0
@@ -877,6 +868,51 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.0018400252, y: 0.05158993, z: 1.2249162}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1076889863
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1076889865}
+  - component: {fileID: 1076889864}
+  m_Layer: 0
+  m_Name: AudioDebugging
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1076889864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076889863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f95546f4fe0e49799c56a45bf9f51ac9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  videoPlayerController: {fileID: 440515707}
+--- !u!4 &1076889865
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076889863}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1528,3 +1564,4 @@ SceneRoots:
   - {fileID: 988914800}
   - {fileID: 5038461293531087910}
   - {fileID: 1760057946}
+  - {fileID: 1076889865}

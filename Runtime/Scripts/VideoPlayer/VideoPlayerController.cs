@@ -31,12 +31,7 @@ namespace DistractorTask.VideoPlayer
         private Action _unregisterVideoClipChangeEvent;
 
         private Action _unregisterVideoClipResetEvent;
-
-        [SerializeField]
-        private StudyConditionVideoInfoData debugData;
-
-        [SerializeField]
-        private TMP_Text debugText;
+        
         
         
         
@@ -135,16 +130,15 @@ namespace DistractorTask.VideoPlayer
             SwitchVideoClip(videoClipGroups[0].videoClips.RandomElement(), videoClipGroups[0].audioClips.RandomElement(), videoClipGroups[0].volume);
             
         }
-
-        [ContextMenu("Debug Switch")]
-        private void DebugSwitchVideoClip()
+        
+        public void DebugSwitchVideoClip(StudyConditionVideoInfoData studyConditionVideoInfo)
         {
             if (videoClipGroups == null || videoClipGroups.Length == 0)
             {
                 Debug.LogError("No video clips specified", this);
                 return;
             }
-            var noiseLevel = debugData.studyCondition.noiseLevel;
+            var noiseLevel = studyConditionVideoInfo.studyCondition.noiseLevel;
 
 
             foreach (var videoClipGroup in videoClipGroups)
@@ -182,7 +176,6 @@ namespace DistractorTask.VideoPlayer
             videoPlayer.Stop();
             var audioClipName = audioClip ? audioClip.name : "No Audio Clip Found";
             var videoClipName = videoClip ? videoClip.name : "No Video Clip Found";
-            debugText.text = videoClipName;
             Debug.Log($"Playing {videoClipName}");
             LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoClipName, audioClipName));
             if(audioClip != null)
