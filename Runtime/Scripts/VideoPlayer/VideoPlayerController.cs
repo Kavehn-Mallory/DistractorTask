@@ -8,6 +8,7 @@ using DistractorTask.Logging;
 using DistractorTask.Transport;
 using DistractorTask.UserStudy.Core;
 using DistractorTask.UserStudy.DataDrivenSetup;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
@@ -31,7 +32,11 @@ namespace DistractorTask.VideoPlayer
 
         private Action _unregisterVideoClipResetEvent;
 
-        
+        [SerializeField]
+        private StudyConditionVideoInfoData debugData;
+
+        [SerializeField]
+        private TMP_Text debugText;
         
         
         
@@ -45,8 +50,16 @@ namespace DistractorTask.VideoPlayer
             videoPlayer.isLooping = true;
             audioSource.loop = true;
 
+
+            foreach (var videoClipGroup in videoClipGroups)
+            {
+                Debug.Log(videoClipGroup.videoClips.Length);
+                Debug.Log(videoClipGroup.audioClips.Length);
+            }
+
+
         }
-        
+
         private void OnEnable()
         {
             _unregisterVideoClipChangeEvent?.Invoke();
@@ -80,10 +93,8 @@ namespace DistractorTask.VideoPlayer
 
         private void ResetVideoClip(UpdateVideoClipData videoClipData, int instanceId)
         {
-            videoPlayer.time = 0;
-            audioSource.time = 0;
-            videoPlayer.Play();
-            audioSource.Play();
+
+            
         }
 
         private void SwitchVideoClip(StudyConditionVideoInfoData studyConditionVideoInfo, int instanceId)
@@ -94,12 +105,15 @@ namespace DistractorTask.VideoPlayer
                 return;
             }
             var noiseLevel = studyConditionVideoInfo.studyCondition.noiseLevel;
-            
+            Debug.Log($"Received noise level {noiseLevel.ToString()}");
             
             foreach (var videoClipGroup in videoClipGroups)
             {
+                Debug.Log(videoClipGroup.videoClips.Length);
                 if ((videoClipGroup.noiseLevel & noiseLevel) == noiseLevel)
                 {
+                    Debug.Log(noiseLevel.ToString());
+                    
                     VideoClip videoLink = null;
                     AudioClip audioClip = null;
                     if (videoClipGroup.videoClips.Length != 0)
@@ -122,16 +136,67 @@ namespace DistractorTask.VideoPlayer
             
         }
 
+        [ContextMenu("Debug Switch")]
+        private void DebugSwitchVideoClip()
+        {
+            if (videoClipGroups == null || videoClipGroups.Length == 0)
+            {
+                Debug.LogError("No video clips specified", this);
+                return;
+            }
+            var noiseLevel = debugData.studyCondition.noiseLevel;
+
+
+            foreach (var videoClipGroup in videoClipGroups)
+            {
+                Debug.Log(videoClipGroup.videoClips.Length);
+                if ((videoClipGroup.noiseLevel & noiseLevel) == noiseLevel)
+                {
+                    Debug.Log(noiseLevel.ToString());
+
+                    VideoClip videoLink = null;
+                    AudioClip audioClip = null;
+                    if (videoClipGroup.videoClips.Length != 0)
+                    {
+                        videoLink = videoClipGroup.videoClips.RandomElement();
+                    }
+
+                    if (videoClipGroup.audioClips.Length != 0)
+                    {
+                        audioClip = videoClipGroup.audioClips.RandomElement();
+                    }
+                    //choose clip 
+                    SwitchVideoClip(videoLink, audioClip, videoClipGroup.volume);
+                    return;
+                }
+            }
+
+            Debug.LogWarning("Did not find a fitting clip. Playing first group as fallback", this);
+            SwitchVideoClip(videoClipGroups[0].videoClips.RandomElement(), videoClipGroups[0].audioClips.RandomElement(), videoClipGroups[0].volume);
+
+        }
+
         private void SwitchVideoClip(VideoClip videoClip, AudioClip audioClip, float volume)
         {
+            audioSource.Stop();
+            videoPlayer.Stop();
             var audioClipName = audioClip ? audioClip.name : "No Audio Clip Found";
             var videoClipName = videoClip ? videoClip.name : "No Video Clip Found";
+            debugText.text = videoClipName;
+            Debug.Log($"Playing {videoClipName}");
             LoggingComponent.Log(LogData.CreateVideoPlayerChangeLogData(videoClipName, audioClipName));
-            videoPlayer.clip = videoClip;
-            audioSource.clip = audioClip;
-            audioSource.volume = volume;
-            audioSource.Play();
-            videoPlayer.Play();
+            if(audioClip != null)
+            {
+                audioSource.clip = audioClip;
+                audioSource.volume = volume;
+                audioSource.Play();
+            }
+            if(videoClip != null)
+            {
+                videoPlayer.clip = videoClip;
+                videoPlayer.Play();
+            }
+            
         }
 
         [Serializable]

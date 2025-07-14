@@ -162,7 +162,7 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
 
             canvas.transform.SetPositionAndRotation(position, Quaternion.identity);
 
-            var angle = 360f / (numberOfDistractors + 1);
+            var angle = 360f / (numberOfDistractors);
 
             var currentAngle = 0f;
             foreach (var distractor in _distractors)
@@ -212,10 +212,6 @@ namespace DistractorTask.UserStudy.DistractorSelectionStage.DistractorComponents
                 _targetShapes[loadLevel].RandomElement();
 
             var peripheralDistractorShape = _targetShapes[loadLevel].RandomElement();
-            if (Random.value >= 0.5f)
-            {
-                peripheralDistractorShape = _distractorShapes[loadLevel].RandomElement();
-            }
         
             _peripheralDistractor.Text.text = peripheralDistractorShape;
         }

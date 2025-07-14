@@ -38,6 +38,7 @@ namespace DistractorTask.Transport
 
         public static StudyCondition ReadStudyCondition(this ref DataStreamReader reader)
         {
+
             var loadLevel = Enum.Parse<LoadLevel>(reader.ReadByte().ToString());
             var noiseLevel = Enum.Parse<NoiseLevel>(reader.ReadByte().ToString());
             var repetitionsPerTrial = reader.ReadInt();
