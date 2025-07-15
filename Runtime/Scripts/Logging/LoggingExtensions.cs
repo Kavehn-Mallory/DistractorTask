@@ -19,6 +19,13 @@ namespace DistractorTask.Logging
                 float.Parse(parts[2], CultureInfo.InvariantCulture));
         }
 
+        public static Vector2 ReadVector2FromCSV(this string vectorRepresentation, char delimiter = ',')
+        {
+            var parts = vectorRepresentation.Split(delimiter);
+            return new Vector2(float.Parse(parts[0], CultureInfo.InvariantCulture),
+                float.Parse(parts[1], CultureInfo.InvariantCulture));
+        }
+
         public static Quaternion ReadQuaternionFromCSV(this string quaternionRepresentation, char delimiter = ',')
         {
             var parts = quaternionRepresentation.Split(delimiter);

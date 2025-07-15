@@ -46,8 +46,211 @@ namespace DistractorTask.Logging
         private Vector3 _linearAcceleration;
         private Quaternion _attitude;
         private float _lux;
-        
-        //Acceleration,AngularVelocity,LinearAcceleration,Attitude,Lux
+
+
+
+        //todo we could change this back to the actual names of the headers and not the names of the properties. The original idea does not work 
+
+         private const string Timestamp = nameof(_timeStamp);
+         private const string Category = nameof(_logCategory);
+         private const string UserId = nameof(_userId);
+         private const string ParticipantType = nameof(_participantType);
+         private const string CameraPosition = nameof(_cameraPosition);
+         private const string CameraRotation = nameof(_cameraRotation);
+         private const string MarkerPointCount = nameof(_markerPointCount);
+         private const string DistanceFromCamera = nameof(_distanceFromCamera);
+         private const string DistanceToWall = nameof(_distanceToWall);
+         private const string HitPointWallPosition = nameof(_hitPointWallPosition);
+         private const string HitPointWallNormal = nameof(_hitPointWallNormal);
+         private const string AnchorPointPosition = nameof(_anchorPointPosition);
+         private const string StudyName = nameof(_studyName);
+         private const string StudyIndex = nameof(_studyIndex);
+         private const string NoiseLevel = nameof(_noiseLevel);
+         private const string LoadLevel = nameof(_loadLevel);
+         private const string TrialCount = nameof(_trialCount);
+         private const string RepetitionsPerTrial = nameof(_repetitionsPerTrial);
+         private const string AudioTaskReactionTime = nameof(_audioTaskReactionTime);
+         private const string TrialTargetIndex = nameof(_trialTargetIndex);
+         private const string TrialSelectedIndex = nameof(_trialSelectedIndex);
+         private const string TrialSymbolOrder = nameof(_trialSymbolOrder);
+         private const string AnchorPointIndex = nameof(_anchorPointIndex);
+         private const string StartTime = nameof(_startTime);
+         private const string ReactionTime = nameof(_reactionTime);
+         private const string LeftEyePosition = nameof(_leftEyePosition);
+         private const string RightEyePosition = nameof(_rightEyePosition);
+         private const string EyeDimensions = nameof(_eyeDimensions);
+         private const string PupilDiameter = nameof(_pupilDiameter);
+         private const string GazeBehaviour = nameof(_gazeBehaviour);
+         private const string GazeBehaviourDuration = nameof(_gazeBehaviourDuration);
+         private const string VideoPath = nameof(_videoPath);
+         private const string AudioPath = nameof(_audioPath);
+         private const string Acceleration = nameof(_acceleration);
+         private const string AngularVelocity = nameof(_angularVelocity);
+         private const string LinearAcceleration = nameof(_linearAcceleration);
+         private const string Attitude = nameof(_attitude);
+         private const string Lux = nameof(_lux);
+
+
+
+        public static LogData LoadLogDataFromCSVLine(string header, string line)
+        {
+            var headerElements = header.Split(';');
+            var elements = line.Split(';');
+
+            var indices = CreatePropertyIndices(headerElements, nameof(Category));
+
+            var logFile = new LogData();
+
+            logFile._timeStamp = long.Parse(GetPropertyValue(elements, indices[nameof(Timestamp)]), CultureInfo.InvariantCulture);
+            logFile._logCategory = Enum.Parse<LogCategory>(GetPropertyValue(elements, indices[nameof(Category)]));
+
+
+
+            switch (logFile._logCategory)
+            {
+                case LogCategory.LogFileStart:
+                    logFile._userId = GetPropertyValue(elements, indices[nameof(UserId)]);
+                    break;
+                case LogCategory.MarkerPointBegin:
+                    logFile._markerPointCount = int.Parse(GetPropertyValue(elements, indices[nameof(MarkerPointCount)]));
+                    break;
+                case LogCategory.MarkerPointConfirmed:
+                    logFile._cameraPosition = GetPropertyValue(elements, indices[nameof(CameraPosition)]).ReadVector3FromCSV();
+                    logFile._cameraRotation = GetPropertyValue(elements, indices[nameof(CameraRotation)]).ReadQuaternionFromCSV();
+                    logFile._distanceFromCamera = float.Parse(GetPropertyValue(elements, indices[nameof(DistanceFromCamera)]), CultureInfo.InvariantCulture);
+                    logFile._distanceToWall = float.Parse(GetPropertyValue(elements, indices[nameof(DistanceToWall)]), CultureInfo.InvariantCulture);
+                    logFile._hitPointWallPosition = GetPropertyValue(elements, indices[nameof(HitPointWallPosition)]).ReadVector3FromCSV();
+                    logFile._hitPointWallNormal = GetPropertyValue(elements, indices[nameof(HitPointWallNormal)]).ReadVector3FromCSV();
+                    logFile._anchorPointPosition = GetPropertyValue(elements, indices[nameof(AnchorPointPosition)]).ReadVector3FromCSV();
+                    logFile._anchorPointIndex = int.Parse(GetPropertyValue(elements, indices[nameof(AnchorPointIndex)]));
+                    break;
+                case LogCategory.StudyBegin:
+                    logFile._studyName = GetPropertyValue(elements, indices[nameof(StudyName)]);
+                    logFile._studyIndex = int.Parse(GetPropertyValue(elements, indices[nameof(StudyIndex)]));
+                    logFile._participantType = GetPropertyValue(elements, indices[nameof(ParticipantType)]);
+                    break;
+                case LogCategory.TrialBegin:
+                    logFile._noiseLevel = Enum.Parse<NoiseLevel>(GetPropertyValue(elements, indices[nameof(NoiseLevel)]));
+                    logFile._loadLevel = Enum.Parse<LoadLevel>(GetPropertyValue(elements, indices[nameof(LoadLevel)]));
+                    logFile._trialCount = int.Parse(GetPropertyValue(elements, indices[nameof(TrialCount)]));
+                    logFile._repetitionsPerTrial = int.Parse(GetPropertyValue(elements, indices[nameof(RepetitionsPerTrial)]));
+                    logFile._audioTaskReactionTime = int.Parse(GetPropertyValue(elements, indices[nameof(AudioTaskReactionTime)]));
+                    break;
+                case LogCategory.TrialConfirmation:
+                    logFile._trialTargetIndex = int.Parse(GetPropertyValue(elements, indices[nameof(TrialTargetIndex)]));
+                    logFile._trialSelectedIndex = int.Parse(GetPropertyValue(elements, indices[nameof(TrialSelectedIndex)]));
+                    logFile._trialSymbolOrder = GetPropertyValue(elements, indices[nameof(TrialSymbolOrder)]);
+                    logFile._startTime = long.Parse(GetPropertyValue(elements, indices[nameof(StartTime)]), CultureInfo.InvariantCulture);
+                    logFile._reactionTime = long.Parse(GetPropertyValue(elements, indices[nameof(ReactionTime)]), CultureInfo.InvariantCulture);
+                    logFile._trialCount = int.Parse(GetPropertyValue(elements, indices[nameof(TrialCount)]));
+                    logFile._repetitionsPerTrial = int.Parse(GetPropertyValue(elements, indices[nameof(RepetitionsPerTrial)]));
+                    logFile._anchorPointIndex = int.Parse(GetPropertyValue(elements, indices[nameof(AnchorPointIndex)]));
+                    break;
+                case LogCategory.AudioTaskConfirmation:
+                    logFile._startTime = long.Parse(GetPropertyValue(elements, indices[nameof(StartTime)]), CultureInfo.InvariantCulture);
+                    logFile._reactionTime = long.Parse(GetPropertyValue(elements, indices[nameof(ReactionTime)]), CultureInfo.InvariantCulture);
+                    break;
+                case LogCategory.EyeTracking:
+                    logFile._cameraPosition = GetPropertyValue(elements, indices[nameof(CameraPosition)]).ReadVector3FromCSV();
+                    logFile._cameraRotation = GetPropertyValue(elements, indices[nameof(CameraRotation)]).ReadQuaternionFromCSV();
+                    logFile._leftEyePosition = GetPropertyValue(elements, indices[nameof(LeftEyePosition)]).ReadVector3FromCSV();
+                    logFile._rightEyePosition = GetPropertyValue(elements, indices[nameof(RightEyePosition)]).ReadVector3FromCSV();
+                    logFile._eyeDimensions = GetPropertyValue(elements, indices[nameof(EyeDimensions)]).ReadVector2FromCSV();
+                    logFile._pupilDiameter = GetPropertyValue(elements, indices[nameof(PupilDiameter)]).ReadVector2FromCSV();
+                    logFile._reactionTime = long.Parse(GetPropertyValue(elements, indices[nameof(ReactionTime)]), CultureInfo.InvariantCulture);
+                    logFile._startTime = long.Parse(GetPropertyValue(elements, indices[nameof(StartTime)]), CultureInfo.InvariantCulture);
+                    logFile._gazeBehaviour = GetPropertyValue(elements, indices[nameof(GazeBehaviour)]);
+                    logFile._gazeBehaviourDuration = ulong.Parse(GetPropertyValue(elements, indices[nameof(GazeBehaviourDuration)]), CultureInfo.InvariantCulture);
+
+                    break;
+                case LogCategory.FrameCapture:
+                    logFile._startTime = long.Parse(GetPropertyValue(elements, indices[nameof(StartTime)]), CultureInfo.InvariantCulture);
+                    logFile._cameraPosition = GetPropertyValue(elements, indices[nameof(CameraPosition)]).ReadVector3FromCSV();
+                    logFile._cameraRotation = GetPropertyValue(elements, indices[nameof(CameraRotation)]).ReadQuaternionFromCSV();
+                    logFile._videoPath = GetPropertyValue(elements, indices[nameof(VideoPath)]);
+                    break;
+                case LogCategory.VideoPlayerChange:
+                    logFile._videoPath = GetPropertyValue(elements, indices[nameof(VideoPath)]);
+                    logFile._audioPath = GetPropertyValue(elements, indices[nameof(AudioPath)]);
+                    break;
+                case LogCategory.GyroValues:
+                    logFile._acceleration = GetPropertyValue(elements, indices[nameof(Acceleration)]).ReadVector3FromCSV();
+                    logFile._angularVelocity = GetPropertyValue(elements, indices[nameof(AngularVelocity)]).ReadVector3FromCSV();
+                    logFile._linearAcceleration = GetPropertyValue(elements, indices[nameof(LinearAcceleration)]).ReadVector3FromCSV();
+                    logFile._attitude = GetPropertyValue(elements, indices[nameof(Attitude)]).ReadQuaternionFromCSV();
+                    break;
+                case LogCategory.Lux:
+                    logFile._lux = float.Parse(GetPropertyValue(elements, indices[nameof(Lux)]), CultureInfo.InvariantCulture);
+                    break;
+
+            }
+
+            return logFile;
+        }
+
+        private static string GetPropertyValue(string[] elements, int v)
+        {
+            if(v == -1)
+            {
+                return "";
+            }
+            return elements[v];
+        }
+
+        private static Dictionary<string, int> CreatePropertyIndices(string[] elements, string v)
+        {
+            var headers = new Dictionary<string, int>();
+
+            headers.Add(nameof(Timestamp), -1);
+            headers.Add(nameof(Category), -1);
+            headers.Add(nameof(UserId), -1);
+            headers.Add(nameof(ParticipantType), -1);
+            headers.Add(nameof(CameraPosition), -1);
+            headers.Add(nameof(CameraRotation), -1);
+            headers.Add(nameof(MarkerPointCount), -1);
+            headers.Add(nameof(DistanceFromCamera), -1);
+            headers.Add(nameof(DistanceToWall), -1);
+            headers.Add(nameof(HitPointWallPosition), -1);
+            headers.Add(nameof(HitPointWallNormal), -1);
+            headers.Add(nameof(AnchorPointPosition), -1);
+            headers.Add(nameof(StudyName), -1);
+            headers.Add(nameof(StudyIndex), -1);
+            headers.Add(nameof(NoiseLevel), -1);
+            headers.Add(nameof(LoadLevel), -1);
+            headers.Add(nameof(TrialCount), -1);
+            headers.Add(nameof(RepetitionsPerTrial), -1);
+            headers.Add(nameof(AudioTaskReactionTime), -1);
+            headers.Add(nameof(TrialTargetIndex), -1);
+            headers.Add(nameof(TrialSelectedIndex), -1);
+            headers.Add(nameof(TrialSymbolOrder), -1);
+            headers.Add(nameof(AnchorPointIndex), -1);
+            headers.Add(nameof(StartTime), -1);
+            headers.Add(nameof(ReactionTime), -1);
+            headers.Add(nameof(LeftEyePosition), -1);
+            headers.Add(nameof(RightEyePosition), -1);
+            headers.Add(nameof(EyeDimensions), -1);
+            headers.Add(nameof(PupilDiameter), -1);
+            headers.Add(nameof(GazeBehaviour), -1);
+            headers.Add(nameof(GazeBehaviourDuration), -1);
+            headers.Add(nameof(VideoPath), -1);
+            headers.Add(nameof(AudioPath), -1);
+            headers.Add(nameof(Acceleration), -1);
+            headers.Add(nameof(AngularVelocity), -1);
+            headers.Add(nameof(LinearAcceleration), -1);
+            headers.Add(nameof(Attitude), -1);
+            headers.Add(nameof(Lux), -1);
+
+            for (var i = 0; i < elements.Length; i++)
+            {
+                var currentElement = elements[i];
+                if (headers.ContainsKey(currentElement))
+                {
+                    headers[currentElement] = i;
+                }
+            }
+
+            return headers;
+        }
 
 
         public static long GetCurrentTimestamp()
@@ -103,7 +306,8 @@ namespace DistractorTask.Logging
         }
 
         
-        
+
+
 
         public static string WriteLogData(LogData logData)
         {
@@ -415,8 +619,10 @@ namespace DistractorTask.Logging
             };
         }
     }
-    
-    public enum LogCategory
+
+
+
+        public enum LogCategory
     {
         DefaultLogData,
         LogFileStart,
