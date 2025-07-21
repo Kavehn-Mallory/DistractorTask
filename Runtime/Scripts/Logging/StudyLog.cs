@@ -50,6 +50,7 @@ namespace DistractorTask.Logging
             _streamWriter?.Flush();
             _streamWriter?.Close();
             _streamWriter?.Dispose();
+            _streamWriter = null;
 
 #if UNITY_EDITOR
             AssetDatabase.Refresh();
@@ -59,6 +60,7 @@ namespace DistractorTask.Logging
         public async ValueTask DisposeAsync()
         {
             if (_streamWriter != null) await _streamWriter.DisposeAsync();
+            _streamWriter = null;
         }
 
         public void WriteLogData(LogData logData)

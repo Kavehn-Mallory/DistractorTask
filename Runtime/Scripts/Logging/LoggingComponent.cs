@@ -84,11 +84,8 @@ namespace DistractorTask.Logging
             {
                 GenerateNewId();
             }
-            if (isServer)
-            {
-                _studyLog = new StudyLog(userId);
-                WriteLogData(LogData.CreateLogFileStartLogData(userId));
-            }
+            _studyLog = new StudyLog(userId);
+            WriteLogData(LogData.CreateLogFileStartLogData(userId));
 
 
         }
@@ -107,6 +104,7 @@ namespace DistractorTask.Logging
         public void EndLogging()
         {
             _studyLog?.Dispose();
+            _studyLog = null;
         }
 
         private void OnLogFileDataReceived(LogFileData logFileData, int arg2)
@@ -127,11 +125,13 @@ namespace DistractorTask.Logging
         private void OnDisable()
         {
             _studyLog?.Dispose();
+            _studyLog = null;
         }
 
         private void OnDestroy()
         {
             _studyLog?.Dispose();
+            _studyLog = null;
         }
 
 
@@ -162,15 +162,16 @@ namespace DistractorTask.Logging
             {
                 return;
             }
-            if (Instance.isServer)
+            if (!Instance.isServer)
             {
-                Instance._studyLog.WriteLogData(logData);
-                return;
+                var logFileData = new LogFileData(logData);
+
+                NetworkManager.Instance.MulticastMessage(logFileData, NetworkExtensions.LoggingPort, Instance.GetInstanceID());
             }
+            Instance._studyLog.WriteLogData(logData);
+            return;
 
-            var logFileData = new LogFileData(logData);
 
-            NetworkManager.Instance.MulticastMessage(logFileData, NetworkExtensions.LoggingPort, Instance.GetInstanceID());
         }
 
         public static void Log(LogData logData)

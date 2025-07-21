@@ -36,15 +36,6 @@ namespace DistractorTask.UserStudy
                 }
             }
 
-            foreach (var noise in noiseLevels)
-            {
-                var noiseByte = (byte)noise;
-              
-                Debug.Log($"Noise as byte: {noiseByte.ToString()} vs real value {noise.ToString()}");
-                var returnValue = Enum.Parse<NoiseLevel>(noiseByte.ToString());
-                Debug.Log($"Noise value return: {returnValue.ToString()}");
-            }
-
             
             if (condition.hasAudioTask)
             {
