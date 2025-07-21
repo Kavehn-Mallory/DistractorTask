@@ -17,8 +17,8 @@ namespace DistractorTask.UserStudy
 
 
             var permutations = (int)(noiseLevelCount * loadLevelCount);
-            var result = new ConditionPermutation[permutations];
 
+            var result = new List<ConditionPermutation>(permutations);
 
             var noiseLevels = GenerateNoiseLevels(condition.noiseLevels);
             var loadLevels = GenerateLoadLevels(condition.loadLevels);
@@ -27,20 +27,26 @@ namespace DistractorTask.UserStudy
             {
                 for (int noiseLevel = 0; noiseLevel < noiseLevelCount; noiseLevel++)
                 {
-                    var index = (loadLevel * noiseLevelCount + noiseLevel + startCondition) % permutations;
-                    result[index] = new ConditionPermutation
+                    result.Add(new ConditionPermutation
                     {
                         LoadLevel = loadLevels[loadLevel],
                         NoiseLevel = noiseLevels[noiseLevel]
-                    };
+                    });
                 }
+            }
+
+            for (int i = 0; i < startCondition; i++)
+            {
+                var elementZero = result[0];
+                result.RemoveAt(0);
+                result.Add(elementZero);
             }
 
             
             if (condition.hasAudioTask)
             {
-                var resultWithAudioTask = new ConditionPermutation[result.Length * 2];
-                for (int i = 0; i < result.Length; i++)
+                var resultWithAudioTask = new ConditionPermutation[result.Count * 2];
+                for (int i = 0; i < result.Count; i++)
                 {
                     var permutation = result[i];
                     resultWithAudioTask[i * 2] = permutation;
@@ -51,7 +57,7 @@ namespace DistractorTask.UserStudy
                 return resultWithAudioTask;
             }
 
-            return result;
+            return result.ToArray();
         }
 
         private static uint Count(uint enumValue)

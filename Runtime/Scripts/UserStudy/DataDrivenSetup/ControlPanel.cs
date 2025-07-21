@@ -66,6 +66,24 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             _enumerator = null;
         }
 
+        [ContextMenu("Test Permutation")]
+        private void TestPermutations()
+        {
+            foreach (var study in studies)
+            {
+
+                var startingCondition = participantDropdown.value;
+                _enumerator = new StudyConditionsEnumerator(study, startingCondition);
+                Debug.Log($"Study {study.studyName} with offset {startingCondition}");
+                while (_enumerator.MoveNext())
+                {
+                    Debug.Log($"Load level {_enumerator.Current.loadLevel} with noise level {_enumerator.Current.noiseLevel}");
+                }
+                
+                
+            }
+        }
+
         private void OnHmdConnectionStateChanged(ConnectionState obj)
         {
             if (obj != ConnectionState.Connected && _hmdCommunicationTask != null)
