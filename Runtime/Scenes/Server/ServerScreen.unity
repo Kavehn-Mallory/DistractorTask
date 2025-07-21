@@ -13562,7 +13562,7 @@ MonoBehaviour:
       hasAudioTask: 0
     isInsideWall: 0
   - studyName: Tutorial Study 3
-    selectionsPerTrial: 2
+    selectionsPerTrial: 5
     trialsPerCondition: 5
     conditions:
       loadLevels: -1
