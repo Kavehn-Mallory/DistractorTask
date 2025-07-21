@@ -35,12 +35,7 @@ namespace DistractorTask.UserStudy
                 }
             }
 
-            for (int i = 0; i < startCondition; i++)
-            {
-                var elementZero = result[0];
-                result.RemoveAt(0);
-                result.Add(elementZero);
-            }
+
 
             
             if (condition.hasAudioTask)
@@ -53,8 +48,22 @@ namespace DistractorTask.UserStudy
                     permutation.HasAudioTask = true;
                     resultWithAudioTask[i * 2 + 1] = permutation;
                 }
+                
+                for (int i = 0; i < startCondition; i++)
+                {
+                    var elementZero = result[0];
+                    result.RemoveAt(0);
+                    result.Add(elementZero);
+                }
 
                 return resultWithAudioTask;
+            }
+            
+            for (int i = 0; i < startCondition; i++)
+            {
+                var elementZero = result[0];
+                result.RemoveAt(0);
+                result.Add(elementZero);
             }
 
             return result.ToArray();
