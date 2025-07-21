@@ -247,7 +247,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
                 if (!_hmdCommunicationTask.IsCompletedSuccessfully)
                 {
                     //todo do we just restart the enumerator at the specified index?
-                    _enumerator.MovePrevious();
+                    //_enumerator.MovePrevious();
                     Debug.LogError("Error while trying to perform trial");
                     return;
                 }
