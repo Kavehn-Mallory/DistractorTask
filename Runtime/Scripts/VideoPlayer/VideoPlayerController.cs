@@ -60,11 +60,11 @@ namespace DistractorTask.VideoPlayer
             _unregisterVideoClipChangeEvent?.Invoke();
             _unregisterVideoClipResetEvent?.Invoke();
             _unregisterVideoClipChangeEvent = NetworkManager.Instance
-                .RegisterPersistentMulticastResponse<StudyConditionVideoInfoData, OnVideoClipChangedData>(
+                .RegisterPersistentMulticastInstantResponse<StudyConditionVideoInfoData, OnVideoClipChangedData>(
                     SwitchVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
             
             _unregisterVideoClipResetEvent = NetworkManager.Instance
-                .RegisterPersistentMulticastResponse<UpdateVideoClipData, OnVideoClipChangedData>(
+                .RegisterPersistentMulticastInstantResponse<UpdateVideoClipData, OnVideoClipChangedData>(
                     ResetVideoClip, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
             
             NetworkManager.Instance.RegisterCallbackAllPorts<StudyEndData>(OnStudyEndDataReceived);

@@ -147,6 +147,23 @@ namespace DistractorTask.Transport
         }
 
         
+
+        public static Action RegisterTaskResponse<T, TResponse>(this INetworkManager networkManager,
+             Func<T, int, Task> taskToPerformBeforeResponse, ConnectionType receivingMessageType, ushort receivingPort,
+            ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId,
+            bool suppressLocalBroadcast = false, bool persistent = false)
+            where T : IRespondingSerializer<TResponse>, new()
+            where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            var responseMessage =
+                networkManager.GetResponseMethod<T, TResponse>(responseMessageType, responseEndpoint, callerId, suppressLocalBroadcast);
+
+            var responseThing = new ResponseTask<T>(networkManager, taskToPerformBeforeResponse, responseMessage, receivingMessageType,
+                receivingPort, persistent);
+            RegisterCallback<T>(networkManager, receivingMessageType, receivingPort, responseThing.TriggerEvent);
+            return responseThing.Unregister;
+        }
+
         public static Action RegisterResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, ConnectionType receivingMessageType, ushort receivingPort,
             ConnectionType responseMessageType, NetworkEndpoint responseEndpoint, int callerId,
             bool suppressLocalBroadcast = false, bool persistent = false) where T : IRespondingSerializer<TResponse>, new()
@@ -262,14 +279,21 @@ namespace DistractorTask.Transport
             return networkManager.RegisterResponse<T, TResponse>(ConnectionType.Broadcast, default, ConnectionType.Broadcast, default, callerId, suppressLocalBroadcast, true);
         }
         
-        public static Action RegisterPersistentMulticastResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, ushort port,
+        public static Action RegisterPersistentMulticastInstantResponse<T, TResponse>(this INetworkManager networkManager, Action<T, int> actionToPerformBeforeResponse, ushort port,
             int callerId) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
             return networkManager.RegisterResponse<T, TResponse>(actionToPerformBeforeResponse, ConnectionType.Multicast, port, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(port), callerId, persistent: true);
         }
         
-        public static Action RegisterPersistentMulticastResponse<T, TResponse>(this INetworkManager networkManager, ushort port,
+        public static Action RegisterPersistentMulticastResponse<T, TResponse>(this INetworkManager networkManager, Func<T, int, Task> taskToPerformBeforeResponse, ushort port,
+            int callerId) where T : IRespondingSerializer<TResponse>, new()
+            where TResponse : IResponseIdentifier, ISerializer, new()
+        {
+            return networkManager.RegisterTaskResponse<T, TResponse>(taskToPerformBeforeResponse, ConnectionType.Multicast, port, ConnectionType.Multicast, NetworkEndpoint.AnyIpv4.WithPort(port), callerId, persistent: true);
+        }
+        
+        public static Action RegisterPersistentMulticastInstantResponse<T, TResponse>(this INetworkManager networkManager, ushort port,
             int callerId) where T : IRespondingSerializer<TResponse>, new()
             where TResponse : IResponseIdentifier, ISerializer, new()
         {
@@ -534,6 +558,41 @@ namespace DistractorTask.Transport
                     _task.SetCanceled();
                 }
             }
+        }
+
+        internal class ResponseTask<T> where T : ISerializer, new()
+        {
+            private Func<T, int, Task> _action;
+            private readonly ConnectionType _receivingMessageType;
+            private readonly ushort _port;
+            private readonly INetworkManager _networkManager;
+            private readonly bool _persistent;
+            private Action<T, int> _response;
+
+            internal ResponseTask(INetworkManager networkManager, Func<T, int, Task> action, Action<T, int> response, ConnectionType receivingMessageType, ushort port,
+                bool persistent)
+            {
+                _action = action;
+                _receivingMessageType = receivingMessageType;
+                _port = port;
+                _persistent = persistent;
+                _networkManager = networkManager;
+                _response = response;
+            }
+
+            public async void TriggerEvent(T data, int callerId)
+            {
+                await _action(data, callerId);
+                _response.Invoke(data, callerId);
+                if (_persistent)
+                {
+                    return;
+                }
+
+                Unregister();
+            }
+            
+            public void Unregister() => UnregisterCallback<T>(_networkManager, _receivingMessageType, _port, TriggerEvent);
         }
         
         internal class OneTimeActionWrapper<T> where T : ISerializer,new()

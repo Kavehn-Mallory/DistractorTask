@@ -34,6 +34,8 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
         public Action<string, int> OnStudyPhaseStart = delegate { };
         public Action<string> OnStudyPhaseEnd = delegate { };
         public Action OnStudyCompleted = delegate { };
+
+        public bool enableResend = true;
         
         /// <summary>
         /// Triggers on each iteration. String represents the name of the study stage, first int is the current index, second int is the iteration count
@@ -218,7 +220,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             }
 
 
-            var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastResponse<TrialCompletedData, TrialCompletedResponseData>(
+            var unregisterCallback = NetworkManager.Instance.RegisterPersistentMulticastInstantResponse<TrialCompletedData, TrialCompletedResponseData>(
                 OnTrialCompleted, NetworkExtensions.DefaultPort, GetInstanceID());
             
             OnIterationCompleted.Invoke("Study Condition", -1, _enumerator.PermutationCount);
@@ -301,7 +303,25 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
             //todo try to adjust values on TrialCompletedData to make sure that those actually make their way across 
         }
         //todo register persistent callback for trial end data? this way we can send new data without interrupting the current study process?
-        
+
+        public async void ResendVideoData()
+        {
+            if (!enableResend || _enumerator == null)
+            {
+                return;
+            }
+            var studyCondition = _enumerator.Current;
+            _videoWallCommunicationTask = NetworkManager.Instance
+                .MulticastMessageAndAwaitResponseWithInterrupt<StudyConditionVideoInfoData, OnVideoClipChangedData>(
+                    new StudyConditionVideoInfoData
+                    {
+                        studyCondition = studyCondition
+                    }, NetworkExtensions.DisplayWallControlPort, GetInstanceID(),
+                    _enumerator.CurrentPermutationIndex);
+
+            await _videoWallCommunicationTask.AwaitMessage();
+            Debug.Log("Resend data");
+        }
         
     }
 

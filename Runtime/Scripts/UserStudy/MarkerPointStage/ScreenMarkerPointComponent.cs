@@ -31,7 +31,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
         {
             markerPointCanvas.gameObject.SetActive(false);
             _markerPoints = CreateMarkerPoints(marker, markerPointCanvas, zones);
-            _unregisterMarkerCountDataResponse = Manager.RegisterPersistentMulticastResponse<MarkerCountData, MarkerPointResponseData>(OnStartConfirmed, _port, GetInstanceID());
+            _unregisterMarkerCountDataResponse = Manager.RegisterPersistentMulticastInstantResponse<MarkerCountData, MarkerPointResponseData>(OnStartConfirmed, _port, GetInstanceID());
         }
 
         private void OnDisable()
@@ -68,7 +68,7 @@ namespace DistractorTask.UserStudy.MarkerPointStage
             }
             Debug.Log("Marker Point Start Received");
             //Manager.RegisterCallback<ActivateMarkerPoint>(OnPointSelectionConfirmed, _port);
-            _activateMarkerPointsRegisterCallback = Manager.RegisterPersistentMulticastResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(
+            _activateMarkerPointsRegisterCallback = Manager.RegisterPersistentMulticastInstantResponse<ActivateMarkerPoint, OnMarkerPointActivatedData>(
                 OnPointSelectionConfirmed, _port, GetInstanceID());
             Manager.RegisterMulticastResponse<MarkerPointEndData, MarkerPointResponseData>(EndMarkerPointSetup, NetworkExtensions.DisplayWallControlPort, GetInstanceID());
             markerPointCanvas.gameObject.SetActive(true);
