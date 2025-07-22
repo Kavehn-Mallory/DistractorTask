@@ -168,8 +168,8 @@ namespace DistractorTask.Logging
 
                 NetworkManager.Instance.MulticastMessage(logFileData, NetworkExtensions.LoggingPort, Instance.GetInstanceID());
             }
-            Instance._studyLog.WriteLogData(logData);
-            return;
+            
+            Instance?._studyLog.WriteLogData(logData);
 
 
         }
