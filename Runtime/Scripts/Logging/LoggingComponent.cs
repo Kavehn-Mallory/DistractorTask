@@ -169,7 +169,7 @@ namespace DistractorTask.Logging
                 NetworkManager.Instance.MulticastMessage(logFileData, NetworkExtensions.LoggingPort, Instance.GetInstanceID());
             }
             
-            Instance?._studyLog.WriteLogData(logData);
+            Instance._studyLog?.WriteLogData(logData);
 
 
         }
