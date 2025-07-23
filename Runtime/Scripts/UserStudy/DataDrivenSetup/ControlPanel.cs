@@ -73,7 +73,7 @@ namespace DistractorTask.UserStudy.DataDrivenSetup
 
         private int CalculateStartingCondition(int studyIndex)
         {
-            if (studyIndex < 2)
+            if (studyIndex < 3)
             {
                 return participantDropdownStudy1.value;
             }
