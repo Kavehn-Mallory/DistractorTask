@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DistractorTask.UserStudy.Core;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace DistractorTask.UserStudy
 {
@@ -14,8 +14,7 @@ namespace DistractorTask.UserStudy
                 Enum.GetNames(typeof(NoiseLevel)).Length);
             var loadLevelCount = math.min(Count((uint)condition.loadLevels),
                 Enum.GetNames(typeof(LoadLevel)).Length);
-
-
+            
             var permutations = (int)(noiseLevelCount * loadLevelCount);
 
             var result = new List<ConditionPermutation>(permutations);
@@ -34,9 +33,6 @@ namespace DistractorTask.UserStudy
                     });
                 }
             }
-
-
-
             
             if (condition.hasAudioTask)
             {
@@ -48,15 +44,8 @@ namespace DistractorTask.UserStudy
                     permutation.HasAudioTask = true;
                     resultWithAudioTask[i * 2 + 1] = permutation;
                 }
-                
-                for (int i = 0; i < startCondition; i++)
-                {
-                    var elementZero = result[0];
-                    result.RemoveAt(0);
-                    result.Add(elementZero);
-                }
 
-                return resultWithAudioTask;
+                result = resultWithAudioTask.ToList();
             }
             
             for (int i = 0; i < startCondition; i++)
