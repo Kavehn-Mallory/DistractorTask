@@ -8,6 +8,49 @@ namespace DistractorTask.Logging
 {
     public class LogData
     {
+        #region ReadOnly Properties
+
+        public long TimeStamp => _timeStamp;
+        public LogCategory LogCategory => _logCategory;
+        public string UserId1 => _userId;
+        public string ParticipantType1 => _participantType;
+        public Vector3 CameraPosition1 => _cameraPosition;
+        public Quaternion CameraRotation1 => _cameraRotation;
+        public int MarkerPointCount1 => _markerPointCount;
+        public float DistanceFromCamera1 => _distanceFromCamera;
+        public float DistanceToWall1 => _distanceToWall;
+        public Vector3 HitPointWallPosition1 => _hitPointWallPosition;
+        public Vector3 HitPointWallNormal1 => _hitPointWallNormal;
+        public Vector3 AnchorPointPosition1 => _anchorPointPosition;
+        public string StudyName1 => _studyName;
+        public int StudyIndex1 => _studyIndex;
+        public NoiseLevel NoiseLevel1 => _noiseLevel;
+        public LoadLevel LoadLevel1 => _loadLevel;
+        public int TrialCount1 => _trialCount;
+        public int RepetitionsPerTrial1 => _repetitionsPerTrial;
+        public int AudioTaskReactionTime1 => _audioTaskReactionTime;
+        public int TrialTargetIndex1 => _trialTargetIndex;
+        public int TrialSelectedIndex1 => _trialSelectedIndex;
+        public string TrialSymbolOrder1 => _trialSymbolOrder;
+        public int AnchorPointIndex1 => _anchorPointIndex;
+        public long StartTime1 => _startTime;
+        public long ReactionTime1 => _reactionTime;
+        public Vector3 LeftEyePosition1 => _leftEyePosition;
+        public Vector3 RightEyePosition1 => _rightEyePosition;
+        public Vector2 EyeDimensions1 => _eyeDimensions;
+        public Vector2 PupilDiameter1 => _pupilDiameter;
+        public string GazeBehaviour1 => _gazeBehaviour;
+        public ulong GazeBehaviourDuration1 => _gazeBehaviourDuration;
+        public string VideoPath1 => _videoPath;
+        public string AudioPath1 => _audioPath;
+        public Vector3 Acceleration1 => _acceleration;
+        public Vector3 AngularVelocity1 => _angularVelocity;
+        public Vector3 LinearAcceleration1 => _linearAcceleration;
+        public Quaternion Attitude1 => _attitude;
+        public float Lux1 => _lux;
+
+        #endregion
+
         private long _timeStamp;
         private LogCategory _logCategory;
         private string _userId;
@@ -46,7 +89,6 @@ namespace DistractorTask.Logging
         private Vector3 _linearAcceleration;
         private Quaternion _attitude;
         private float _lux;
-
 
 
         //todo we could change this back to the actual names of the headers and not the names of the properties. The original idea does not work 
