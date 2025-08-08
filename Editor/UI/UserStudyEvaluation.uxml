@@ -1,0 +1,26 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/UI/UserStudyEvaluation.uss?fileID=7433441132597879392&amp;guid=e529f86182af6854aa0b9f735c0e6e44&amp;type=3#UserStudyEvaluation" />
+    <editor:Toolbar>
+        <editor:ToolbarMenu />
+        <editor:ToolbarButton text="Button" />
+    </editor:Toolbar>
+    <engine:TabView>
+        <engine:Tab label="Overview" name="Overview" />
+        <engine:Tab label="Per Participant" name="PerParticipant">
+            <engine:VisualElement name="Study1" style="flex-grow: 1;" />
+            <engine:VisualElement name="Study1_3" style="flex-grow: 1;" />
+            <engine:VisualElement name="Study2" style="flex-grow: 1;" />
+            <engine:VisualElement name="Study3" style="flex-grow: 1;" />
+        </engine:Tab>
+        <engine:Tab label="Per Condition" name="PerCondition">
+            <engine:VisualElement name="Settings" style="flex-grow: 1; flex-direction: row; margin-top: 10px;">
+                <engine:EnumField label="Load Level" value="Low" type="DistractorTask.UserStudy.Core.LoadLevel, DistractorTask.Runtime" name="LoadLevelSettings" />
+                <engine:EnumField label="Noise Level" value="None" type="DistractorTask.UserStudy.Core.NoiseLevel, DistractorTask.Runtime" name="NoiseLevelSettings" />
+            </engine:VisualElement>
+            <engine:VisualElement name="Spacing" style="flex-grow: 1; height: 25px;" />
+            <engine:VisualElement name="Content" style="flex-grow: 1;">
+                <DistractorTask.Editor.UI.IntegerBoxPlot style="height: 150px; width: 50px;" />
+            </engine:VisualElement>
+        </engine:Tab>
+    </engine:TabView>
+</engine:UXML>
