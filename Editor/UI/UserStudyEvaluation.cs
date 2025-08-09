@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using DistractorTask.Logging;
+using Unity.Properties;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -18,7 +19,24 @@ namespace DistractorTask.Editor.UI
         [SerializeField]
         private UserStudyEvaluationSettings settings;
 
+        private RuntimeStudyData _currentlyActiveStudyData;
+
+        public RuntimeStudyData CurrentlyActiveStudyData
+        {
+            get => _currentlyActiveStudyData;
+            set
+            {
+                _currentlyActiveStudyData = value;
+                OnRuntimeStudyDataChanged();
+            }
+        }
+
+        private RuntimeStudyData _emptyStudyData;
+
+        
+
         private const string DefaultSettingsPath = "Assets/DistractorTask/UserStudyEvaluationSettings";
+        
 
         [MenuItem("Window/DistractorTask/UserStudyEvaluation")]
         public static void ShowExample()
@@ -26,6 +44,8 @@ namespace DistractorTask.Editor.UI
             UserStudyEvaluation wnd = GetWindow<UserStudyEvaluation>();
             wnd.titleContent = new GUIContent("UserStudyEvaluation");
         }
+        
+        
 
         public void CreateGUI()
         {
@@ -43,6 +63,8 @@ namespace DistractorTask.Editor.UI
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
+
+            CreateEmptyStudySettings();
             
             
             // Each editor window contains a root VisualElement object
@@ -74,6 +96,14 @@ namespace DistractorTask.Editor.UI
             
         }
 
+        private void CreateEmptyStudySettings()
+        {
+            _emptyStudyData = ScriptableObject.CreateInstance<RuntimeStudyData>();
+            _emptyStudyData.logFiles = new List<RuntimeLogEventData>();
+            _emptyStudyData.userIds = Array.Empty<string>();
+            _emptyStudyData.userStudySettings = ScriptableObject.CreateInstance<UserStudySettings>();
+        }
+
         private void OnActiveTabChanged(Tab oldTab, Tab newTab)
         {
             //throw new System.NotImplementedException();
@@ -84,9 +114,56 @@ namespace DistractorTask.Editor.UI
             var overviewTab = tabView.Q<Tab>("Overview");
             var participantTab = tabView.Q<Tab>("PerParticipant");
             var conditionTab = tabView.Q<Tab>("PerCondition");
-            
-            
+
+            SetupOverviewTab(overviewTab);
+            SetupParticipantTab(participantTab);
+            SetupConditionTab(conditionTab);
+
+
         }
+        
+        private void SetupOverviewTab(Tab overviewTab)
+        {
+            var loadedAssetNameLabel = overviewTab.Q<Label>("LoadedAsset");
+            loadedAssetNameLabel.bindingPath = nameof(RuntimeStudyData.userStudySettings);
+            var participantCount = overviewTab.Q<Label>("NoOfParticipants");
+            participantCount.bindingPath = nameof(RuntimeStudyData.userIds.Length);
+        }
+        
+        private void SetupParticipantTab(Tab participantTab)
+        {
+            var participantDropdown = participantTab.Q<DropdownField>("ParticipantSelector");
+            participantDropdown.bindingPath = nameof(RuntimeStudyData.userIds);
+            participantDropdown.RegisterValueChangedCallback(OnParticipantChanged);
+        }
+
+        private void OnParticipantChanged(ChangeEvent<string> evt)
+        {
+            UpdateStudies(evt.newValue);
+        }
+
+        private void UpdateStudies(string userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SetupConditionTab(Tab conditionTab)
+        {
+            var loadLevel = conditionTab.Q<EnumField>("LoadLevelSettings");
+            var noiseLevel = conditionTab.Q<EnumField>("NoiseLevelSettings");
+
+            loadLevel.RegisterValueChangedCallback(OnConditionChanged);
+            noiseLevel.RegisterValueChangedCallback(OnConditionChanged);
+        }
+        
+        private void OnConditionChanged(ChangeEvent<Enum> evt)
+        {
+            throw new NotImplementedException();
+        }
+        
+
+        
+
 
         private void SetupToolbar(Toolbar toolbar)
         {
@@ -106,6 +183,22 @@ namespace DistractorTask.Editor.UI
             {
                 return;
             }
+
+            CurrentlyActiveStudyData = AssetDatabase.LoadAssetAtPath<RuntimeStudyData>(path);
+            
+            
+        }
+        
+        private void OnRuntimeStudyDataChanged()
+        {
+            rootVisualElement.Unbind();
+            
+            if (_currentlyActiveStudyData)
+            {
+                _currentlyActiveStudyData = _emptyStudyData;
+            }
+            var serializedObject = new SerializedObject(_currentlyActiveStudyData);
+            this.rootVisualElement.Bind(serializedObject);
         }
 
         private void OnLoadLogFiles(DropdownMenuAction dropdownMenuAction)
@@ -181,6 +274,13 @@ namespace DistractorTask.Editor.UI
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            _currentlyActiveStudyData = parent;
+
+            if (settings)
+            {
+                settings.lastOpenedPath = targetPath;
+            }
+
             Debug.Log($"Failed to create {failedAssets} assets");
         }
         
@@ -194,7 +294,7 @@ namespace DistractorTask.Editor.UI
                 result[i - 1] = new LogEvent
                 {
                     timeStamp = ReadTimeStamp(text[i].Split(';')[0]),
-                    logData = LogData.LoadLogDataFromCSVLine(text[0], text[i])
+                    logData = LogData.LoadLogDataFromCsvLine(text[0], text[i])
                 };
             }
             
@@ -203,6 +303,7 @@ namespace DistractorTask.Editor.UI
         
         private static TimeSpan ReadTimeStamp(string v)
         {
+            return DateTime.Parse(v).TimeOfDay;
             if (DateTime.TryParse(v, out var timeStamp))
             {
                 return timeStamp.TimeOfDay;
@@ -215,15 +316,10 @@ namespace DistractorTask.Editor.UI
         [Serializable]
         public struct LogEvent
         {
-            public TimeSpan timeStamp;
+            public SerializableTimeSpan timeStamp;
             public LogData logData;
         }
 
-        [Serializable]
-        public struct SerializableLogEvent
-        {
-            public SerializableTimeSpan timeStamp;
-            
-        }
+
     }
 }

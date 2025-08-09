@@ -32,7 +32,7 @@ namespace DistractorTask.Logging
                 result[i - 1] = new LogEvent
                 {
                     timeStamp = ReadTimeStamp(text[i].Split(';')[0]),
-                    logData = LogData.LoadLogDataFromCSVLine(text[0], text[i])
+                    logData = LogData.LoadLogDataFromCsvLine(text[0], text[i])
                 };
             }
             

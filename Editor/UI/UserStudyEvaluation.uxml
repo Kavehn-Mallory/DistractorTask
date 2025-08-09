@@ -6,7 +6,15 @@
         <editor:ToolbarButton text="Button" />
     </editor:Toolbar>
     <engine:TabView>
-        <engine:Tab label="Overview" name="Overview" />
+        <engine:Tab label="Overview" name="Overview">
+            <engine:VisualElement name="WarningArea" style="flex-grow: 1;">
+                <engine:Label name="StudyStateText" />
+            </engine:VisualElement>
+            <engine:VisualElement name="StudyOverview" style="flex-grow: 1;">
+                <engine:TextField label="Loaded Asset" readonly="true" />
+                <engine:TextField label="No. of Participants" readonly="true" />
+            </engine:VisualElement>
+        </engine:Tab>
         <engine:Tab label="Per Participant" name="PerParticipant">
             <engine:VisualElement name="Study1" style="flex-grow: 1;" />
             <engine:VisualElement name="Study1_3" style="flex-grow: 1;" />
