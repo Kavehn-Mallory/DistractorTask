@@ -1,7 +1,8 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Assets/UI/UserStudyEvaluation.uss?fileID=7433441132597879392&amp;guid=e529f86182af6854aa0b9f735c0e6e44&amp;type=3#UserStudyEvaluation" />
+    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/UserStudyEvaluation.uss?fileID=7433441132597879392&amp;guid=e529f86182af6854aa0b9f735c0e6e44&amp;type=3#UserStudyEvaluation" />
+    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/IntegerBoxPlot.uss?fileID=7433441132597879392&amp;guid=55499204efd649f6b043a4c85320fd35&amp;type=3#IntegerBoxPlot" />
     <editor:Toolbar>
-        <editor:ToolbarMenu />
+        <editor:ToolbarMenu text="File" name="File" />
         <editor:ToolbarButton text="Button" />
     </editor:Toolbar>
     <engine:TabView>
@@ -19,7 +20,11 @@
             </engine:VisualElement>
             <engine:VisualElement name="Spacing" style="flex-grow: 1; height: 25px;" />
             <engine:VisualElement name="Content" style="flex-grow: 1;">
-                <DistractorTask.Editor.UI.IntegerBoxPlot style="height: 150px; width: 50px;" />
+                <engine:VisualElement name="ReactionTimeContainer" style="flex-grow: 1; align-self: center;">
+                    <DistractorTask.Editor.UI.IntegerBoxPlot />
+                    <DistractorTask.Editor.UI.PieChart />
+                </engine:VisualElement>
+                <engine:Button text="Button" name="Button" />
             </engine:VisualElement>
         </engine:Tab>
     </engine:TabView>

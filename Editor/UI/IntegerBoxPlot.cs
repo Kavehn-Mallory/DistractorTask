@@ -25,6 +25,7 @@ namespace DistractorTask.Editor.UI
             Values = values;
             
             generateVisualContent += DrawCanvas;
+            
         }
 
         private void DrawCanvas(MeshGenerationContext ctx)
@@ -45,8 +46,8 @@ namespace DistractorTask.Editor.UI
             
             
             painter.DrawBoxPlot(graphMin, graphMax, Values[0], Values[^1], Values[lowerQuartileIndex],
-                Values[upperQuartileIndex], Values[Values.Length / 2], new Vector2(), this.layout.size, Color.white,
-                Color.red, Color.red, Color.black, Color.blue);
+                Values[upperQuartileIndex], Values[Values.Length / 2], new Vector2(), this.layout.size, BorderColor,
+                BoxBorderColor, BoxColor, WhiskerColor, MedianColor, DrawBorder);
             
 
         }

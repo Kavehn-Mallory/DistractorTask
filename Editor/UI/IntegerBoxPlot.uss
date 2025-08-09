@@ -1,0 +1,12 @@
+IntegerBoxPlot {
+    --border-color: white;
+    --box-border-color: red;
+    --box-color: red;
+    --whisker-color: black;
+    --median-color: blue;
+    --mean-color: green;
+    --draw-border: false;
+    --draw-mean: false;
+    width: 50;
+    height: 150;
+}

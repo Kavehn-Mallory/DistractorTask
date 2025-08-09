@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace DistractorTask.Logging
 {
+    [Serializable]
     public class LogData
     {
         #region ReadOnly Properties
@@ -51,43 +52,81 @@ namespace DistractorTask.Logging
 
         #endregion
 
+        [SerializeField]
         private long _timeStamp;
+        [SerializeField]
         private LogCategory _logCategory;
+        [SerializeField]
         private string _userId;
+        [SerializeField]
         private string _participantType;
+        [SerializeField]
         private Vector3 _cameraPosition;
+        [SerializeField]
         private Quaternion _cameraRotation;
+        [SerializeField]
         private int _markerPointCount;
+        [SerializeField]
         private float _distanceFromCamera;
+        [SerializeField]
         private float _distanceToWall;
+        [SerializeField]
         private Vector3 _hitPointWallPosition;
+        [SerializeField]
         private Vector3 _hitPointWallNormal;
+        [SerializeField]
         private Vector3 _anchorPointPosition;
+        [SerializeField]
         private string _studyName;
+        [SerializeField]
         private int _studyIndex;
+        [SerializeField]
         private NoiseLevel _noiseLevel;
+        [SerializeField]
         private LoadLevel _loadLevel;
+        [SerializeField]
         private int _trialCount;
+        [SerializeField]
         private int _repetitionsPerTrial;
+        [SerializeField]
         private int _audioTaskReactionTime;
+        [SerializeField]
         private int _trialTargetIndex;
+        [SerializeField]
         private int _trialSelectedIndex;
+        [SerializeField]
         private string _trialSymbolOrder;
+        [SerializeField]
         private int _anchorPointIndex;
+        [SerializeField]
         private long _startTime;
+        [SerializeField]
         private long _reactionTime;
+        [SerializeField]
         private Vector3 _leftEyePosition;
+        [SerializeField]
         private Vector3 _rightEyePosition;
+        [SerializeField]
         private Vector2 _eyeDimensions;
+        [SerializeField]
         private Vector2 _pupilDiameter;
+        [SerializeField]
         private string _gazeBehaviour;
+        [SerializeField]
         private ulong _gazeBehaviourDuration;
+        [SerializeField]
         private string _videoPath;
+        [SerializeField]
         private string _audioPath;
+        [SerializeField]
         private Vector3 _acceleration;
+        [SerializeField]
         private Vector3 _angularVelocity;
+        [SerializeField]
         private Vector3 _linearAcceleration;
+        [SerializeField]
         private Quaternion _attitude;
+        [SerializeField]
         private float _lux;
 
 
@@ -142,6 +181,7 @@ namespace DistractorTask.Logging
             var indices = CreatePropertyIndices(headerElements, nameof(Category));
 
             var logFile = new LogData();
+            
 
             logFile._timeStamp = long.Parse(GetPropertyValue(elements, indices[nameof(Timestamp)]), CultureInfo.InvariantCulture);
             logFile._logCategory = Enum.Parse<LogCategory>(GetPropertyValue(elements, indices[nameof(Category)]));

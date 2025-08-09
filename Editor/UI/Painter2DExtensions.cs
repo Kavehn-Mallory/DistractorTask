@@ -6,18 +6,17 @@ namespace DistractorTask.Editor.UI
 {
     public static class Painter2DExtensions
     {
-        public static void DrawRectangle(this Painter2D painter, Vector2 bottomLeft, Vector2 topRight, bool fillRectangle = false)
+        public static void DrawRectangle(this Painter2D painter, Vector2 topLeft, Vector2 bottomRight, bool fillRectangle = false)
         {
             painter.BeginPath();
-            painter.MoveTo(bottomLeft);
-            painter.LineTo(new Vector2(bottomLeft.x, topRight.y));
-            painter.LineTo(new Vector2(topRight.x, topRight.y));
-            painter.LineTo(new Vector2(topRight.x, bottomLeft.y));
+            painter.MoveTo(topLeft);
+            painter.LineTo(new Vector2(topLeft.x, bottomRight.y));
+            painter.LineTo(new Vector2(bottomRight.x, bottomRight.y));
+            painter.LineTo(new Vector2(bottomRight.x, topLeft.y));
             painter.ClosePath();
             if (fillRectangle)
             {
                 painter.Fill();
-                return;
             }
             painter.Stroke();
         }
@@ -32,10 +31,18 @@ namespace DistractorTask.Editor.UI
         
         public static void DrawBoxPlot(this Painter2D painter, float graphMin, float graphMax, float min,
             float max, float lowerQuartile, float upperQuartile, float median, Vector2 topLeft, Vector2 size, Color borderColor,
-            Color boxBorderColor, Color boxColor, Color whiskerColor, Color medianColor)
+            Color boxBorderColor, Color boxColor, Color whiskerColor, Color medianColor, bool drawBorderColor = false)
         {
 
+            
+            
             var bottomRight = topLeft + size;
+
+            if (drawBorderColor)
+            {
+                painter.strokeColor = borderColor;
+                painter.DrawRectangle(topLeft, bottomRight);
+            }
             
             var graphTopLeft = topLeft + new Vector2(0.1f, 0) * size;
             var graphBottomRight = bottomRight - new Vector2(0.1f, 0) * size;
@@ -82,13 +89,19 @@ namespace DistractorTask.Editor.UI
             
             //median
             painter.DrawLine(graphTopLeft + new Vector2(0, distancePerUnit * (graphMax - median)), graphTopLeft + new Vector2(boxWidth, distancePerUnit * (graphMax - median)));
-
-
-
-
-
+            
         }
 
+
+        public static void DrawBoxPlot(this Painter2D painter, float graphMin, float graphMax, float min,
+            float max, float lowerQuartile, float upperQuartile, float median, float mean, Vector2 topLeft,
+            Vector2 size, Color borderColor,
+            Color boxBorderColor, Color boxColor, Color whiskerColor, Color medianColor, Color meanColor, bool drawBorderColor = false)
+        {
+            painter.DrawBoxPlot(graphMin, graphMax, min, max, lowerQuartile, upperQuartile, median, topLeft, size, borderColor, boxBorderColor, boxColor, whiskerColor, medianColor, drawBorderColor);
+
+            throw new NotImplementedException();
+        }
 
 
 
