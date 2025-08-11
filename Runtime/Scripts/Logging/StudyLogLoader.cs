@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DistractorTask.UserStudy.Core;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace DistractorTask.Logging
@@ -79,7 +80,7 @@ namespace DistractorTask.Logging
             var trialBegin = 0;
             var trials = new List<TrialData>();
             var trialIndices = new List<int>();
-
+            
             _logData = new LogData[logEvents.Length];
             _timeStamps = new TimeSpan[logEvents.Length];
             

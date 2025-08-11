@@ -28,6 +28,18 @@ namespace DistractorTask.Editor.UI
             painter.LineTo(end);
             painter.Stroke();
         }
+
+        public static void DrawCircle(this Painter2D painter, Vector2 center, float radius, bool fillCircle = true)
+        {
+            painter.BeginPath();
+            painter.MoveTo(center);
+            painter.Arc(center, radius, 0, 360f);
+            if (fillCircle)
+            {
+                painter.Fill();
+            }
+            painter.Stroke();
+        }
         
         public static void DrawBoxPlot(this Painter2D painter, float graphMin, float graphMax, float min,
             float max, float lowerQuartile, float upperQuartile, float median, Vector2 topLeft, Vector2 size, Color borderColor,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,7 +8,7 @@ namespace DistractorTask.Editor.UI
 {
     [Serializable]
     [UxmlElement]
-    public abstract partial class BoxPlot<T> : VisualElement
+    public partial class BoxPlot : VisualElement
     {
         [Header("Color Selection")]
         [UxmlAttribute]
@@ -75,7 +76,30 @@ namespace DistractorTask.Editor.UI
                 _meanColorWasSet = true;
             }
         }
-        
+
+        [UxmlAttribute]
+        public Vector2 GraphRange
+        {
+            get => _graphRange;
+            set
+            {
+                _graphRange = value;
+                CheckGraphRange();
+                MarkDirtyRepaint();
+            }
+        }
+
+        private void CheckGraphRange()
+        {
+            //if(math.any)
+            _graphRange.x = Mathf.Min(_graphRange.x, _minMax.x);
+            _graphRange.y = Mathf.Max(_graphRange.y, _minMax.y);
+        }
+
+        private Vector2 _graphRange;
+
+        private Vector2 _quartiles;
+        private Vector2 _minMax;
         
         private bool _borderColorWasSet = false;
         private bool _boxBorderColorWasSet = false;
@@ -99,17 +123,53 @@ namespace DistractorTask.Editor.UI
         
         internal static readonly BindingId medianColorStyleProperty = (BindingId) "style.median-color";
         
-        private T[] _values = Array.Empty<T>();
+        private float[] _values = Array.Empty<float>();
+
+        private float _median;
+        private float _mean;
 
         [UxmlAttribute]
-        public T[] Values
+        public float[] Values
         {
             get => _values;
             set
             {
                 _values = value;
+                RecalculateBoxPlotValues();
                 MarkDirtyRepaint();
             }
+        }
+
+        
+        
+        private void RecalculateBoxPlotValues()
+        {
+            if (Values == null || Values.Length == 0)
+            {
+                _quartiles = new Vector2(0, 0);
+                _minMax = new Vector2(0, 0);
+                return;
+            }
+
+            Array.Sort(Values);
+
+            var lowerQuartileIndex = (int)(Values.Length * 0.25f);
+            var upperQuartileIndex = (int)(Values.Length * 0.75f);
+
+            _quartiles = new Vector2(Values[lowerQuartileIndex], Values[upperQuartileIndex]);
+            _minMax = new Vector2(Values[0], Values[^1]);
+
+            _median = Values[Values.Length / 2];
+            if (Values.Length % 2 == 0 && Values.Length > 1)
+            {
+                var halfPoint = Values.Length / 2;
+                _median = (Values[halfPoint - 1] + _median) / 2f;
+            }
+
+            _mean = Values.Average();
+
+            Debug.Log($"Box Plot: {_minMax.ToString()}. Median: {_median}. Mean: {_mean}");
+            CheckGraphRange();
         }
 
         [Header("Display Settings")]
@@ -145,6 +205,27 @@ namespace DistractorTask.Editor.UI
             AddToClassList(ussClassName);
             RegisterCallback<CustomStyleResolvedEvent>(OnStylesResolved);
             //this.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(DefaultStyleSheetPath));
+
+            if (_values == Array.Empty<float>())
+            {
+                var values = new float[11];
+                values[0] = 1;
+                values[1] = 3;
+                values[2] = 5;
+                values[3] = 6;
+                values[4] = 76;
+                values[5] = 23;
+                values[6] = 5;
+                values[7] = 50;
+                values[8] = 47;
+                values[9] = 100;
+                values[10] = 19;
+
+                Values = values;
+            }
+
+            
+            generateVisualContent += DrawCanvas;
             
         }
 
@@ -161,6 +242,22 @@ namespace DistractorTask.Editor.UI
             evt.ResolveCustomStyleSheetProperty(DrawBorderStyleProperty, ref _drawBorder);
             evt.ResolveCustomStyleSheetProperty(DrawMeanStyleProperty, ref _drawMean);
             
+        }
+        
+        private void DrawCanvas(MeshGenerationContext ctx)
+        {
+            if (Values == null || Values.Length == 0)
+            {
+                return;
+            }
+            var painter = ctx.painter2D;
+            
+            
+            painter.DrawBoxPlot(_graphRange.x, _graphRange.y, _minMax.x, _minMax.y, _quartiles.x,
+                _quartiles.y, _median, new Vector2(), this.layout.size, BorderColor,
+                BoxBorderColor, BoxColor, WhiskerColor, MedianColor, DrawBorder);
+            
+
         }
     }
 }

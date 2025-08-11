@@ -6,6 +6,6 @@ namespace DistractorTask.Editor.UI
     {
         public string userId;
         public string timeStamp;
-        public UserStudyEvaluation.LogEvent[] logEvents;
+        public UserStudyEvaluationEditor.LogEvent[] logEvents;
     }
 }

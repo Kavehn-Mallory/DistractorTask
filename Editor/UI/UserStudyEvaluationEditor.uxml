@@ -1,6 +1,7 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/UserStudyEvaluation.uss?fileID=7433441132597879392&amp;guid=e529f86182af6854aa0b9f735c0e6e44&amp;type=3#UserStudyEvaluation" />
-    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/IntegerBoxPlot.uss?fileID=7433441132597879392&amp;guid=55499204efd649f6b043a4c85320fd35&amp;type=3#IntegerBoxPlot" />
+    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/UserStudyEvaluationEditor.uss?fileID=7433441132597879392&amp;guid=e529f86182af6854aa0b9f735c0e6e44&amp;type=3#UserStudyEvaluationEditor" />
+    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/BoxPlot.uss?fileID=7433441132597879392&amp;guid=55499204efd649f6b043a4c85320fd35&amp;type=3#BoxPlot" />
+    <Style src="project://database/Packages/com.janwittke.distractortask/Editor/UI/Graph2D.uss?fileID=7433441132597879392&amp;guid=0e21ffa2e5cc09041a007f186a776c03&amp;type=3#Graph2D" />
     <editor:Toolbar>
         <editor:ToolbarMenu text="File" name="File" />
         <editor:ToolbarButton text="Button" />
@@ -11,11 +12,12 @@
                 <engine:Label name="StudyStateText" />
             </engine:VisualElement>
             <engine:VisualElement name="StudyOverview" style="flex-grow: 1;">
-                <engine:TextField label="Loaded Asset" readonly="true" />
-                <engine:TextField label="No. of Participants" readonly="true" />
+                <engine:TextField label="Loaded Asset" readonly="true" name="LoadedAsset" />
+                <engine:TextField label="No. of Participants" readonly="true" name="NoOfParticipants" />
             </engine:VisualElement>
         </engine:Tab>
         <engine:Tab label="Per Participant" name="PerParticipant">
+            <engine:DropdownField label="User Id" name="ParticipantSelector" />
             <engine:VisualElement name="Study1" style="flex-grow: 1;" />
             <engine:VisualElement name="Study1_3" style="flex-grow: 1;" />
             <engine:VisualElement name="Study2" style="flex-grow: 1;" />
@@ -29,10 +31,11 @@
             <engine:VisualElement name="Spacing" style="flex-grow: 1; height: 25px;" />
             <engine:VisualElement name="Content" style="flex-grow: 1;">
                 <engine:VisualElement name="ReactionTimeContainer" style="flex-grow: 1; align-self: center;">
-                    <DistractorTask.Editor.UI.IntegerBoxPlot />
-                    <DistractorTask.Editor.UI.PieChart />
+                    <DistractorTask.Editor.UI.BoxPlot name="ReactionTimeBoxPlot" />
+                    <DistractorTask.Editor.UI.PieChart name="AccuracyPieChart" style="width: 100px; height: 100px;" />
+                    <DistractorTask.Editor.UI.Graph2D name="ReactionTimeOverTimeForCondition" selected-graph-type="Point" />
+                    <DistractorTask.Editor.UI.Graph2D name="ReactionTimeOverTimePerMarkerPoint" selected-graph-type="Point" />
                 </engine:VisualElement>
-                <engine:Button text="Button" name="Button" />
             </engine:VisualElement>
         </engine:Tab>
     </engine:TabView>

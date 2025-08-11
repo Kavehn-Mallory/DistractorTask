@@ -10,7 +10,7 @@ namespace DistractorTask.Editor.UI
     [UxmlElement]
     public partial class PieChart : VisualElement
     {
-        private float _radius = 100.0f;
+        private float _radius = 25.0f;
 
         public float radius
         {
@@ -56,10 +56,10 @@ namespace DistractorTask.Editor.UI
             }
 
             var totalValue = percentages.Sum();
-            
-            
-            
-            
+
+
+
+            var center = layout.size / 2f;
             
             var colors = new Color32[] {
                 new Color32(182,235,122,255),
@@ -78,8 +78,8 @@ namespace DistractorTask.Editor.UI
                 painter.fillColor = colors[k];
                 k = ((k + 1) % colors.Length);
                 painter.BeginPath();
-                painter.MoveTo(new Vector2(_radius, _radius));
-                painter.Arc(new Vector2(_radius, _radius), _radius, angle, anglePct);
+                painter.MoveTo(center);
+                painter.Arc(center, _radius, angle, anglePct);
                 painter.Fill();
 
                 angle = anglePct;

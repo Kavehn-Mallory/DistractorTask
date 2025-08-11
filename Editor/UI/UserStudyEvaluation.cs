@@ -1,325 +1,379 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
+using System.Linq;
 using DistractorTask.Logging;
-using Unity.Properties;
-using UnityEditor;
-using UnityEditor.UIElements;
+using DistractorTask.UserStudy.Core;
+using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace DistractorTask.Editor.UI
 {
-    public class UserStudyEvaluation : EditorWindow
+    public class UserStudyEvaluation
     {
-        [SerializeField]
-        private VisualTreeAsset visualTreeAsset = default;
+        //for each log file -> reaction time for each trial 
 
-        [SerializeField]
-        private UserStudyEvaluationSettings settings;
+        private string[] _userIds = Array.Empty<string>();
 
-        private RuntimeStudyData _currentlyActiveStudyData;
+        private StudyLogRuntime[] _studyLogs = Array.Empty<StudyLogRuntime>();
 
-        public RuntimeStudyData CurrentlyActiveStudyData
+        public UserStudyEvaluation(RuntimeStudyData studyData)
         {
-            get => _currentlyActiveStudyData;
-            set
+            _studyLogs = new StudyLogRuntime[studyData.logFiles.Count];
+            _userIds = studyData.userIds;
+            for (var i = 0; i < studyData.logFiles.Count; i++)
             {
-                _currentlyActiveStudyData = value;
-                OnRuntimeStudyDataChanged();
+                var logFile = studyData.logFiles[i];
+                _studyLogs[i] = new StudyLogRuntime(logFile.logEvents);
             }
         }
 
-        private RuntimeStudyData _emptyStudyData;
-
-        
-
-        private const string DefaultSettingsPath = "Assets/DistractorTask/UserStudyEvaluationSettings";
-        
-
-        [MenuItem("Window/DistractorTask/UserStudyEvaluation")]
-        public static void ShowExample()
+        public ReactionTimeData[] CalculateReactionTimeForCondition(LoadLevel loadLevel, NoiseLevel noiseLevel)
         {
-            UserStudyEvaluation wnd = GetWindow<UserStudyEvaluation>();
-            wnd.titleContent = new GUIContent("UserStudyEvaluation");
-        }
-        
-        
-
-        public void CreateGUI()
-        {
-            if (!settings)
+            var timings = new List<ReactionTimeData>();
+            foreach (var studyLog in _studyLogs)
             {
-                Debug.Log("Creating settings");
-                settings = AssetDatabase.LoadAssetAtPath<UserStudyEvaluationSettings>(
-                    $"{DefaultSettingsPath}/UserStudyEvaluationSettings.asset") ?? ScriptableObject.CreateInstance<UserStudyEvaluationSettings>();
+                timings.AddRange(studyLog.CalculateTrialTimingsForCondition(loadLevel, noiseLevel).ReactionTimes);
+            }
+            return timings.ToArray();
+        }
+
+        public void Count()
+        {
+            Debug.Log($"Study count: {_studyLogs.Length}");
+            var c = 0;
+            foreach (var studyLog in _studyLogs)
+            {
+                c += studyLog.CountTrialCount();
+            }
+            Debug.Log(c);
+        }
+
+        public class StudyLogRuntime
+        {
+            private TimeSpan[] _timeStamps;
+            private EventTimings[] _eventTimings;
+            private StudyData[] _studyData;
+            private TrialData[] _trials;
+            private LogData[] _logData;
+
+            public StudyLogRuntime(UserStudyEvaluationEditor.LogEvent[] logData)
+            {
+                GenerateStudyTimings(logData);
+            }
+
+            public int CountTrialCount()
+            {
+                var counter = 0;
+                Debug.Log($"Data count: {_eventTimings.Length}");
+                foreach (var evenTiming in _eventTimings)
+                {
+                    if (evenTiming.EventType == StudyEventType.Trial)
+                    {
+                        counter++;
+                    }
+                }
+
+                return counter;
+            }
+
+            private void GenerateStudyTimings(UserStudyEvaluationEditor.LogEvent[] logEvents)
+            {
+                var studyTimings = new List<EventTimings>();
+                var studyData = new List<StudyData>();
+                var studyBegin = 0;
+                var trialCount = 0;
+                var actualTrialCount = 0;
+                var repetitionsPerTrial = 0;
+                var trialBegin = 0;
+                var trials = new List<TrialData>();
+                var trialIndices = new List<int>();
+                _logData = new LogData[logEvents.Length];
                 
-            }
-            if (!EditorUtility.IsPersistent(settings))
-            {
-                Directory.CreateDirectory(DefaultSettingsPath);
-                AssetDatabase.CreateAsset(settings, $"{DefaultSettingsPath}/UserStudyEvaluationSettings.asset");
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-            }
+                _timeStamps = new TimeSpan[logEvents.Length];
 
-            CreateEmptyStudySettings();
-            
-            
-            // Each editor window contains a root VisualElement object
-            VisualElement root = rootVisualElement;
-
-            
-
-            // Instantiate UXML
-            VisualElement labelFromUXML = visualTreeAsset.Instantiate();
-            root.Add(labelFromUXML);
-            var toolbar = root.Q<Toolbar>();
-            if (toolbar != null)
-            {
-                SetupToolbar(toolbar);
-            }
-            
-            var tabView = root.Q<TabView>();
-
-            if (tabView != null)
-            {
-                SetupTabs(tabView);
-
-                tabView.activeTabChanged += OnActiveTabChanged;
-            }
-            
-            
-
-            LoadGeneratedStudyData(settings.lastOpenedPath);
-            
-        }
-
-        private void CreateEmptyStudySettings()
-        {
-            _emptyStudyData = ScriptableObject.CreateInstance<RuntimeStudyData>();
-            _emptyStudyData.logFiles = new List<RuntimeLogEventData>();
-            _emptyStudyData.userIds = Array.Empty<string>();
-            _emptyStudyData.userStudySettings = ScriptableObject.CreateInstance<UserStudySettings>();
-        }
-
-        private void OnActiveTabChanged(Tab oldTab, Tab newTab)
-        {
-            //throw new System.NotImplementedException();
-        }
-
-        private void SetupTabs(TabView tabView)
-        {
-            var overviewTab = tabView.Q<Tab>("Overview");
-            var participantTab = tabView.Q<Tab>("PerParticipant");
-            var conditionTab = tabView.Q<Tab>("PerCondition");
-
-            SetupOverviewTab(overviewTab);
-            SetupParticipantTab(participantTab);
-            SetupConditionTab(conditionTab);
-
-
-        }
-        
-        private void SetupOverviewTab(Tab overviewTab)
-        {
-            var loadedAssetNameLabel = overviewTab.Q<Label>("LoadedAsset");
-            loadedAssetNameLabel.bindingPath = nameof(RuntimeStudyData.userStudySettings);
-            var participantCount = overviewTab.Q<Label>("NoOfParticipants");
-            participantCount.bindingPath = nameof(RuntimeStudyData.userIds.Length);
-        }
-        
-        private void SetupParticipantTab(Tab participantTab)
-        {
-            var participantDropdown = participantTab.Q<DropdownField>("ParticipantSelector");
-            participantDropdown.bindingPath = nameof(RuntimeStudyData.userIds);
-            participantDropdown.RegisterValueChangedCallback(OnParticipantChanged);
-        }
-
-        private void OnParticipantChanged(ChangeEvent<string> evt)
-        {
-            UpdateStudies(evt.newValue);
-        }
-
-        private void UpdateStudies(string userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SetupConditionTab(Tab conditionTab)
-        {
-            var loadLevel = conditionTab.Q<EnumField>("LoadLevelSettings");
-            var noiseLevel = conditionTab.Q<EnumField>("NoiseLevelSettings");
-
-            loadLevel.RegisterValueChangedCallback(OnConditionChanged);
-            noiseLevel.RegisterValueChangedCallback(OnConditionChanged);
-        }
-        
-        private void OnConditionChanged(ChangeEvent<Enum> evt)
-        {
-            throw new NotImplementedException();
-        }
-        
-
-        
-
-
-        private void SetupToolbar(Toolbar toolbar)
-        {
-            var toolbarMenu = toolbar.Q<ToolbarMenu>("File");
-            toolbarMenu.menu.AppendAction("Load Study Log Files", OnLoadLogFiles);
-            toolbarMenu.menu.AppendAction("Load Generated Study Data", OnLoadGeneratedStudyData);
-        }
-
-        private void OnLoadGeneratedStudyData(DropdownMenuAction obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void LoadGeneratedStudyData(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
-
-            CurrentlyActiveStudyData = AssetDatabase.LoadAssetAtPath<RuntimeStudyData>(path);
-            
-            
-        }
-        
-        private void OnRuntimeStudyDataChanged()
-        {
-            rootVisualElement.Unbind();
-            
-            if (_currentlyActiveStudyData)
-            {
-                _currentlyActiveStudyData = _emptyStudyData;
-            }
-            var serializedObject = new SerializedObject(_currentlyActiveStudyData);
-            this.rootVisualElement.Bind(serializedObject);
-        }
-
-        private void OnLoadLogFiles(DropdownMenuAction dropdownMenuAction)
-        {
-            var path = EditorUtility.OpenFolderPanel("Select folder that contains the logfiles", Application.persistentDataPath,
-                "");
-            
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
-            
-            var targetPath = EditorUtility.SaveFilePanelInProject("Select target location for generated study data", "Assets", "asset", "asset");
-
-            if (string.IsNullOrEmpty(targetPath))
-            {
-                return;
-            }
-            
-            var files = Directory.GetFiles(path);
-
-            var parent = ScriptableObject.CreateInstance<RuntimeStudyData>();
-            parent.logFiles = new List<RuntimeLogEventData>();
-            Debug.Log(targetPath);
-            AssetDatabase.CreateAsset(parent, $"{targetPath}");
-            AssetDatabase.SaveAssets();
-
-            var failedAssets = 0;
-            for (var i = 0; i < files.Length; i++)
-            {
-                var file = files[i];
-                EditorUtility.DisplayProgressBar("Generating files", $"Creating file {i + 1} out of {files.Length}",
-                    ((float)i) / files.Length);
-                if (Path.GetExtension(file) != ".csv")
+                for (int i = 0; i < logEvents.Length; i++)
                 {
-                    continue;
+                    var logEvent = logEvents[i];
+                    _timeStamps[i] = logEvent.timeStamp;
+                    _logData[i] = logEvent.logData;
+
+                    if (logEvent.logData.LogCategory == LogCategory.StudyBegin)
+                    {
+                        if (trialBegin > 0)
+                        {
+                            Debug.LogWarning(
+                                $"Study {logEvents[studyBegin].logData.StudyName1} has a trial without TrialEnd entry");
+                            CreateTrialEventTiming(ref studyTimings, ref trialBegin, i, ref trials, ref trialIndices);
+                        }
+
+                        if (trialCount > 0)
+                        {
+                            Debug.LogWarning($"Study {logEvents[studyBegin].logData.StudyName1} has no StudyEnd entry");
+                            CreateStudyEventTiming(ref studyTimings, ref studyBegin, i - 1, ref studyData,
+                                ref trialCount, ref actualTrialCount, ref repetitionsPerTrial);
+                        }
+
+                        studyBegin = i;
+                    }
+
+                    if (logEvent.logData.LogCategory == LogCategory.StudyEnd)
+                    {
+                        CreateStudyEventTiming(ref studyTimings, ref studyBegin, i, ref studyData, ref trialCount,
+                            ref actualTrialCount, ref repetitionsPerTrial);
+                    }
+
+                    if (logEvent.logData.LogCategory == LogCategory.TrialBegin)
+                    {
+                        if (trialBegin > 0)
+                        {
+                            Debug.LogWarning(
+                                $"Study {logEvents[studyBegin].logData.StudyName1} has a trial without TrialEnd entry");
+                            CreateTrialEventTiming(ref studyTimings, ref trialBegin, i, ref trials, ref trialIndices);
+                        }
+
+                        trialCount = logEvent.logData.TrialCount1;
+                        repetitionsPerTrial = logEvent.logData.RepetitionsPerTrial1;
+                        trialBegin = i;
+                    }
+
+                    if (logEvent.logData.LogCategory == LogCategory.TrialConfirmation)
+                    {
+                        actualTrialCount++;
+                        trialIndices.Add(i);
+                    }
+
+                    if (logEvent.logData.LogCategory == LogCategory.TrialEnd)
+                    {
+                        CreateTrialEventTiming(ref studyTimings, ref trialBegin, i, ref trials, ref trialIndices);
+                    }
                 }
+                
+                //todo make sure that there is no open study / trial etc. 
 
-                try
+                _eventTimings = studyTimings.ToArray();
+                _studyData = studyData.ToArray();
+                _trials = trials.ToArray();
+            }
+
+            private static void CreateStudyEventTiming(ref List<EventTimings> studyTimings, ref int begin,
+                int currentIndex, ref List<StudyData> studyData, ref int trialCount,
+                ref int actualTrialCount, ref int repetitionsPerTrial)
+            {
+                repetitionsPerTrial = math.max(1, repetitionsPerTrial);
+                studyTimings.Add(new EventTimings
                 {
-                    var fileName = Path.GetFileNameWithoutExtension(file);
-                    var fileNameParts = fileName.Split('_');
+                    StartIndex = begin,
+                    EndIndex = currentIndex,
+                    EventType = StudyEventType.StudyStage,
+                    DataIndex = studyData.Count
+                });
+                studyData.Add(new StudyData
+                {
+                    TrialCount = trialCount,
+                    ActualTrialCount = actualTrialCount / repetitionsPerTrial,
+                    RepetitionsPerTrial = repetitionsPerTrial,
+                    EventTimingIndex = studyTimings.Count - 1
+                });
 
-                    var logEvents = LoadLogFile(file);
+                trialCount = 0;
+                actualTrialCount = 0;
+                repetitionsPerTrial = 0;
+            }
 
-                    var runtimeLogEventData = ScriptableObject.CreateInstance<RuntimeLogEventData>();
+            private static void CreateTrialEventTiming(ref List<EventTimings> studyTimings, ref int begin,
+                int currentIndex, ref List<TrialData> trialData, ref List<int> trials)
+            {
+                studyTimings.Add(new EventTimings
+                {
+                    StartIndex = begin,
+                    EndIndex = currentIndex,
+                    EventType = StudyEventType.Trial,
+                    DataIndex = trialData.Count
+                });
+                trialData.Add(new TrialData()
+                {
+                    Trials = trials.ToArray()
+                });
+                begin = 0;
+                trials.Clear();
+            }
 
-                    runtimeLogEventData.logEvents = logEvents;
-                    runtimeLogEventData.timeStamp = fileNameParts[0];
-                    runtimeLogEventData.userId = fileNameParts[1];
-                    runtimeLogEventData.name = fileName;
+            private string GetStudyStageName(int index)
+            {
+                return _logData[index].StudyName1;
+            }
 
+            private string GetParticipantType(int index)
+            {
+                return _logData[index].ParticipantType1;
+            }
+            
+            
+            public TrialTiming CalculateTrialTimingsForCondition(LoadLevel loadLevel, NoiseLevel noiseLevel)
+            {
+               
+                var trialTimings = new TrialTiming
+                {
+                    LoadLevel = loadLevel,
+                    NoiseLevel = noiseLevel
                     
-                    parent.logFiles.Add(runtimeLogEventData);
-
-
-                    AssetDatabase.AddObjectToAsset(runtimeLogEventData, parent);
-                }
-                catch (Exception e)
-                {
-                    failedAssets++;
-                    Debug.Log($"{e}. \n Failed to generate data from {file}");
-                }
-            }
-            EditorUtility.ClearProgressBar();
-
-            var studySettings = ScriptableObject.CreateInstance<UserStudySettings>();
-            parent.userStudySettings = studySettings;
-            studySettings.name = "UserStudyConfiguration";
-            AssetDatabase.AddObjectToAsset(studySettings, parent);
-            UserStudySettingsEditor.ShowWindow(studySettings);
-            
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            _currentlyActiveStudyData = parent;
-
-            if (settings)
-            {
-                settings.lastOpenedPath = targetPath;
-            }
-
-            Debug.Log($"Failed to create {failedAssets} assets");
-        }
-        
-        private static LogEvent[] LoadLogFile(string path)
-        {
-            var text = File.ReadAllLines(path);
-            var result = new LogEvent[text.Length - 1];
-
-            for (var i = 1; i < text.Length; i++)
-            {
-                result[i - 1] = new LogEvent
-                {
-                    timeStamp = ReadTimeStamp(text[i].Split(';')[0]),
-                    logData = LogData.LoadLogDataFromCsvLine(text[0], text[i])
                 };
+                var timings = new List<ReactionTimeData>();
+                var counter = 0;
+                foreach (var eventTiming in _eventTimings)
+                {
+                    if (eventTiming.EventType == StudyEventType.Trial && _logData[eventTiming.StartIndex].LoadLevel1 == loadLevel && _logData[eventTiming.StartIndex].NoiseLevel1 == noiseLevel)
+                    {
+                        counter++;
+                        var trials = _trials[eventTiming.DataIndex];
+
+                        for (var i = 0; i < trials.Trials.Length; i++)
+                        {
+                            var trial = trials.Trials[i];
+                            var trialData = _logData[trial];
+
+                            var duration =
+                                new TimeSpan(trialData.ReactionTime1).Subtract(new TimeSpan(trialData.StartTime1));
+                            
+                            timings.Add(new ReactionTimeData
+                            {
+                                Duration = duration.Milliseconds,
+                                Time = new TimeSpan(trialData.StartTime1).Milliseconds
+                            });
+                        }
+                    }
+                }
+
+                Debug.Log($"{counter} trials found");
+                trialTimings.ReactionTimes = timings.ToArray();
+
+                return trialTimings;
             }
-            
-            return result;
-        }
-        
-        private static TimeSpan ReadTimeStamp(string v)
-        {
-            return DateTime.Parse(v).TimeOfDay;
-            if (DateTime.TryParse(v, out var timeStamp))
+
+            public TrialTiming[] CalculateTrialTimingsForStudy(int studyIndex)
             {
-                return timeStamp.TimeOfDay;
+                var study = _studyData[studyIndex];
+
+                var eventTimings = _eventTimings[study.EventTimingIndex];
+                
+                var trialTimings = new List<TrialTiming>();
+                for (var index = eventTimings.StartIndex; index <= eventTimings.EndIndex; index++)
+                {
+                    var eventTiming = _eventTimings[index];
+                    if (eventTiming.EventType == StudyEventType.Trial)
+                    {
+                        trialTimings.Add(new TrialTiming
+                        {
+                            LoadLevel = _logData[eventTiming.StartIndex].LoadLevel1,
+                            NoiseLevel = _logData[eventTiming.StartIndex].NoiseLevel1
+                        });
+                        var trials = _trials[eventTiming.DataIndex];
+
+                        var timings = new ReactionTimeData[trials.Trials.Length];
+
+                        for (var i = 0; i < trials.Trials.Length; i++)
+                        {
+                            var trial = trials.Trials[i];
+                            var trialData = _logData[trial];
+
+                            var duration =
+                                new TimeSpan(trialData.ReactionTime1).Subtract(new TimeSpan(trialData.StartTime1)).Milliseconds;
+
+                            timings[i] = new ReactionTimeData
+                            {
+                                Duration = duration,
+                                Time = new TimeSpan(trialData.StartTime1).Milliseconds
+                            };
+                        }
+
+                        var result = trialTimings[^1];
+                        result.ReactionTimes = timings;
+                        trialTimings[^1] = result;
+                    }
+                }
+
+                return trialTimings.ToArray();
             }
 
-            return DateTime.Now.TimeOfDay;
-            //return TimeSpan.Parse(v, "");
+            private TrialTiming[] CalculateTrialTimings()
+            {
+                var trialTimings = new List<TrialTiming>();
+                foreach (var eventTiming in _eventTimings)
+                {
+                    if (eventTiming.EventType == StudyEventType.Trial)
+                    {
+                        trialTimings.Add(new TrialTiming
+                        {
+                            LoadLevel = _logData[eventTiming.StartIndex].LoadLevel1,
+                            NoiseLevel = _logData[eventTiming.StartIndex].NoiseLevel1
+                        });
+                        var trials = _trials[eventTiming.DataIndex];
+
+                        var timings = new ReactionTimeData[trials.Trials.Length];
+
+                        for (var i = 0; i < trials.Trials.Length; i++)
+                        {
+                            var trial = trials.Trials[i];
+                            var trialData = _logData[trial];
+
+                            var duration =
+                                new TimeSpan(trialData.ReactionTime1).Subtract(new TimeSpan(trialData.StartTime1)).Milliseconds;
+
+                            timings[i] = new ReactionTimeData
+                            {
+                                Duration = duration,
+                                Time = new TimeSpan(trialData.StartTime1).Milliseconds
+                            };
+                        }
+
+                        var result = trialTimings[^1];
+                        result.ReactionTimes = timings;
+                        trialTimings[^1] = result;
+                    }
+                }
+
+                return trialTimings.ToArray();
+            }
+        }
+
+        public struct StudyData
+        {
+            public int TrialCount;
+            public int ActualTrialCount;
+            public int RepetitionsPerTrial;
+            public int EventTimingIndex;
+        }
+
+        public struct TrialTiming
+        {
+            public NoiseLevel NoiseLevel;
+            public LoadLevel LoadLevel;
+            public ReactionTimeData[] ReactionTimes;
+        }
+
+        public struct TrialData
+        {
+            public int[] Trials;
+        }
+
+        public struct EventTimings
+        {
+            public int StartIndex;
+            public int EndIndex;
+            public StudyEventType EventType;
+            public int DataIndex;
+        }
+
+        public enum StudyEventType
+        {
+            StudyStage,
+            Trial
         }
         
-        [Serializable]
-        public struct LogEvent
+        public struct ReactionTimeData
         {
-            public SerializableTimeSpan timeStamp;
-            public LogData logData;
+            public float Time;
+            public float Duration;
         }
-
-
     }
 }

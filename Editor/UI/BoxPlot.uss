@@ -1,4 +1,4 @@
-IntegerBoxPlot {
+BoxPlot {
     --border-color: white;
     --box-border-color: red;
     --box-color: red;

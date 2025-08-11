@@ -1,0 +1,4 @@
+Graph2D {
+    width: 250px;
+    height: 100px;
+}
