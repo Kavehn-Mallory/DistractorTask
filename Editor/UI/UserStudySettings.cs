@@ -8,5 +8,6 @@ namespace DistractorTask.Editor.UI
     public class UserStudySettings : ScriptableObject
     {
         public Study[] studies = Array.Empty<Study>();
+        public string[] validIds = Array.Empty<string>();
     }
 }

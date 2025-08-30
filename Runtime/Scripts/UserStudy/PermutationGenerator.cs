@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using DistractorTask.UserStudy.Core;
+using DistractorTask.UserStudy.DataDrivenSetup;
 using Unity.Mathematics;
 
 namespace DistractorTask.UserStudy
 {
-    internal static class PermutationGenerator
+    public static class PermutationGenerator
     {
         internal static ConditionPermutation[] GeneratePermutations(Condition condition, int startCondition)
         {
@@ -57,6 +58,19 @@ namespace DistractorTask.UserStudy
 
             return result.ToArray();
         }
+        
+        public static int CalculateTrialCount(Study study)
+        {
+            var noiseLevelCount = math.min(Count((uint)study.conditions.noiseLevels),
+                Enum.GetNames(typeof(NoiseLevel)).Length);
+            var loadLevelCount = math.min(Count((uint)study.conditions.loadLevels),
+                Enum.GetNames(typeof(LoadLevel)).Length);
+
+            var trialCount = (int)(noiseLevelCount * loadLevelCount) * study.selectionsPerTrial *
+                             study.trialsPerCondition;
+            return study.conditions.hasAudioTask ? trialCount * 2 : trialCount;
+        }
+        
 
         private static uint Count(uint enumValue)
         {

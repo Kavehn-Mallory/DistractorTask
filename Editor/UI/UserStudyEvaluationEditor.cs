@@ -2,8 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DistractorTask.Editor.UI.CustomUI;
+using DistractorTask.Editor.UI.DuplicatePropertyDrawer;
 using DistractorTask.Logging;
+using DistractorTask.UserStudy;
 using DistractorTask.UserStudy.Core;
+using DistractorTask.UserStudy.DataDrivenSetup;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -19,28 +23,24 @@ namespace DistractorTask.Editor.UI
 
         [SerializeField]
         private UserStudyEvaluationSettings settings;
-
-        private RuntimeStudyData _currentlyActiveStudyData;
-
-        public RuntimeStudyData CurrentlyActiveStudyData
-        {
-            get => _currentlyActiveStudyData;
-            set
-            {
-                _currentlyActiveStudyData = value;
-                OnRuntimeStudyDataChanged();
-            }
-        }
-
-        private RuntimeStudyData _emptyStudyData;
-
-        //private UserStudyEvaluation _userStudyEvaluation;
+        
         private UserStudyEvaluationTextBased _userStudyEvaluationTextBased;
 
         private ConditionTabFields _conditionTabFields;
 
 
         private string[] _paths = Array.Empty<string>();
+
+        private TextField _loadedAssetField;
+        private TextField _participantCount;
+        private DropdownField _participantDropdownField;
+        private VisualElement _warningArea;
+
+        [SerializeField]
+        private UserStudySettings userStudySettings;
+
+
+        private List<UserStudyEvaluationTextBased.Duplicate> _duplicates;
 
         
 
@@ -65,6 +65,15 @@ namespace DistractorTask.Editor.UI
                     $"{DefaultSettingsPath}/UserStudyEvaluationSettings.asset") ?? ScriptableObject.CreateInstance<UserStudyEvaluationSettings>();
                 
             }
+
+            if (!userStudySettings)
+            {
+                Debug.Log("Creating settings");
+                userStudySettings = AssetDatabase.LoadAssetAtPath<UserStudySettings>(
+                    $"{DefaultSettingsPath}/UserStudySettings.asset") ?? ScriptableObject.CreateInstance<UserStudySettings>();
+
+            }
+            
             if (!EditorUtility.IsPersistent(settings))
             {
                 Directory.CreateDirectory(DefaultSettingsPath);
@@ -73,7 +82,15 @@ namespace DistractorTask.Editor.UI
                 AssetDatabase.Refresh();
             }
 
-            CreateEmptyStudySettings();
+            if (!EditorUtility.IsPersistent(userStudySettings))
+            {
+                Directory.CreateDirectory(DefaultSettingsPath);
+                AssetDatabase.CreateAsset(userStudySettings, $"{DefaultSettingsPath}/UserStudySettings.asset");
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+
+            CreateStudyEvaluationContainer();
             
             
             // Each editor window contains a root VisualElement object
@@ -105,16 +122,18 @@ namespace DistractorTask.Editor.UI
             
             
 
-            LoadGeneratedStudyData(settings.lastOpenedPath);
+            LoadStudyFiles(settings.lastOpenedPath);
             
         }
 
-        private void CreateEmptyStudySettings()
+        private void CreateStudyEvaluationContainer()
         {
-            _emptyStudyData = ScriptableObject.CreateInstance<RuntimeStudyData>();
-            _emptyStudyData.logFiles = new List<RuntimeLogEventData>();
-            _emptyStudyData.userIds = Array.Empty<string>();
-            _emptyStudyData.userStudySettings = ScriptableObject.CreateInstance<UserStudySettings>();
+            _userStudyEvaluationTextBased = ScriptableObject.CreateInstance<UserStudyEvaluationTextBased>();
+            rootVisualElement.Unbind();
+            
+            //SetupOverviewTab(ref this.rootVisualElement.Q<Tab>("Overview"));
+            var serializedObject = new SerializedObject(_userStudyEvaluationTextBased);
+            this.rootVisualElement.Bind(serializedObject);
         }
 
         private void OnActiveTabChanged(Tab oldTab, Tab newTab)
@@ -127,30 +146,118 @@ namespace DistractorTask.Editor.UI
             var overviewTab = tabView.Q<Tab>("Overview");
             var participantTab = tabView.Q<Tab>("PerParticipant");
             var conditionTab = tabView.Q<Tab>("PerCondition");
+            var settingsTab = tabView.Q<Tab>("Settings");
             
             Debug.Log($"Is null {overviewTab == null},{participantTab == null},{conditionTab == null}");
 
             SetupOverviewTab(ref overviewTab);
             SetupParticipantTab(participantTab);
             SetupConditionTab(conditionTab);
+            SetupSettingsTab(settingsTab);
 
 
         }
-        
+
+        private void SetupSettingsTab(Tab settingsTab)
+        {
+            var propertyField = settingsTab.Q<PropertyField>();
+            propertyField.dataSource = userStudySettings;
+        }
+
         private void SetupOverviewTab(ref Tab overviewTab)
         {
-            Debug.Log($"is it null now: {overviewTab == null}");
-            var loadedAssetNameLabel = overviewTab.Q<TextField>("LoadedAsset");
-            loadedAssetNameLabel.bindingPath = nameof(RuntimeStudyData.userStudySettings);
-            var participantCount = overviewTab.Q<TextField>("NoOfParticipants");
-            participantCount.bindingPath = nameof(RuntimeStudyData.userIds.Length);
+            //todo binding here
+
+            var so = new SerializedObject(_userStudyEvaluationTextBased);
+            _loadedAssetField = overviewTab.Q<TextField>("LoadedAsset");
+            //_loadedAssetField.value = _userStudyEvaluationTextBased.DateRange;
+            _loadedAssetField.TrackPropertyValue(so.FindProperty(UserStudyEvaluationTextBased.DateRangeFieldName), ev => _loadedAssetField.value = _userStudyEvaluationTextBased.DateRange);
+            //_loadedAssetField.bindingPath = UserStudyEvaluationTextBased.DateRangeFieldName;
+            _participantCount = overviewTab.Q<TextField>("NoOfParticipants");
+            var property = so.FindProperty(UserStudyEvaluationTextBased
+                .UserIdsArrayFieldName);
+            _participantCount.TrackPropertyValue(property, OnFilePathsChanged);
+            //participantCount.bindingPath = nameof(RuntimeStudyData.userIds.Length);
+
+
+            _warningArea = overviewTab.Q<VisualElement>("WarningArea");
         }
-        
+
+        private void OnFilePathsChanged(SerializedProperty obj)
+        {
+            _participantCount.value = obj.arraySize.ToString();
+            var currentIndex = _participantDropdownField.index;
+            _participantDropdownField.choices = _userStudyEvaluationTextBased.UserIds;
+            _participantDropdownField.index = math.clamp(currentIndex, 0, _participantDropdownField.choices.Count);
+            //_loadedAssetField.value = _userStudyEvaluationTextBased.DateRange;
+
+            _duplicates = _userStudyEvaluationTextBased.FindDuplicates();
+
+            if (_duplicates.Count > 0)
+            {
+                _warningArea.Add(new Label($"There are {_duplicates.Count} duplicates in the data set"));
+                var listView = new ListView(_duplicates);
+                listView.makeItem = () => new DuplicateField();
+                listView.bindItem = BindItem;
+                _warningArea.Add(listView);
+                _warningArea.Add(new VisualElement
+                {
+                    style = { height = 20}
+                });
+
+            }
+
+            var trialCount =
+                _userStudyEvaluationTextBased.CheckTrialCountDataForStudies(_userStudyEvaluationTextBased.UserIds
+                    .ToArray(),userStudySettings.studies.Length);
+                
+                
+            var headerElements = new string[trialCount.Length + 1];
+            headerElements[0] = "Default";
+
+            for (int i = 0; i < trialCount.Length; i++)
+            {
+                headerElements[i + 1] = trialCount[i].Id;
+            }
+
+                
+            var header = new RowElement(headerElements);
+                
+            _warningArea.Add(header);
+
+            for (int i = 0; i < userStudySettings.studies.Length; i++)
+            {
+                EditorUtility.DisplayProgressBar("Calculating Trial Count per Study", $"{i} / {userStudySettings.studies.Length}", (float)i / userStudySettings.studies.Length);
+                for (int duplicate = 0; duplicate < trialCount.Length; duplicate++)
+                {
+                    var numberOfTrials = trialCount[duplicate].Trials.Length > i
+                        ? trialCount[duplicate].Trials[i].ToString()
+                        : "0";
+                    headerElements[duplicate + 1] = numberOfTrials;
+                }
+
+                var trialCountTarget = PermutationGenerator.CalculateTrialCount(userStudySettings.studies[i])
+                    .ToString();
+                headerElements[0] = trialCountTarget;
+                _warningArea.Add(new RowElement(headerElements));
+            }
+            
+            EditorUtility.ClearProgressBar();
+            
+        }
+
+
+        private void BindItem(VisualElement element, int i)
+        {
+            var item = _duplicates[i];
+            (element as DuplicateField)?.SetDuplicate(item);
+        }
+
         private void SetupParticipantTab(Tab participantTab)
         {
-            var participantDropdown = participantTab.Q<DropdownField>("ParticipantSelector");
-            participantDropdown.bindingPath = nameof(RuntimeStudyData.userIds);
-            participantDropdown.RegisterValueChangedCallback(OnParticipantChanged);
+            _participantDropdownField = participantTab.Q<DropdownField>("ParticipantSelector");
+            _participantDropdownField.bindingPath = UserStudyEvaluationTextBased.UserIdsArrayFieldName;
+            _participantDropdownField.RegisterValueChangedCallback(OnParticipantChanged);
         }
 
         private void OnParticipantChanged(ChangeEvent<string> evt)
@@ -160,7 +267,7 @@ namespace DistractorTask.Editor.UI
 
         private void UpdateStudies(string userId)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         private void SetupConditionTab(Tab conditionTab)
@@ -227,8 +334,6 @@ namespace DistractorTask.Editor.UI
                 lastTime = element.Time;
                 
                 points.Add(new Vector2(element.Time, element.Duration));
-                
-                
             }
 
             _conditionTabFields.ReactionTimeOverTimeGraph.RangeXAxis = new Vector2(minTime, maxTime);
@@ -244,9 +349,13 @@ namespace DistractorTask.Editor.UI
         private void SetupToolbar(Toolbar toolbar)
         {
             var toolbarMenu = toolbar.Q<ToolbarMenu>("File");
-            toolbarMenu.menu.AppendAction("Load Study Log Files", OnLoadLogFiles);
             toolbarMenu.menu.AppendAction("Load Study Log Files - Text Only", OnLoadLogFilesOnlyText);
-            toolbarMenu.menu.AppendAction("Load Generated Study Data", OnLoadGeneratedStudyData);
+            toolbarMenu.menu.AppendAction("Generate Python Files", GeneratePythonFiles);
+        }
+
+        private void GeneratePythonFiles(DropdownMenuAction obj)
+        {
+            NormalizedCsvGenerator.GenerateCSVFilesForPython(_userStudyEvaluationTextBased.FilePaths);
         }
 
         private void OnLoadLogFilesOnlyText(DropdownMenuAction obj)
@@ -258,168 +367,27 @@ namespace DistractorTask.Editor.UI
             {
                 return;
             }
+
+            settings.lastOpenedPath = path;
             
             
-            var files = Directory.GetFiles(path);
+            LoadStudyFiles(path);
+
+        }
+
+        private void LoadStudyFiles(string folderPath)
+        {
+            if (string.IsNullOrEmpty(folderPath))
+            {
+                return;
+            }
+            var files = Directory.GetFiles(folderPath);
 
             _paths = files.Where(file => Path.GetExtension(file) == ".csv").ToArray();
 
-            _userStudyEvaluationTextBased = new UserStudyEvaluationTextBased(_paths);
-
-
-        }
-
-        private void OnLoadGeneratedStudyData(DropdownMenuAction obj)
-        {
-            var path = EditorUtility.OpenFilePanel("Select Generated Study Data", "Assets", "asset");
-            Debug.Log(path);
-            LoadGeneratedStudyData(path);
-        }
-
-        private void LoadGeneratedStudyData(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
-
-            var test = AssetDatabase.LoadAssetAtPath<RuntimeStudyData>("Assets/DistractorTask/GeneratedData/GeneratedUserStudyData.asset");
-            Debug.Log(test.logFiles.Count);
-            CurrentlyActiveStudyData = test;
-            
-            
+            _userStudyEvaluationTextBased.SetFilePaths(_paths, userStudySettings.validIds);
         }
         
-        private void OnRuntimeStudyDataChanged()
-        {
-            rootVisualElement.Unbind();
-            
-            if (!_currentlyActiveStudyData)
-            {
-                Debug.Log("Did not find anything");
-                _currentlyActiveStudyData = _emptyStudyData;
-            }
-
-            
-            //SetupOverviewTab(ref this.rootVisualElement.Q<Tab>("Overview"));
-            var serializedObject = new SerializedObject(_currentlyActiveStudyData);
-            this.rootVisualElement.Bind(serializedObject);
-
-            Debug.Log($"Loading _current study {_currentlyActiveStudyData.logFiles.Count}");
-            //_userStudyEvaluation = new UserStudyEvaluation(_currentlyActiveStudyData);
-        }
-
-        private void OnLoadLogFiles(DropdownMenuAction dropdownMenuAction)
-        {
-            var path = EditorUtility.OpenFolderPanel("Select folder that contains the logfiles", Application.persistentDataPath,
-                "");
-            
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
-            
-            var targetPath = EditorUtility.SaveFilePanelInProject("Select target location for generated study data", "Assets", "asset", "asset");
-
-            if (string.IsNullOrEmpty(targetPath))
-            {
-                return;
-            }
-            
-            var files = Directory.GetFiles(path);
-
-            var parent = ScriptableObject.CreateInstance<RuntimeStudyData>();
-            parent.logFiles = new List<RuntimeLogEventData>();
-            Debug.Log(targetPath);
-            AssetDatabase.CreateAsset(parent, $"{targetPath}");
-            AssetDatabase.SaveAssets();
-
-            var failedAssets = 0;
-            for (var i = 0; i < files.Length; i++)
-            {
-                var file = files[i];
-                EditorUtility.DisplayProgressBar("Generating files", $"Creating file {i + 1} out of {files.Length}",
-                    ((float)i) / files.Length);
-                if (Path.GetExtension(file) != ".csv")
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var fileName = Path.GetFileNameWithoutExtension(file);
-                    var fileNameParts = fileName.Split('_');
-
-                    var logEvents = LoadLogFile(file);
-
-                    var runtimeLogEventData = ScriptableObject.CreateInstance<RuntimeLogEventData>();
-
-                    runtimeLogEventData.logEvents = logEvents;
-                    runtimeLogEventData.timeStamp = fileNameParts[0];
-                    runtimeLogEventData.userId = fileNameParts[1];
-                    runtimeLogEventData.name = fileName;
-
-                    
-                    parent.logFiles.Add(runtimeLogEventData);
-
-
-                    AssetDatabase.AddObjectToAsset(runtimeLogEventData, parent);
-                }
-                catch (Exception e)
-                {
-                    failedAssets++;
-                    Debug.Log($"{e}. \n Failed to generate data from {file}");
-                }
-            }
-            EditorUtility.ClearProgressBar();
-
-            var studySettings = ScriptableObject.CreateInstance<UserStudySettings>();
-            parent.userStudySettings = studySettings;
-            studySettings.name = "UserStudyConfiguration";
-            AssetDatabase.AddObjectToAsset(studySettings, parent);
-            UserStudySettingsEditor.ShowWindow(studySettings);
-            
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            _currentlyActiveStudyData = parent;
-
-            if (settings)
-            {
-                settings.lastOpenedPath = targetPath;
-            }
-
-            Debug.Log($"Failed to create {failedAssets} assets");
-        }
-        
-        private static LogEvent[] LoadLogFile(string path)
-        {
-            var text = File.ReadAllLines(path);
-            var result = new LogEvent[text.Length - 1];
-
-            for (var i = 1; i < text.Length; i++)
-            {
-                result[i - 1] = new LogEvent
-                {
-                    timeStamp = ReadTimeStamp(text[i].Split(';')[0]),
-                    logData = LogData.LoadLogDataFromCsvLine(text[0], text[i])
-                };
-            }
-            
-            return result;
-        }
-        
-        private static TimeSpan ReadTimeStamp(string v)
-        {
-            return DateTime.Parse(v).TimeOfDay;
-            if (DateTime.TryParse(v, out var timeStamp))
-            {
-                return timeStamp.TimeOfDay;
-            }
-
-            return DateTime.Now.TimeOfDay;
-            //return TimeSpan.Parse(v, "");
-        }
         
         [Serializable]
         public struct LogEvent

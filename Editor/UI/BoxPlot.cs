@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -157,8 +158,51 @@ namespace DistractorTask.Editor.UI
             var upperQuartileIndex = (int)(Values.Length * 0.75f);
 
             _quartiles = new Vector2(Values[lowerQuartileIndex], Values[upperQuartileIndex]);
-            _minMax = new Vector2(Values[0], Values[^1]);
+            
 
+
+
+            var iqr = math.distance(_quartiles.x, _quartiles.y) * 1.5f;
+
+            var outlierCount = 0;
+
+            var minMaxIndex = new int2(0, Values.Length);
+
+            for (int i = 0; i < lowerQuartileIndex; i++)
+            {
+                if (math.distance(_quartiles.x, _values[i]) <= iqr)
+                {
+                    outlierCount = i;
+                    minMaxIndex.x = i;
+                    break;
+                }
+            }
+
+            for (int i = _values.Length - 1; i > upperQuartileIndex; i--)
+            {
+                if (math.distance(_quartiles.y, _values[i]) <= iqr)
+                {
+                    outlierCount += ((_values.Length - 1) - i);
+                    minMaxIndex.y = i + 1;
+                    break;
+                }
+            }
+
+            var valuesWithoutOutliers = new float[minMaxIndex.y - minMaxIndex.x];
+
+            for (int i = 0; i < valuesWithoutOutliers.Length; i++)
+            {
+                valuesWithoutOutliers[i] = Values[minMaxIndex.x + i];
+            }
+
+            _values = valuesWithoutOutliers;
+            
+            lowerQuartileIndex = (int)(Values.Length * 0.25f);
+            upperQuartileIndex = (int)(Values.Length * 0.75f);
+
+            _quartiles = new Vector2(Values[lowerQuartileIndex], Values[upperQuartileIndex]);
+            
+            _minMax = new Vector2(Values[0], Values[^1]);
             _median = Values[Values.Length / 2];
             if (Values.Length % 2 == 0 && Values.Length > 1)
             {
@@ -166,9 +210,11 @@ namespace DistractorTask.Editor.UI
                 _median = (Values[halfPoint - 1] + _median) / 2f;
             }
 
+            
             _mean = Values.Average();
+            
 
-            Debug.Log($"Box Plot: {_minMax.ToString()}. Median: {_median}. Mean: {_mean}");
+            Debug.Log($"Box Plot: {_minMax.ToString()}. Median: {_median}. Mean: {_mean}. Removed {outlierCount} outliers");
             CheckGraphRange();
         }
 

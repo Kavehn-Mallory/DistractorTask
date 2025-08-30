@@ -38,5 +38,8 @@
                 </engine:VisualElement>
             </engine:VisualElement>
         </engine:Tab>
+        <engine:Tab label="Settings" name="Settings">
+            <editor:PropertyField data-source-type="DistractorTask.Editor.UI.UserStudySettings, DistractorTask.Editor" />
+        </engine:Tab>
     </engine:TabView>
 </engine:UXML>
