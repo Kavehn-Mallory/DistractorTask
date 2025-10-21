@@ -156,8 +156,6 @@ namespace DistractorTask.Editor.UI
             {
                 result[studyIndex] = trialCountForCurrentStudy;
             }
-
-            Debug.Log($"Found {trialsWithoutStudy} trials that were outside a study");
             return new TrialData
             {
                 Trials = result.ToArray(),
