@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using DistractorTask.Logging;
 using DistractorTask.UserStudy.Core;
@@ -26,13 +27,13 @@ namespace DistractorTask.Editor.UI
         
 
         public const string Header =
-            "Time;Timestamp;UserId;StudyIndex;NoiseLevel;LoadLevel;TrialCount;RepetitionsPerTrial;TrialTargetIndex;TrialSelectedIndex;TrialSymbolOrder;AnchorPointIndex;StartTime;ReactionTime";
+            "Time;Timestamp;UserId;StudyIndex;NoiseLevel;LoadLevel;TrialCount;RepetitionsPerTrial;TrialTargetIndex;TrialSelectedIndex;TrialSymbolOrder;AnchorPointIndex;StartTime;ReactionTime;HasAudioTask";
 
         public const string AudioTaskHeader = "Time;UserId;NoiseLevel;LoadLevel;ReactionTime";
         
         
 
-        public const string EyeTrackingDataHeader = "Time;UserId;NoiseLevel;LoadLevel;GazeBehaviour;Duration";
+        public const string EyeTrackingDataHeader = "Time;UserId;NoiseLevel;LoadLevel;GazeBehaviour;Duration;HasAudioTask";
 
         public const string NoAudioResponseValue = "None";
 
@@ -78,6 +79,8 @@ namespace DistractorTask.Editor.UI
             
             audioTaskStreamWriter.WriteLine(AudioTaskHeader);
             eyetrackingDataStreamWriter.WriteLine(EyeTrackingDataHeader);
+            
+            
 
             foreach (var filePath in paths)
             {
@@ -88,7 +91,10 @@ namespace DistractorTask.Editor.UI
                 var userId = "";
                 NoiseLevel noiseLevel = NoiseLevel.None;
                 LoadLevel loadLevel = LoadLevel.Low;
+                int hasAudioTask = 0;
                 bool insideTask = false;
+                
+                Dictionary<string, ulong> gazeBehaviourDurationDebug = new Dictionary<string, ulong>();
 
                 while (reader.Peek() >= 0)
                 {
@@ -108,19 +114,24 @@ namespace DistractorTask.Editor.UI
                         loadLevel = Enum.Parse<LoadLevel>(parts[(int)LogFileHeaders.LoadLevel]);
                         noiseLevel = Enum.Parse<NoiseLevel>(parts[(int)LogFileHeaders.NoiseLevel]);
                         insideTask = true;
+                        hasAudioTask = (int.Parse(parts[(int)LogFileHeaders.AudioTaskReactionTime])) == 2 ? 1 : 0;
                     }
                     
 
                     if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialConfirmation))
                     {
-                        
-                        var l = $"{parts[(int)LogFileHeaders.Time]};{parts[(int)LogFileHeaders.Timestamp]};{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{parts[(int)LogFileHeaders.TrialCount]};{parts[(int)LogFileHeaders.RepetitionsPerTrial]};{parts[(int)LogFileHeaders.TrialTargetIndex]};{parts[(int)LogFileHeaders.TrialSelectedIndex]};{parts[(int)LogFileHeaders.TrialSymbolOrder]};{parts[(int)LogFileHeaders.AnchorPointIndex]};{parts[(int)LogFileHeaders.StartTime]};{parts[(int)LogFileHeaders.ReactionTime]}";
+                        if (!insideTask)
+                        {
+                            Debug.LogWarning($"File {filePath} has TrialConfirmation-Data without TrialStart in Study {studyIndex}");
+                        }
+                        var l = $"{parts[(int)LogFileHeaders.Time]};{parts[(int)LogFileHeaders.Timestamp]};{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{parts[(int)LogFileHeaders.TrialCount]};{parts[(int)LogFileHeaders.RepetitionsPerTrial]};{parts[(int)LogFileHeaders.TrialTargetIndex]};{parts[(int)LogFileHeaders.TrialSelectedIndex]};{parts[(int)LogFileHeaders.TrialSymbolOrder]};{parts[(int)LogFileHeaders.AnchorPointIndex]};{parts[(int)LogFileHeaders.StartTime]};{parts[(int)LogFileHeaders.ReactionTime]};{hasAudioTask}";
                         streamWriters[studyIndex].WriteLine(l);
-                        insideTask = false;
+                        
                     }
 
                     if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.AudioTaskConfirmation))
                     {
+                        
                         var start = new TimeSpan(long.Parse(parts[(int)LogFileHeaders.StartTime]));
                         var reactionTime = (new TimeSpan(long.Parse(parts[(int)LogFileHeaders.ReactionTime])) - start).Ticks / TimeSpan.TicksPerMillisecond;
                         var reactionTimeValue = reactionTime > maxReactionTimeInMilliseconds
@@ -130,14 +141,29 @@ namespace DistractorTask.Editor.UI
                         audioTaskStreamWriter.WriteLine($"{parts[(int)LogFileHeaders.Time]};{userId};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{reactionTimeValue}");
                     }
 
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialEnd))
+                    {
+                        insideTask = false;
+                        hasAudioTask = 0;
+                    }
+
                     if (insideTask && parts[(int)LogFileHeaders.Category] == nameof(LogCategory.EyeTracking))
                     {
 
                         var duration = ulong.Parse(parts[(int)LogFileHeaders.GazeBehaviourDuration]);
+                        var gazeBehaviourType = parts[(int)LogFileHeaders.GazeBehaviour];
+                        gazeBehaviourDurationDebug.TryAdd(gazeBehaviourType, 0);
+                        gazeBehaviourDurationDebug[gazeBehaviourType] += duration;
                         
-                        eyetrackingDataStreamWriter.WriteLine($"{parts[(int)LogFileHeaders.Time]};{userId};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{parts[(int)LogFileHeaders.GazeBehaviour]};{duration}");
+                        eyetrackingDataStreamWriter.WriteLine($"{parts[(int)LogFileHeaders.Time]};{userId};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{gazeBehaviourType};{duration};{hasAudioTask}");
                     }
                     
+                }
+
+                Debug.Log($"{userId} Eyetracking Data");
+                foreach (var gazeBehaviourPair in gazeBehaviourDurationDebug)
+                {
+                    Debug.Log($"Spent {gazeBehaviourPair.Value} units in {gazeBehaviourPair.Key}");
                 }
             }
 
