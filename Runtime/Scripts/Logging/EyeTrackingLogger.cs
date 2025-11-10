@@ -257,6 +257,7 @@ namespace DistractorTask.Logging
             Debug.Log(
                 $"Got eye tracker data - Valid: {!data.Equals(default(EyeTrackerData))}, PupilData null: {data.PupilData == null}");
             
+            
             Vector3 leftEyePosition = new Vector3(-1, -1, -1);
             Vector3 rightEyePosition = new Vector3(-1, -1, -1);
             Vector2 pupilDiameter = new Vector2(-1, -1);

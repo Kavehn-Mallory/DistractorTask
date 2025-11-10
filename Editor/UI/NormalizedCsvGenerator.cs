@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using DistractorTask.Logging;
 using DistractorTask.UserStudy.Core;
+using MagicLeap.OpenXR.Features.EyeTracker;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.XR.MagicLeap;
 
 namespace DistractorTask.Editor.UI
 {
@@ -80,7 +83,16 @@ namespace DistractorTask.Editor.UI
             audioTaskStreamWriter.WriteLine(AudioTaskHeader);
             eyetrackingDataStreamWriter.WriteLine(EyeTrackingDataHeader);
             
-            
+            Dictionary<string, int> gazeBehaviourDurations = new Dictionary<string, int>();
+                
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Unknown), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.EyesClosed), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Blink), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.BlinkLeft), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.BlinkRight), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Fixation), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Pursuit), 0);
+            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Saccade), 0);
 
             foreach (var filePath in paths)
             {
@@ -93,8 +105,13 @@ namespace DistractorTask.Editor.UI
                 LoadLevel loadLevel = LoadLevel.Low;
                 int hasAudioTask = 0;
                 bool insideTask = false;
+                string lastStartTime = "";
+                int identicalStartTimeCounter = 0;
+                string lastGazeBehaviour = "";
                 
-                Dictionary<string, ulong> gazeBehaviourDurationDebug = new Dictionary<string, ulong>();
+                
+                gazeBehaviourDurations.ResetEyetrackingData();
+                
 
                 while (reader.Peek() >= 0)
                 {
@@ -151,20 +168,40 @@ namespace DistractorTask.Editor.UI
                     {
 
                         var duration = ulong.Parse(parts[(int)LogFileHeaders.GazeBehaviourDuration]);
-                        var gazeBehaviourType = parts[(int)LogFileHeaders.GazeBehaviour];
-                        gazeBehaviourDurationDebug.TryAdd(gazeBehaviourType, 0);
-                        gazeBehaviourDurationDebug[gazeBehaviourType] += duration;
+                        var startTime = parts[(int)LogFileHeaders.StartTime];
+
                         
+                        var gazeBehaviourType = parts[(int)LogFileHeaders.GazeBehaviour];
+                        //gazeBehaviourDurations.TryAdd(gazeBehaviourType, 0);
+                        TimeSpan timeStampDuration = TimeSpan.FromTicks((long)(duration / 100));;
+                        
+                        if (startTime != lastStartTime)
+                        {
+                            
+                            gazeBehaviourDurations[gazeBehaviourType] += timeStampDuration.Milliseconds;
+                            identicalStartTimeCounter++;
+                        }
+                        else if(!lastGazeBehaviour.Equals(gazeBehaviourType))
+                        {
+                            gazeBehaviourDurations[gazeBehaviourType] += timeStampDuration.Milliseconds;
+                            identicalStartTimeCounter--;
+                        }
+
+                        lastStartTime = startTime;
+                        lastGazeBehaviour = gazeBehaviourType;
                         eyetrackingDataStreamWriter.WriteLine($"{parts[(int)LogFileHeaders.Time]};{userId};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{gazeBehaviourType};{duration};{hasAudioTask}");
                     }
                     
                 }
 
-                Debug.Log($"{userId} Eyetracking Data");
-                foreach (var gazeBehaviourPair in gazeBehaviourDurationDebug)
+                float timer = 0;
+                Debug.Log($"{userId} Eyetracking Data with {identicalStartTimeCounter} identical timings");
+                foreach (var gazeBehaviourPair in gazeBehaviourDurations)
                 {
-                    Debug.Log($"Spent {gazeBehaviourPair.Value} units in {gazeBehaviourPair.Key}");
+                    timer += gazeBehaviourPair.Value;
+                    Debug.Log($"Spent {gazeBehaviourPair.Value.ToString()} milliseconds in {gazeBehaviourPair.Key}");
                 }
+                Debug.Log($"{userId} spent {timer / (1000f * 60f)} minutes in the application?");
             }
 
             foreach (var streamWriter in streamWriters)
@@ -178,5 +215,20 @@ namespace DistractorTask.Editor.UI
         }
 
         
+    }
+
+    public static class EyeTrackingDataExtension
+    {
+        public static void ResetEyetrackingData(this Dictionary<string, int> gazeBehaviourDurations)
+        {
+            gazeBehaviourDurations[nameof(GazeBehaviorType.Unknown)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.EyesClosed)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.Blink)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.BlinkLeft)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.BlinkRight)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.Fixation)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.Pursuit)] = 0;
+            gazeBehaviourDurations[nameof(GazeBehaviorType.Saccade)] = 0;
+        }
     }
 }
