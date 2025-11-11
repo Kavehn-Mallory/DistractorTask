@@ -82,17 +82,20 @@ namespace DistractorTask.Editor.UI
             
             audioTaskStreamWriter.WriteLine(AudioTaskHeader);
             eyetrackingDataStreamWriter.WriteLine(EyeTrackingDataHeader);
+
+            Dictionary<EyeTrackingEvent, int> overlappingEvents = new Dictionary<EyeTrackingEvent, int>();
             
-            Dictionary<string, int> gazeBehaviourDurations = new Dictionary<string, int>();
-                
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Unknown), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.EyesClosed), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Blink), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.BlinkLeft), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.BlinkRight), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Fixation), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Pursuit), 0);
-            gazeBehaviourDurations.Add(nameof(GazeBehaviorType.Saccade), 0);
+            Dictionary<string, int> gazeBehaviourDurations = new Dictionary<string, int>
+            {
+                { nameof(GazeBehaviorType.Unknown), 0 },
+                { nameof(GazeBehaviorType.EyesClosed), 0 },
+                { nameof(GazeBehaviorType.Blink), 0 },
+                { nameof(GazeBehaviorType.BlinkLeft), 0 },
+                { nameof(GazeBehaviorType.BlinkRight), 0 },
+                { nameof(GazeBehaviorType.Fixation), 0 },
+                { nameof(GazeBehaviorType.Pursuit), 0 },
+                { nameof(GazeBehaviorType.Saccade), 0 }
+            };
 
             foreach (var filePath in paths)
             {
@@ -107,7 +110,9 @@ namespace DistractorTask.Editor.UI
                 bool insideTask = false;
                 string lastStartTime = "";
                 int identicalStartTimeCounter = 0;
+                int identicalStartTimeWithDifferentDurationsCounter = 0;
                 string lastGazeBehaviour = "";
+                ulong lastDuration = 0;
                 
                 
                 gazeBehaviourDurations.ResetEyetrackingData();
@@ -173,21 +178,32 @@ namespace DistractorTask.Editor.UI
                         
                         var gazeBehaviourType = parts[(int)LogFileHeaders.GazeBehaviour];
                         //gazeBehaviourDurations.TryAdd(gazeBehaviourType, 0);
-                        TimeSpan timeStampDuration = TimeSpan.FromTicks((long)(duration / 100));;
-                        
-                        if (startTime != lastStartTime)
+                        TimeSpan timeStampDuration = TimeSpan.FromTicks((long)(duration / 100));
+
+                        if (lastStartTime == startTime)
                         {
-                            
-                            gazeBehaviourDurations[gazeBehaviourType] += timeStampDuration.Milliseconds;
-                            identicalStartTimeCounter++;
+                            if (lastGazeBehaviour.Equals(gazeBehaviourType))
+                            {
+                                //identical event 
+                                identicalStartTimeCounter++;
+                                if (lastDuration != duration)
+                                    identicalStartTimeWithDifferentDurationsCounter++;
+                                continue;
+                            }
+
+                            var overlapEvent = new EyeTrackingEvent
+                            {
+                                FirstEvent = lastGazeBehaviour,
+                                SecondEvent = gazeBehaviourType
+                            };
+                            overlappingEvents.TryAdd(overlapEvent, 0);
+                            overlappingEvents[overlapEvent] += 1;
+
                         }
-                        else if(!lastGazeBehaviour.Equals(gazeBehaviourType))
-                        {
-                            gazeBehaviourDurations[gazeBehaviourType] += timeStampDuration.Milliseconds;
-                            identicalStartTimeCounter--;
-                        }
+                        gazeBehaviourDurations[gazeBehaviourType] += timeStampDuration.Milliseconds;
 
                         lastStartTime = startTime;
+                        lastDuration = duration;
                         lastGazeBehaviour = gazeBehaviourType;
                         eyetrackingDataStreamWriter.WriteLine($"{parts[(int)LogFileHeaders.Time]};{userId};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{gazeBehaviourType};{duration};{hasAudioTask}");
                     }
@@ -195,13 +211,18 @@ namespace DistractorTask.Editor.UI
                 }
 
                 float timer = 0;
-                Debug.Log($"{userId} Eyetracking Data with {identicalStartTimeCounter} identical timings");
+                Debug.Log($"{userId} Eyetracking Data with {identicalStartTimeCounter} identical timings and {identicalStartTimeWithDifferentDurationsCounter} different durations");
                 foreach (var gazeBehaviourPair in gazeBehaviourDurations)
                 {
                     timer += gazeBehaviourPair.Value;
                     Debug.Log($"Spent {gazeBehaviourPair.Value.ToString()} milliseconds in {gazeBehaviourPair.Key}");
                 }
                 Debug.Log($"{userId} spent {timer / (1000f * 60f)} minutes in the application?");
+
+                foreach (var overlappingEvent in overlappingEvents)
+                {
+                    Debug.Log($"Contained {overlappingEvent.Value} instances where {overlappingEvent.Key.FirstEvent} started at the same time as {overlappingEvent.Key.SecondEvent}");
+                }
             }
 
             foreach (var streamWriter in streamWriters)
@@ -215,6 +236,27 @@ namespace DistractorTask.Editor.UI
         }
 
         
+    }
+
+    public struct EyeTrackingEvent : IEquatable<EyeTrackingEvent>
+    {
+        public string FirstEvent;
+        public string SecondEvent;
+
+        public bool Equals(EyeTrackingEvent other)
+        {
+            return FirstEvent == other.FirstEvent && SecondEvent == other.SecondEvent;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is EyeTrackingEvent other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FirstEvent, SecondEvent);
+        }
     }
 
     public static class EyeTrackingDataExtension
