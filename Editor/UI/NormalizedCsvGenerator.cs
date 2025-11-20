@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using DistractorTask.Logging;
 using DistractorTask.UserStudy.Core;
@@ -8,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.XR.MagicLeap;
+using UnityEngine.XR.OpenXR.Features.MagicLeapSupport.NativeInterop;
 
 namespace DistractorTask.Editor.UI
 {
@@ -27,6 +29,8 @@ namespace DistractorTask.Editor.UI
 
         public const string EyeTrackingDataFileName = "EyeTrackingData.csv";
         
+        public const string EyeTrackingSwitchDataFileName = "EyeTrackingSwitchData.csv";
+        
         
 
         public const string Header =
@@ -36,7 +40,9 @@ namespace DistractorTask.Editor.UI
         
         
 
-        public const string EyeTrackingDataHeader = "Time;UserId;NoiseLevel;LoadLevel;GazeBehaviour;Duration;HasAudioTask";
+        public const string EyeTrackingDataHeader = "UserId;StudyIndex;NoiseLevel;LoadLevel;GazeBehaviour;Duration;NormalizedDuration;HasAudioTask";
+        
+        public const string EyeTrackingSwitchDataHeader = "UserId;StudyIndex;NoiseLevel;LoadLevel;GazeBehaviourBefore;GazeBehaviourAfter;Count";
 
         public const string NoAudioResponseValue = "None";
 
@@ -61,7 +67,6 @@ namespace DistractorTask.Editor.UI
             }
 
             var streamWriters = new StreamWriter[6];
-            
             streamWriters[0] = new StreamWriter(path + "/" + StudyTutorial1FileName);
             streamWriters[1] = new StreamWriter(path + "/" + Study1FileName);
             streamWriters[2] = new StreamWriter(path + "/" + Study13FileName);
@@ -74,6 +79,7 @@ namespace DistractorTask.Editor.UI
             var audioTaskStreamWriter = new StreamWriter(path + "/" + AudioTaskResultFileName);
 
             var eyetrackingDataStreamWriter = new StreamWriter(path + "/" + EyeTrackingDataFileName);
+            var eyetrackingSwitchDataStreamWriter = new StreamWriter(path + "/" + EyeTrackingSwitchDataFileName);
 
             foreach (var streamWriter in streamWriters)
             {
@@ -82,12 +88,14 @@ namespace DistractorTask.Editor.UI
             
             audioTaskStreamWriter.WriteLine(AudioTaskHeader);
             eyetrackingDataStreamWriter.WriteLine(EyeTrackingDataHeader);
+            eyetrackingSwitchDataStreamWriter.WriteLine(EyeTrackingSwitchDataHeader);
 
-            Dictionary<EyeTrackingEvent, int> overlappingEvents = new Dictionary<EyeTrackingEvent, int>();
+            Dictionary<EyeTrackingEvent, int> eyeTrackingSwitchEvents = new Dictionary<EyeTrackingEvent, int>();
+            
+            eyeTrackingSwitchEvents.InitializeEyetrackingSwitchData();
             
             Dictionary<string, int> gazeBehaviourDurations = new Dictionary<string, int>
             {
-                { nameof(GazeBehaviorType.Unknown), 0 },
                 { nameof(GazeBehaviorType.EyesClosed), 0 },
                 { nameof(GazeBehaviorType.Blink), 0 },
                 { nameof(GazeBehaviorType.BlinkLeft), 0 },
@@ -108,7 +116,7 @@ namespace DistractorTask.Editor.UI
                 LoadLevel loadLevel = LoadLevel.Low;
                 int hasAudioTask = 0;
                 bool insideTask = false;
-                string lastStartTime = "";
+                long lastStartTimeInTicks = 0;
                 int identicalStartTimeCounter = 0;
                 int identicalStartTimeWithDifferentDurationsCounter = 0;
                 string lastGazeBehaviour = "";
@@ -116,6 +124,7 @@ namespace DistractorTask.Editor.UI
                 
                 
                 gazeBehaviourDurations.ResetEyetrackingData();
+                eyeTrackingSwitchEvents.ResetEyetrackingSwitchData();
                 
 
                 while (reader.Peek() >= 0)
@@ -167,62 +176,98 @@ namespace DistractorTask.Editor.UI
                     {
                         insideTask = false;
                         hasAudioTask = 0;
+                        
+                        //write eyetracker data
+                        foreach (var switchEvent in eyeTrackingSwitchEvents)
+                        {
+                            eyetrackingSwitchDataStreamWriter.WriteLine($"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{switchEvent.Key.FirstEvent};{switchEvent.Key.SecondEvent};{switchEvent.Value}");
+
+                            
+                        }
+                        eyeTrackingSwitchEvents.ResetEyetrackingSwitchData();
+                        
+                        //calculate current event. It ends now 
+                        var startTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        var length = (TimeSpan.FromTicks(startTime) - TimeSpan.FromTicks(lastStartTimeInTicks))
+                            .Milliseconds;
+
+                        if (lastGazeBehaviour != "")
+                        {
+                            gazeBehaviourDurations[lastGazeBehaviour] += length;
+                        }
+                        
+                        var totalTime = 0;
+                        foreach (var gazeBehaviourDuration in gazeBehaviourDurations)
+                        {
+                            totalTime += gazeBehaviourDuration.Value;
+                        }
+                        
+                        foreach (var gazeBehaviourDuration in gazeBehaviourDurations)
+                        {
+                            //we save both the actual time and the normalized time for this combination of noise level and load level 
+                            var normalizedTime = totalTime != 0 ? ((float)gazeBehaviourDuration.Value) / totalTime : 0;
+                            eyetrackingDataStreamWriter.WriteLine($"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{gazeBehaviourDuration.Key};{gazeBehaviourDuration.Value};{normalizedTime.ToString(CultureInfo.InvariantCulture)};{hasAudioTask}");
+                        }
+                        gazeBehaviourDurations.ResetEyetrackingData();
+                        
+
+                        lastGazeBehaviour = "";
                     }
 
                     if (insideTask && parts[(int)LogFileHeaders.Category] == nameof(LogCategory.EyeTracking))
                     {
-
-                        var duration = ulong.Parse(parts[(int)LogFileHeaders.GazeBehaviourDuration]);
-                        var startTime = parts[(int)LogFileHeaders.StartTime];
-
+                        
+                        var startTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
                         
                         var gazeBehaviourType = parts[(int)LogFileHeaders.GazeBehaviour];
-                        //gazeBehaviourDurations.TryAdd(gazeBehaviourType, 0);
-                        TimeSpan timeStampDuration = TimeSpan.FromTicks((long)(duration / 100));
 
-                        if (lastStartTime == startTime)
+                        if (lastGazeBehaviour == "")
                         {
-                            if (lastGazeBehaviour.Equals(gazeBehaviourType))
+                            if (gazeBehaviourType != nameof(GazeBehaviorType.Unknown))
                             {
-                                //identical event 
-                                identicalStartTimeCounter++;
-                                if (lastDuration != duration)
-                                    identicalStartTimeWithDifferentDurationsCounter++;
-                                continue;
+                                //this is the first event in this trial, this should avoid any event being carried over from the previous trial
+                                lastStartTimeInTicks = startTime;
+                                lastGazeBehaviour = gazeBehaviourType;
                             }
-
-                            var overlapEvent = new EyeTrackingEvent
-                            {
-                                FirstEvent = lastGazeBehaviour,
-                                SecondEvent = gazeBehaviourType
-                            };
-                            overlappingEvents.TryAdd(overlapEvent, 0);
-                            overlappingEvents[overlapEvent] += 1;
-
                         }
-                        gazeBehaviourDurations[gazeBehaviourType] += timeStampDuration.Milliseconds;
-
-                        lastStartTime = startTime;
-                        lastDuration = duration;
-                        lastGazeBehaviour = gazeBehaviourType;
-                        eyetrackingDataStreamWriter.WriteLine($"{parts[(int)LogFileHeaders.Time]};{userId};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{gazeBehaviourType};{duration};{hasAudioTask}");
+                        else if (!lastGazeBehaviour.Equals(gazeBehaviourType))
+                        {
+                            
+                            
+                            
+                            var length = (TimeSpan.FromTicks(startTime) - TimeSpan.FromTicks(lastStartTimeInTicks))
+                                .Milliseconds;
+                            
+                            gazeBehaviourDurations[lastGazeBehaviour] += length;
+                            
+                            if (gazeBehaviourType != nameof(GazeBehaviorType.Unknown))
+                            {
+                                var switchEvent = new EyeTrackingEvent
+                                {
+                                    FirstEvent = lastGazeBehaviour,
+                                    SecondEvent = gazeBehaviourType
+                                };
+                            
+                                Debug.Log($"Switch event {switchEvent.FirstEvent} to {switchEvent.SecondEvent}");
+                                eyeTrackingSwitchEvents[switchEvent] += 1;
+                            }
+                            else
+                            {
+                                //we reset to avoid adding the unknown type
+                                gazeBehaviourType = "";
+                            }
+                            
+                            lastStartTimeInTicks = startTime;
+                            lastGazeBehaviour = gazeBehaviourType;
+                        }
+                        
+                        
                     }
                     
                 }
 
-                float timer = 0;
-                Debug.Log($"{userId} Eyetracking Data with {identicalStartTimeCounter} identical timings and {identicalStartTimeWithDifferentDurationsCounter} different durations");
-                foreach (var gazeBehaviourPair in gazeBehaviourDurations)
-                {
-                    timer += gazeBehaviourPair.Value;
-                    Debug.Log($"Spent {gazeBehaviourPair.Value.ToString()} milliseconds in {gazeBehaviourPair.Key}");
-                }
-                Debug.Log($"{userId} spent {timer / (1000f * 60f)} minutes in the application?");
 
-                foreach (var overlappingEvent in overlappingEvents)
-                {
-                    Debug.Log($"Contained {overlappingEvent.Value} instances where {overlappingEvent.Key.FirstEvent} started at the same time as {overlappingEvent.Key.SecondEvent}");
-                }
+                
             }
 
             foreach (var streamWriter in streamWriters)
@@ -231,12 +276,15 @@ namespace DistractorTask.Editor.UI
             }
 
             audioTaskStreamWriter.Dispose();
+            eyetrackingDataStreamWriter.Dispose();
+            eyetrackingSwitchDataStreamWriter.Dispose();
 
 
         }
 
         
     }
+    
 
     public struct EyeTrackingEvent : IEquatable<EyeTrackingEvent>
     {
@@ -263,7 +311,6 @@ namespace DistractorTask.Editor.UI
     {
         public static void ResetEyetrackingData(this Dictionary<string, int> gazeBehaviourDurations)
         {
-            gazeBehaviourDurations[nameof(GazeBehaviorType.Unknown)] = 0;
             gazeBehaviourDurations[nameof(GazeBehaviorType.EyesClosed)] = 0;
             gazeBehaviourDurations[nameof(GazeBehaviorType.Blink)] = 0;
             gazeBehaviourDurations[nameof(GazeBehaviorType.BlinkLeft)] = 0;
@@ -271,6 +318,65 @@ namespace DistractorTask.Editor.UI
             gazeBehaviourDurations[nameof(GazeBehaviorType.Fixation)] = 0;
             gazeBehaviourDurations[nameof(GazeBehaviorType.Pursuit)] = 0;
             gazeBehaviourDurations[nameof(GazeBehaviorType.Saccade)] = 0;
+        }
+
+        public static void InitializeEyetrackingSwitchData(
+            this Dictionary<EyeTrackingEvent, int> gazeBehaviourSwitchData)
+        {
+            
+            for (int i = 1; i < 8; i++)
+            {
+                for (int j = 1; j < 8; j++)
+                {
+                    if (i == j)
+                    {
+                        continue;
+                    }
+                    gazeBehaviourSwitchData.Add(new EyeTrackingEvent
+                    {
+                        FirstEvent = ((GazeBehaviorType)i).ToString(),
+                        SecondEvent = ((GazeBehaviorType)j).ToString()
+                    }, 0);
+                }
+            }
+        }
+        
+        public static void ResetEyetrackingSwitchData(
+            this Dictionary<EyeTrackingEvent, int> gazeBehaviourSwitchData)
+        {
+            
+            for (int i = 1; i < 8; i++)
+            {
+                for (int j = 1; j < 8; j++)
+                {
+                    if (i == j)
+                    {
+                        continue;
+                    }
+                    var data = new EyeTrackingEvent
+                    {
+                        FirstEvent = ((GazeBehaviorType)i).ToString(),
+                        SecondEvent = ((GazeBehaviorType)j).ToString()
+                    };
+                    gazeBehaviourSwitchData[data] = 0;
+                }
+            }
+        }
+
+        public interface ILogFileProcessor
+        {
+            public void ProcessLogFileEvent(LogCategory logEvent, ILogFileState state);
+        }
+
+        public interface ILogFileState
+        {
+            public int StudyIndex { get; }
+            public NoiseLevel NoiseLevel { get; }
+            public LoadLevel LoadLevel { get; }
+            
+            public bool InsideTrial { get; }
+            
+            public string UserId { get; }
         }
     }
 }
