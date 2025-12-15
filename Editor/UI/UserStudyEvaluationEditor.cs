@@ -351,11 +351,25 @@ namespace DistractorTask.Editor.UI
             var toolbarMenu = toolbar.Q<ToolbarMenu>("File");
             toolbarMenu.menu.AppendAction("Load Study Log Files - Text Only", OnLoadLogFilesOnlyText);
             toolbarMenu.menu.AppendAction("Generate Python Files", GeneratePythonFiles);
+            toolbarMenu.menu.AppendAction("Generate Error Rate Python File", GenerateErrorRatePythonFile);
+            toolbarMenu.menu.AppendAction("Generate Task Performance over Time Python File", GenerateTaskPerformanceOverTimeFile);
+        }
+
+        private void GenerateErrorRatePythonFile(DropdownMenuAction obj)
+        {
+            NormalizedCsvGenerator.GenerateErrorRateCSVFiles(_userStudyEvaluationTextBased.FilePaths);
+        }
+
+        private void GenerateTaskPerformanceOverTimeFile(DropdownMenuAction obj)
+        {
+            NormalizedCsvGenerator.GenerateTaskPerformanceOverTimeCSVFile(_userStudyEvaluationTextBased.FilePaths);
         }
 
         private void GeneratePythonFiles(DropdownMenuAction obj)
         {
             NormalizedCsvGenerator.GenerateCSVFilesForPython(_userStudyEvaluationTextBased.FilePaths);
+            NormalizedCsvGenerator.GenerateErrorRateCSVFiles(_userStudyEvaluationTextBased.FilePaths);
+            NormalizedCsvGenerator.GenerateTaskPerformanceOverTimeCSVFile(_userStudyEvaluationTextBased.FilePaths);
         }
 
         private void OnLoadLogFilesOnlyText(DropdownMenuAction obj)

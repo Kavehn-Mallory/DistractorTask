@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using Codice.Client.Selector;
 using DistractorTask.Logging;
 using DistractorTask.UserStudy.Core;
 using MagicLeap.OpenXR.Features.EyeTracker;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UIElements;
 using UnityEngine.XR.MagicLeap;
 using UnityEngine.XR.OpenXR.Features.MagicLeapSupport.NativeInterop;
 
@@ -30,8 +33,9 @@ namespace DistractorTask.Editor.UI
         public const string EyeTrackingDataFileName = "EyeTrackingData.csv";
         
         public const string EyeTrackingSwitchDataFileName = "EyeTrackingSwitchData.csv";
-        
-        
+
+        public const string ErrorRateDataFileName = "ErrorRateData.csv";
+        public const string TaskPerformanceOverTimeFileName = "TaskPerformanceOverTime.csv";
 
         public const string Header =
             "Time;Timestamp;UserId;StudyIndex;NoiseLevel;LoadLevel;TrialCount;RepetitionsPerTrial;TrialTargetIndex;TrialSelectedIndex;TrialSymbolOrder;AnchorPointIndex;StartTime;ReactionTime;HasAudioTask";
@@ -46,6 +50,13 @@ namespace DistractorTask.Editor.UI
 
         public const string NoAudioResponseValue = "None";
 
+        public const string TaskPerformanceOverTimeHeader =
+            "UserId;StudyIndex;NoiseLevel;LoadLevel;TimeInStudy;TimeInCondition;ReactionTime";
+
+        public const string ErrorRateHeader = "UserId;StudyIndex;NoiseLevel;LoadLevel;Response;ResponsePercentage";
+
+        public static readonly int[] TutorialStudyIndices = new[] { 0, 4 };
+
         private static string GetPythonConformNoiseLevel(NoiseLevel noiseLevel)
         {
             if(noiseLevel == NoiseLevel.None)
@@ -54,6 +65,252 @@ namespace DistractorTask.Editor.UI
             }
 
             return $"{noiseLevel}";
+        }
+
+
+        private static StreamWriter CreateStreamWriter(string basePath, string fileName)
+        {
+            if (string.IsNullOrEmpty(basePath) || string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException(
+                    $"The given path or file name are empty. Path: {basePath} and FileName: {fileName}");
+            }
+
+            if (!fileName.EndsWith(".csv"))
+            {
+                fileName += ".csv";
+            }
+            return new StreamWriter(basePath + "/" + fileName);
+        }
+
+        public static void GenerateErrorRateCSVFiles(string[] paths)
+        {
+            var path = EditorUtility.OpenFolderPanel("Select folder that contains the logfiles", Application.persistentDataPath,
+                "");
+            
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            var errorRateStreamWriter = CreateStreamWriter(path, ErrorRateDataFileName);
+            
+            errorRateStreamWriter.WriteLine(ErrorRateHeader);
+
+            var errorRates = new List<ErrorRateData>();
+
+
+            foreach (var filePath in paths)
+            {
+                using StreamReader reader = new StreamReader(filePath);
+                int studyIndex = -1;
+                
+                var userId = "";
+                NoiseLevel noiseLevel = NoiseLevel.None;
+                LoadLevel loadLevel = LoadLevel.Low;
+                bool insideTask = false;
+
+
+                while (reader.Peek() >= 0)
+                {
+                    var line = reader.ReadLine();
+                    var parts = line.Split(';');
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.LogFileStart))
+                    {
+                        userId = parts[(int)(LogFileHeaders.UserId)];
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyBegin))
+                    {
+                        studyIndex = int.Parse(parts[(int)LogFileHeaders.StudyIndex]);
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialBegin))
+                    {
+                        loadLevel = Enum.Parse<LoadLevel>(parts[(int)LogFileHeaders.LoadLevel]);
+                        noiseLevel = Enum.Parse<NoiseLevel>(parts[(int)LogFileHeaders.NoiseLevel]);
+                        insideTask = true;
+
+                        var errorRateItem = new ErrorRateData
+                        {
+                            CorrectlySelected = 0,
+                            IncorrectlySelected = 0,
+                            NothingSelected = 0,
+                            NoiseLevel = noiseLevel,
+                            LoadLevel = loadLevel
+                        };
+
+                        if (!errorRates.Contains(errorRateItem))
+                        {
+                            errorRates.Add(errorRateItem);
+                        }
+                    }
+                    
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialConfirmation))
+                    {
+                        if (!insideTask)
+                        {
+                            Debug.LogWarning($"File {filePath} has TrialConfirmation-Data without TrialStart in Study {studyIndex}");
+                        }
+
+                        var selectedIndex = int.Parse(parts[(int)LogFileHeaders.TrialSelectedIndex]);
+                        var targetIndex = int.Parse(parts[(int)LogFileHeaders.TrialTargetIndex]);
+
+
+                        var index = errorRates.FindIndex(e => e.LoadLevel == loadLevel && e.NoiseLevel == noiseLevel);
+                        var errorRate = errorRates[index];
+
+                        if (selectedIndex == -1)
+                        {
+                            errorRate.NothingSelected++;
+                        }
+                        else if (selectedIndex == targetIndex)
+                        {
+                            errorRate.CorrectlySelected++;
+                        }
+                        else
+                        {
+                            errorRate.IncorrectlySelected++;
+                        }
+
+                        errorRates[index] = errorRate;
+                        
+                    }
+                    
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialEnd))
+                    {
+                        insideTask = false;
+                    }
+                    
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyEnd))
+                    {
+                        if (!TutorialStudyIndices.Contains(studyIndex))
+                        {
+                            foreach (var errorRateData in errorRates)
+                            {
+                                var total = errorRateData.Total;
+                                if (total == 0)
+                                {
+                                    continue;
+                                }
+                                var correctlySelectedPercent = ((float)errorRateData.CorrectlySelected) / total;
+                                var incorrectlySelectedPercent = ((float)errorRateData.IncorrectlySelected) / total;
+                                var nothingSelectedPercent = ((float)errorRateData.NothingSelected) / total;
+                            
+                                Assert.AreApproximatelyEqual(1f, correctlySelectedPercent + incorrectlySelectedPercent + nothingSelectedPercent);
+                                errorRateStreamWriter.WriteLine($"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{errorRateData.LoadLevel};Success;{correctlySelectedPercent}");
+                                errorRateStreamWriter.WriteLine($"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{errorRateData.LoadLevel};Failure;{incorrectlySelectedPercent}");
+                                errorRateStreamWriter.WriteLine($"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{errorRateData.LoadLevel};Missed;{nothingSelectedPercent}");
+                            }
+                        }
+                        errorRates.Clear();
+                        
+                    }
+                    
+                }
+                
+                
+                
+
+            }
+
+
+            errorRateStreamWriter.Dispose();
+        }
+
+        public static void GenerateTaskPerformanceOverTimeCSVFile(string[] paths)
+        {
+            var path = EditorUtility.OpenFolderPanel("Select folder that contains the logfiles", Application.persistentDataPath,
+                "");
+            
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            var taskPerformanceStreamWriter = CreateStreamWriter(path, TaskPerformanceOverTimeFileName);
+            
+            taskPerformanceStreamWriter.WriteLine(TaskPerformanceOverTimeHeader);
+
+
+            foreach (var filePath in paths)
+            {
+                using StreamReader reader = new StreamReader(filePath);
+                int studyIndex = -1;
+
+                var userId = "";
+                NoiseLevel noiseLevel = NoiseLevel.None;
+                LoadLevel loadLevel = LoadLevel.Low;
+                bool insideTask = false;
+                long trialStartTime = 0;
+                long studyStartTime = 0;
+
+                while (reader.Peek() >= 0)
+                {
+                    var line = reader.ReadLine();
+                    var parts = line.Split(';');
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.LogFileStart))
+                    {
+                        userId = parts[(int)(LogFileHeaders.UserId)];
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyBegin))
+                    {
+                        studyIndex = int.Parse(parts[(int)LogFileHeaders.StudyIndex]);
+                        studyStartTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialBegin))
+                    {
+                        loadLevel = Enum.Parse<LoadLevel>(parts[(int)LogFileHeaders.LoadLevel]);
+                        noiseLevel = Enum.Parse<NoiseLevel>(parts[(int)LogFileHeaders.NoiseLevel]);
+                        insideTask = true;
+                        
+                        trialStartTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                    }
+                    
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialConfirmation))
+                    {
+                        if (!insideTask)
+                        {
+                            Debug.LogWarning($"File {filePath} has TrialConfirmation-Data without TrialStart in Study {studyIndex}");
+                        }
+
+                        if (!TutorialStudyIndices.Contains(studyIndex))
+                        {
+                            var trialTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        
+                            var lengthInTrialTime = (TimeSpan.FromTicks(trialTime) - TimeSpan.FromTicks(trialStartTime))
+                                .TotalMilliseconds;
+                        
+                            var lengthInStudyTime = (TimeSpan.FromTicks(trialTime) - TimeSpan.FromTicks(studyStartTime))
+                                .TotalMilliseconds;
+
+                            var reactionTime = TimeSpan.FromTicks((long.Parse(parts[(int)LogFileHeaders.ReactionTime]) -
+                                                                   long.Parse(parts[(int)LogFileHeaders.StartTime]))).TotalMilliseconds;
+                        
+                            //"UserId;StudyIndex;NoiseLevel;LoadLevel;TimeInStudy;TimeInCondition;ReactionTime";
+                            var l = $"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{lengthInStudyTime};{lengthInTrialTime};{reactionTime}";
+                            taskPerformanceStreamWriter.WriteLine(l);
+                        }
+
+                        
+                    }
+                    
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialEnd))
+                    {
+                        insideTask = false;
+                    }
+                    
+                }
+
+            }
+
+
+
+            taskPerformanceStreamWriter.Dispose();
         }
         
         public static void GenerateCSVFilesForPython(string[] paths, float maxReactionTimeInMilliseconds = 2000f)
@@ -110,7 +367,7 @@ namespace DistractorTask.Editor.UI
                 using StreamReader reader = new StreamReader(filePath);
                 int studyIndex = -1;
 
-
+                
                 var userId = "";
                 NoiseLevel noiseLevel = NoiseLevel.None;
                 LoadLevel loadLevel = LoadLevel.Low;
@@ -283,6 +540,32 @@ namespace DistractorTask.Editor.UI
         }
 
         
+    }
+
+    public struct ErrorRateData : IEquatable<ErrorRateData>
+    {
+        public NoiseLevel NoiseLevel;
+        public LoadLevel LoadLevel;
+        public int CorrectlySelected;
+        public int IncorrectlySelected;
+        public int NothingSelected;
+
+        public int Total => CorrectlySelected + IncorrectlySelected + NothingSelected;
+
+        public bool Equals(ErrorRateData other)
+        {
+            return NoiseLevel == other.NoiseLevel && LoadLevel == other.LoadLevel;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ErrorRateData other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine((int)NoiseLevel, (int)LoadLevel);
+        }
     }
     
 
