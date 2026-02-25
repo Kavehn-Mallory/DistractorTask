@@ -353,6 +353,7 @@ namespace DistractorTask.Editor.UI
             toolbarMenu.menu.AppendAction("Generate Python Files", GeneratePythonFiles);
             toolbarMenu.menu.AppendAction("Generate Error Rate Python File", GenerateErrorRatePythonFile);
             toolbarMenu.menu.AppendAction("Generate Task Performance over Time Python File", GenerateTaskPerformanceOverTimeFile);
+            toolbarMenu.menu.AppendAction("Generate Python File for each unique condition", GenerateFilesForStudyTrialConditionCases);
         }
 
         private void GenerateErrorRatePythonFile(DropdownMenuAction obj)
@@ -363,6 +364,11 @@ namespace DistractorTask.Editor.UI
         private void GenerateTaskPerformanceOverTimeFile(DropdownMenuAction obj)
         {
             NormalizedCsvGenerator.GenerateTaskPerformanceOverTimeCSVFile(_userStudyEvaluationTextBased.FilePaths);
+        }
+
+        private void GenerateFilesForStudyTrialConditionCases(DropdownMenuAction obj)
+        {
+            NormalizedCsvGenerator.GeneratePerStudyConditionCSVFiles(_userStudyEvaluationTextBased.FilePaths);
         }
 
         private void GeneratePythonFiles(DropdownMenuAction obj)

@@ -7,6 +7,7 @@ using Codice.Client.Selector;
 using DistractorTask.Logging;
 using DistractorTask.UserStudy.Core;
 using MagicLeap.OpenXR.Features.EyeTracker;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -51,9 +52,12 @@ namespace DistractorTask.Editor.UI
         public const string NoAudioResponseValue = "None";
 
         public const string TaskPerformanceOverTimeHeader =
-            "UserId;StudyIndex;NoiseLevel;LoadLevel;TimeInStudy;TimeInCondition;ReactionTime";
+            "UserId;StudyIndex;NoiseLevel;LoadLevel;TimeInStudy;TimeInCondition;ReactionTime;NormalizedTimeInStudy;NormalizedTimeInCondition";
 
         public const string ErrorRateHeader = "UserId;StudyIndex;NoiseLevel;LoadLevel;Response;ResponsePercentage";
+        
+        public const string HeaderStudyTrialCondition = "Time;Category;CameraPosition;CameraRotation;DistanceFromCamera;DistanceToWall;HitPointWallPosition;HitPointWallNormal;AnchorPointPosition;AudioTaskReactionTime;TrialTargetIndex;TrialSelectedIndex;TrialSymbolOrder;AnchorPointIndex;ReactionTime;LeftEyePosition;RightEyePosition;EyeDimensions;PupilDiameter;GazeBehaviour;GazeBehaviourStartTime;GazeBehaviourDuration;Acceleration;AngularVelocity;LinearAcceleration;Attitude;Lux";
+
 
         public static readonly int[] TutorialStudyIndices = new[] { 0, 4 };
 
@@ -65,6 +69,115 @@ namespace DistractorTask.Editor.UI
             }
 
             return $"{noiseLevel}";
+        }
+
+
+        public static void GeneratePerStudyConditionCSVFiles(string[] paths)
+        {
+            var path = EditorUtility.OpenFolderPanel("Select target folder for generated logfiles", Application.persistentDataPath,
+                "");
+            
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+            
+
+            foreach (var filePath in paths)
+            {
+                
+                using StreamReader reader = new StreamReader(filePath);
+                int studyIndex = -1;
+                
+                var userId = "";
+                bool insideTask = false;
+
+                StreamWriter streamWriter = null;
+                
+                while (reader.Peek() >= 0)
+                {
+                    var line = reader.ReadLine();
+                    var parts = line.Split(';');
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.LogFileStart))
+                    {
+                        userId = parts[(int)(LogFileHeaders.UserId)];
+                        continue;
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyBegin))
+                    {
+                        studyIndex = int.Parse(parts[(int)LogFileHeaders.StudyIndex]);
+
+                        if (streamWriter != null)
+                        {
+                            streamWriter.Flush();
+                            streamWriter.Dispose();
+                            streamWriter = null;
+                        }
+                        continue;
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialBegin))
+                    {
+                        var loadLevel = Enum.Parse<LoadLevel>(parts[(int)LogFileHeaders.LoadLevel]);
+                        var noiseLevel = Enum.Parse<NoiseLevel>(parts[(int)LogFileHeaders.NoiseLevel]);
+                        insideTask = true;
+                        if (!TutorialStudyIndices.Contains(studyIndex))
+                        {
+                            streamWriter = CreateStreamWriter(path,$"{userId}_{studyIndex}_{loadLevel.ToString()}_{GetPythonConformNoiseLevel(noiseLevel)}");
+                        
+                            streamWriter.WriteLine(HeaderStudyTrialCondition);
+                        }
+                        continue;
+                        
+                    }
+                    
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialEnd))
+                    {
+                        if (streamWriter != null)
+                        {
+                            streamWriter.Flush();
+                            streamWriter.Dispose();
+                            streamWriter = null;
+                        }
+                        insideTask = false;
+                        continue;
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyEnd))
+                    {
+                        if (streamWriter != null)
+                        {
+                            streamWriter.Flush();
+                            streamWriter.Dispose();
+                            streamWriter = null;
+                        }
+                        insideTask = false;
+                        continue;
+                    }
+                    
+                    if (insideTask && streamWriter != null)
+                    {
+                        var startTime = parts[(int)LogFileHeaders.StartTime];
+                        var endTime = parts[(int)LogFileHeaders.ReactionTime];
+                        string reactionTime = startTime;
+                        string gazeBehaviourStartTime = startTime;
+                        if (parts[(int)LogFileHeaders.Category] != nameof(LogCategory.EyeTracking) && !string.IsNullOrEmpty(startTime) && !string.IsNullOrEmpty(endTime))
+                        {
+                            reactionTime = TimeSpan.FromTicks((long.Parse(parts[(int)LogFileHeaders.ReactionTime]) -
+                                                                   long.Parse(parts[(int)LogFileHeaders.StartTime]))).TotalMilliseconds.ToString();
+                            gazeBehaviourStartTime = "";
+                        }
+                        var l = $"{parts[(int)LogFileHeaders.Time]};{parts[(int)LogFileHeaders.Category]};{parts[(int)LogFileHeaders.CameraPosition]};{parts[(int)LogFileHeaders.CameraRotation]};{parts[(int)LogFileHeaders.DistanceFromCamera]};{parts[(int)LogFileHeaders.DistanceToWall]};{parts[(int)LogFileHeaders.HitPointWallPosition]};{parts[(int)LogFileHeaders.HitPointWallNormal]};{parts[(int)LogFileHeaders.AnchorPointPosition]};{parts[(int)LogFileHeaders.AudioTaskReactionTime]};{parts[(int)LogFileHeaders.TrialTargetIndex]};{parts[(int)LogFileHeaders.TrialSelectedIndex]};{parts[(int)LogFileHeaders.TrialSymbolOrder]};{parts[(int)LogFileHeaders.AnchorPointIndex]};{reactionTime};{parts[(int)LogFileHeaders.LeftEyePosition]};{parts[(int)LogFileHeaders.RightEyePosition]};{parts[(int)LogFileHeaders.EyeDimensions]};{parts[(int)LogFileHeaders.PupilDiameter]};{parts[(int)LogFileHeaders.GazeBehaviour]};{gazeBehaviourStartTime};{parts[(int)LogFileHeaders.GazeBehaviourDuration]};{parts[(int)LogFileHeaders.Acceleration]};{parts[(int)LogFileHeaders.AngularVelocity]};{parts[(int)LogFileHeaders.LinearAcceleration]};{parts[(int)LogFileHeaders.Attitude]};{parts[(int)LogFileHeaders.Lux]}";
+
+                        streamWriter.WriteLine(l);
+                    }
+                    
+                    
+                }
+                
+
+            }
+
+            
         }
 
 
@@ -221,7 +334,7 @@ namespace DistractorTask.Editor.UI
 
         public static void GenerateTaskPerformanceOverTimeCSVFile(string[] paths)
         {
-            var path = EditorUtility.OpenFolderPanel("Select folder that contains the logfiles", Application.persistentDataPath,
+            var path = EditorUtility.OpenFolderPanel("Select target folder for generated logfiles", Application.persistentDataPath,
                 "");
             
             if (string.IsNullOrEmpty(path))
@@ -240,11 +353,9 @@ namespace DistractorTask.Editor.UI
                 int studyIndex = -1;
 
                 var userId = "";
-                NoiseLevel noiseLevel = NoiseLevel.None;
-                LoadLevel loadLevel = LoadLevel.Low;
                 bool insideTask = false;
-                long trialStartTime = 0;
-                long studyStartTime = 0;
+                var taskPerformanceStorage = new List<TaskPerformanceTrialStorage>();
+                double2 minMaxInStudyTime = new double2(double.MaxValue, 0);
 
                 while (reader.Peek() >= 0)
                 {
@@ -258,15 +369,56 @@ namespace DistractorTask.Editor.UI
                     if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyBegin))
                     {
                         studyIndex = int.Parse(parts[(int)LogFileHeaders.StudyIndex]);
-                        studyStartTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        var studyStartTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        minMaxInStudyTime.x = TimeSpan.FromTicks(studyStartTime).TotalMilliseconds;
+                    }
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyEnd))
+                    {
+                        var studyEndTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        minMaxInStudyTime.y = TimeSpan.FromTicks(studyEndTime).TotalMilliseconds;
+                        
+                        foreach (var taskPerformance in taskPerformanceStorage)
+                        {
+                            foreach (var trialTime in taskPerformance.TrialTimes)
+                            {
+                                var normalizedTimeInTrial =
+                                    trialTime.TrialTiming.Normalize(taskPerformance.MinMaxTime.x, taskPerformance.MinMaxTime.y);
+                                var normalizedTimeInStudy =
+                                    trialTime.TrialTiming.Normalize(minMaxInStudyTime.x, minMaxInStudyTime.y);
+                                
+                                //we are recalculating the correct timings by using the start times and subtracting those from the timestamps 
+                                var l = $"{userId};{studyIndex};{GetPythonConformNoiseLevel(taskPerformance.NoiseLevel)};{taskPerformance.LoadLevel};{trialTime.TrialTiming - minMaxInStudyTime.x};{trialTime.TrialTiming - taskPerformance.MinMaxTime.x};{trialTime.ReactionTime};{normalizedTimeInStudy};{normalizedTimeInTrial}";
+                                taskPerformanceStreamWriter.WriteLine(l);
+                            }
+                        }
+                        
+                        taskPerformanceStorage.Clear();
                     }
                     if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialBegin))
                     {
-                        loadLevel = Enum.Parse<LoadLevel>(parts[(int)LogFileHeaders.LoadLevel]);
-                        noiseLevel = Enum.Parse<NoiseLevel>(parts[(int)LogFileHeaders.NoiseLevel]);
+
+                        var trialStartTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        if (taskPerformanceStorage.Count > 0 && insideTask)
+                        {
+                            //if we are still in the task, we did not have an end trial 
+                            Debug.LogWarning("Found trial without TrialEnd-Event");
+                            var test = taskPerformanceStorage[^1];
+                            test.MinMaxTime.y = TimeSpan.FromTicks(trialStartTime).TotalMilliseconds;
+                            taskPerformanceStorage[^1] = test;
+                        }
+                        
+                        var loadLevel = Enum.Parse<LoadLevel>(parts[(int)LogFileHeaders.LoadLevel]);
+                        var noiseLevel = Enum.Parse<NoiseLevel>(parts[(int)LogFileHeaders.NoiseLevel]);
                         insideTask = true;
                         
-                        trialStartTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        taskPerformanceStorage.Add(new TaskPerformanceTrialStorage
+                        {
+                            LoadLevel = loadLevel,
+                            TrialTimes = new List<TrialTime>(),
+                            NoiseLevel = noiseLevel,
+                            MinMaxTime = new double2(TimeSpan.FromTicks(trialStartTime).TotalMilliseconds, 0)
+                        });
+
                     }
                     
 
@@ -280,19 +432,20 @@ namespace DistractorTask.Editor.UI
                         if (!TutorialStudyIndices.Contains(studyIndex))
                         {
                             var trialTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
-                        
-                            var lengthInTrialTime = (TimeSpan.FromTicks(trialTime) - TimeSpan.FromTicks(trialStartTime))
-                                .TotalMilliseconds;
-                        
-                            var lengthInStudyTime = (TimeSpan.FromTicks(trialTime) - TimeSpan.FromTicks(studyStartTime))
-                                .TotalMilliseconds;
-
+                            
                             var reactionTime = TimeSpan.FromTicks((long.Parse(parts[(int)LogFileHeaders.ReactionTime]) -
                                                                    long.Parse(parts[(int)LogFileHeaders.StartTime]))).TotalMilliseconds;
                         
                             //"UserId;StudyIndex;NoiseLevel;LoadLevel;TimeInStudy;TimeInCondition;ReactionTime";
-                            var l = $"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{lengthInStudyTime};{lengthInTrialTime};{reactionTime}";
-                            taskPerformanceStreamWriter.WriteLine(l);
+                            /*var l = $"{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{lengthInStudyTime};{lengthInTrialTime};{reactionTime}";
+                            taskPerformanceStreamWriter.WriteLine(l);*/
+                            var taskPerformance = taskPerformanceStorage[^1];
+                            taskPerformance.TrialTimes.Add(new TrialTime
+                            {
+                                TrialTiming = TimeSpan.FromTicks(trialTime).TotalMilliseconds,
+                                ReactionTime = reactionTime
+                            });
+                            taskPerformanceStorage[^1] = taskPerformance;
                         }
 
                         
@@ -302,9 +455,14 @@ namespace DistractorTask.Editor.UI
                     if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialEnd))
                     {
                         insideTask = false;
+                        var trialTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
+                        var test = taskPerformanceStorage[^1];
+                        test.MinMaxTime.y = TimeSpan.FromTicks(trialTime).TotalMilliseconds;
+                        taskPerformanceStorage[^1] = test;
                     }
                     
                 }
+
 
             }
 
@@ -540,6 +698,20 @@ namespace DistractorTask.Editor.UI
         }
 
         
+    }
+
+    public struct TaskPerformanceTrialStorage
+    {
+        public double2 MinMaxTime;
+        public NoiseLevel NoiseLevel;
+        public LoadLevel LoadLevel;
+        public List<TrialTime> TrialTimes;
+    }
+
+    public struct TrialTime
+    {
+        public double ReactionTime;
+        public double TrialTiming;
     }
 
     public struct ErrorRateData : IEquatable<ErrorRateData>
