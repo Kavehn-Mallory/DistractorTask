@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using UnityEngine;
 
 namespace DistractorTask.Logging
@@ -22,8 +23,25 @@ namespace DistractorTask.Logging
         public static Vector2 ReadVector2FromCSV(this string vectorRepresentation, char delimiter = ',')
         {
             var parts = vectorRepresentation.Split(delimiter);
+
             return new Vector2(float.Parse(parts[0], CultureInfo.InvariantCulture),
                 float.Parse(parts[1], CultureInfo.InvariantCulture));
+
+            
+        }
+
+        public static bool TryReadVector2FromCSV(this string vectorRepresentation, out Vector2 result, char delimiter = ',')
+        {
+            try
+            {
+                result = vectorRepresentation.ReadVector2FromCSV(delimiter);
+                return true;
+            }
+            catch (Exception e)
+            {
+                result = default(Vector2);
+                return false;
+            }
         }
 
         public static Quaternion ReadQuaternionFromCSV(this string quaternionRepresentation, char delimiter = ',')

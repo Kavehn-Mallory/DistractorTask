@@ -6,6 +6,7 @@ using System.Linq;
 using Codice.Client.Selector;
 using DistractorTask.Logging;
 using DistractorTask.UserStudy.Core;
+using JetBrains.Annotations;
 using MagicLeap.OpenXR.Features.EyeTracker;
 using Unity.Mathematics;
 using UnityEditor;
@@ -34,6 +35,8 @@ namespace DistractorTask.Editor.UI
         public const string EyeTrackingDataFileName = "EyeTrackingData.csv";
         
         public const string EyeTrackingSwitchDataFileName = "EyeTrackingSwitchData.csv";
+        
+        public const string EyeTrackingPupilDataFileName = "EyeTrackingPupilData.csv";
 
         public const string ErrorRateDataFileName = "ErrorRateData.csv";
         public const string TaskPerformanceOverTimeFileName = "TaskPerformanceOverTime.csv";
@@ -49,6 +52,9 @@ namespace DistractorTask.Editor.UI
         
         public const string EyeTrackingSwitchDataHeader = "UserId;StudyIndex;NoiseLevel;LoadLevel;GazeBehaviourBefore;GazeBehaviourAfter;Count";
 
+        public const string EyeTrackingPupilDataHeader =
+            "UserId;StudyIndex;TrialIndex;Region;NoiseLevel;LoadLevel;PupilDiameterLeft;PupilDiameterRight;LuxValue;AdjustedPupilDiameterLeft;AdjustedPupilDiameterRight";
+        
         public const string NoAudioResponseValue = "None";
 
         public const string TaskPerformanceOverTimeHeader =
@@ -495,6 +501,7 @@ namespace DistractorTask.Editor.UI
 
             var eyetrackingDataStreamWriter = new StreamWriter(path + "/" + EyeTrackingDataFileName);
             var eyetrackingSwitchDataStreamWriter = new StreamWriter(path + "/" + EyeTrackingSwitchDataFileName);
+            var pupilDiameterDataStreamWriter = new StreamWriter(path + "/" + EyeTrackingPupilDataFileName);
 
             foreach (var streamWriter in streamWriters)
             {
@@ -504,10 +511,13 @@ namespace DistractorTask.Editor.UI
             audioTaskStreamWriter.WriteLine(AudioTaskHeader);
             eyetrackingDataStreamWriter.WriteLine(EyeTrackingDataHeader);
             eyetrackingSwitchDataStreamWriter.WriteLine(EyeTrackingSwitchDataHeader);
+            pupilDiameterDataStreamWriter.WriteLine(EyeTrackingPupilDataHeader);
 
             Dictionary<EyeTrackingEvent, int> eyeTrackingSwitchEvents = new Dictionary<EyeTrackingEvent, int>();
             
             eyeTrackingSwitchEvents.InitializeEyetrackingSwitchData();
+
+            List<PupilDataStorage> pupilDataStorage = new List<PupilDataStorage>();
             
             Dictionary<string, int> gazeBehaviourDurations = new Dictionary<string, int>
             {
@@ -524,9 +534,10 @@ namespace DistractorTask.Editor.UI
             {
                 using StreamReader reader = new StreamReader(filePath);
                 int studyIndex = -1;
-
-                
+                var luxValue = 0f;
+                var invalidLux = 0;
                 var userId = "";
+                var trialCounter = 0;
                 NoiseLevel noiseLevel = NoiseLevel.None;
                 LoadLevel loadLevel = LoadLevel.Low;
                 int hasAudioTask = 0;
@@ -536,7 +547,7 @@ namespace DistractorTask.Editor.UI
                 int identicalStartTimeWithDifferentDurationsCounter = 0;
                 string lastGazeBehaviour = "";
                 ulong lastDuration = 0;
-                
+                pupilDataStorage.Clear();
                 
                 gazeBehaviourDurations.ResetEyetrackingData();
                 eyeTrackingSwitchEvents.ResetEyetrackingSwitchData();
@@ -562,7 +573,15 @@ namespace DistractorTask.Editor.UI
                         insideTask = true;
                         hasAudioTask = (int.Parse(parts[(int)LogFileHeaders.AudioTaskReactionTime])) == 2 ? 1 : 0;
                     }
-                    
+
+                    if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.Lux))
+                    {
+                        if (!float.TryParse(parts[(int)LogFileHeaders.Lux], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out luxValue))
+                        {
+                            invalidLux++;
+                        }
+                        //luxValue = float.Parse(parts[(int)LogFileHeaders.Lux], CultureInfo.InvariantCulture);
+                    }
 
                     if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.TrialConfirmation))
                     {
@@ -570,6 +589,18 @@ namespace DistractorTask.Editor.UI
                         {
                             Debug.LogWarning($"File {filePath} has TrialConfirmation-Data without TrialStart in Study {studyIndex}");
                         }
+
+                        var region = parts[(int)LogFileHeaders.AnchorPointIndex];
+                        
+                        foreach (var pupilData in pupilDataStorage)
+                        {
+                            var adjustedDiameter = pupilData.PupilDiameter * pupilData.LuxValue;
+                            pupilDiameterDataStreamWriter.WriteLine($"{userId};{studyIndex};{trialCounter};{region};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{pupilData.PupilDiameter.x.ToString(CultureInfo.InvariantCulture)};{pupilData.PupilDiameter.y.ToString(CultureInfo.InvariantCulture)};{luxValue.ToString(CultureInfo.InvariantCulture)};{adjustedDiameter.x.ToString(CultureInfo.InvariantCulture)};{adjustedDiameter.y.ToString(CultureInfo.InvariantCulture)}");
+
+                        }
+                        pupilDataStorage.Clear();
+                        trialCounter++;
+                        
                         var l = $"{parts[(int)LogFileHeaders.Time]};{parts[(int)LogFileHeaders.Timestamp]};{userId};{studyIndex};{GetPythonConformNoiseLevel(noiseLevel)};{loadLevel};{parts[(int)LogFileHeaders.TrialCount]};{parts[(int)LogFileHeaders.RepetitionsPerTrial]};{parts[(int)LogFileHeaders.TrialTargetIndex]};{parts[(int)LogFileHeaders.TrialSelectedIndex]};{parts[(int)LogFileHeaders.TrialSymbolOrder]};{parts[(int)LogFileHeaders.AnchorPointIndex]};{parts[(int)LogFileHeaders.StartTime]};{parts[(int)LogFileHeaders.ReactionTime]};{hasAudioTask}";
                         streamWriters[studyIndex].WriteLine(l);
                         
@@ -631,7 +662,20 @@ namespace DistractorTask.Editor.UI
 
                     if (insideTask && parts[(int)LogFileHeaders.Category] == nameof(LogCategory.EyeTracking))
                     {
-                        
+                        if (luxValue != 0 && parts[(int)LogFileHeaders.PupilDiameter].TryReadVector2FromCSV(out var pupilDiameter))
+                        {
+                     
+                            if (pupilDiameter.x >= 0 && pupilDiameter.y >= 0)
+                            {
+                                pupilDataStorage.Add(new PupilDataStorage
+                                {
+                                    PupilDiameter = pupilDiameter,
+                                    LuxValue = luxValue
+                                });
+                            }
+                            
+                            
+                        }
                         var startTime = long.Parse(parts[(int)LogFileHeaders.Timestamp]);
                         
                         var gazeBehaviourType = parts[(int)LogFileHeaders.GazeBehaviour];
@@ -680,7 +724,7 @@ namespace DistractorTask.Editor.UI
                     }
                     
                 }
-
+                Debug.Log($"Invalid lux values: {invalidLux}");
 
                 
             }
@@ -698,6 +742,12 @@ namespace DistractorTask.Editor.UI
         }
 
         
+    }
+
+    public struct PupilDataStorage
+    {
+        public Vector2 PupilDiameter;
+        public float LuxValue;
     }
 
     public struct TaskPerformanceTrialStorage

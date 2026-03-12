@@ -145,6 +145,7 @@ namespace DistractorTask.Editor.UI
 
                 if (parts[(int)LogFileHeaders.Category] == nameof(LogCategory.StudyEnd))
                 {
+                    Debug.Log(id);
                     result[studyIndex] = trialCountForCurrentStudy;
                     trialCountForCurrentStudy = 0;
                     studyIndex = -1;
